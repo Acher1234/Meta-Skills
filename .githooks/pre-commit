@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo -e "${RED}✖ gitleaks introuvable.${NC}"
+  echo -e "${YELLOW}  Installe-le puis réessaie :${NC}"
+  echo "    macOS  : brew install gitleaks"
+  echo "    Linux  : apt-get install gitleaks   (ou télécharge depuis github.com/gitleaks/gitleaks/releases)"
+  echo ""
+  echo -e "${YELLOW}  Pour bypasser exceptionnellement (déconseillé) : git commit --no-verify${NC}"
+  exit 1
+fi
+
+echo -e "${YELLOW}🔍 gitleaks : analyse des changements indexés...${NC}"
+
+if gitleaks git --help >/dev/null 2>&1; then
+  SCAN_CMD=(gitleaks git --staged --redact --verbose)
+else
+  SCAN_CMD=(gitleaks protect --staged --redact --verbose)
+fi
+
+if ! "${SCAN_CMD[@]}"; then
+  echo ""
+  echo -e "${RED}✖ Commit bloqué : un secret potentiel a été détecté.${NC}"
+  echo -e "${YELLOW}  Retire le secret des fichiers indexés, puis recommite.${NC}"
+  echo -e "${YELLOW}  Faux positif ? Ajoute une règle d'exclusion dans .gitleaks.toml${NC}"
+  echo -e "${YELLOW}  (ou, en dernier recours : git commit --no-verify)${NC}"
+  exit 1
+fi
+
+echo -e "${GREEN}✔ Aucun secret détecté. Commit autorisé.${NC}"
+exit 0

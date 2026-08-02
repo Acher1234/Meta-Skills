@@ -1,0 +1,39 @@
+---
+description: Prefer minimal comments; when needed, write them in English only
+alwaysApply: true
+---
+
+# Minimal Comments (English Only)
+
+Do not clutter code with unnecessary comments. Prefer clear names and structure over narration.
+
+## Do
+
+- Comment only when intent is non-obvious: trade-offs, invariants, workarounds, or "why" that code alone cannot express
+- Write every comment in English
+- Keep comments short and precise
+
+## Don't
+
+- Don't comment what the code already says (e.g. `// increment i`, `// return the result`)
+- Don't leave TODOs, section banners, or changelog-style notes unless asked
+- Don't write comments in French or any language other than English
+- Don't add JSDoc/docstrings that restate parameter names without adding value
+
+## Examples
+
+```typescript
+// ❌ BAD — narrates the obvious; not English
+// On récupère l'utilisateur
+const user = await getUser(id);
+
+// ❌ BAD — restates the code
+// Check if user is null
+if (user == null) {
+  return null;
+}
+
+// ✅ GOOD — explains non-obvious why (English)
+// Retry once: Salesforce returns 401 briefly after token refresh
+const result = await retryOnce(() => fetchRecord(id));
+```
