@@ -1,5 +1,6 @@
 google_token.json
 google_client_secret.json
 google_oauth_pending.json
+.env
 *.pyc
 __pycache__/
