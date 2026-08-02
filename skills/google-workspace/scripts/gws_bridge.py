@@ -8,18 +8,17 @@ import os
 import subprocess
 import sys
 from datetime import datetime, timezone
-from pathlib import Path
 
-# Ensure sibling modules (_skill_home) are importable when run standalone.
-_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
-if _SCRIPTS_DIR not in sys.path:
-    sys.path.insert(0, _SCRIPTS_DIR)
+from common.skill_cred import WORKSPACE_ENV, SkillCred, default_skill_dir
 
-from _skill_home import get_skill_home
+_SKILL_DIR = default_skill_dir(__file__)
+os.environ.setdefault(WORKSPACE_ENV, str(_SKILL_DIR))
+
+TOKEN_PATH = SkillCred("google-workspace", ["google_token.json"])
 
 
-def get_token_path() -> Path:
-    return get_skill_home() / "google_token.json"
+def get_token_path() -> SkillCred:
+    return TOKEN_PATH
 
 
 def _normalize_authorized_user_payload(payload: dict) -> dict:

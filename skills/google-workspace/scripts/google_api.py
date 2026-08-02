@@ -36,16 +36,14 @@ from datetime import datetime, timedelta, timezone
 from email.mime.text import MIMEText
 from pathlib import Path
 
-# Ensure sibling modules (_skill_home) are importable when run standalone.
-_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
-if _SCRIPTS_DIR not in sys.path:
-    sys.path.insert(0, _SCRIPTS_DIR)
+from common.skill_cred import WORKSPACE_ENV, SkillCred, default_skill_dir
 
-from _skill_home import get_skill_home
+_SKILL_DIR = default_skill_dir(__file__)
+os.environ.setdefault(WORKSPACE_ENV, str(_SKILL_DIR))
 
-SKILL_HOME = get_skill_home()
-TOKEN_PATH = SKILL_HOME / "google_token.json"
-CLIENT_SECRET_PATH = SKILL_HOME / "google_client_secret.json"
+_SKILL = "google-workspace"
+TOKEN_PATH = SkillCred(_SKILL, ["google_token.json"])
+CLIENT_SECRET_PATH = SkillCred(_SKILL, ["google_client_secret.json"])
 
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
