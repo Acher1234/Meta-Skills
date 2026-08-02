@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/logo.png" alt="AI-Skills" width="640" />
+<img src="assets/logo.png" alt="Meta-Skills" width="640" />
 
 # Meta-Skills
 
@@ -25,7 +25,7 @@ parts live once; each tool only gets the `SKILL.md`.
 |---|---|
 | 🎯 **Multi-target** | Cursor · Claude · Hermes · OpenClaw *(OpenClaw in progress)* |
 | 🌐 **External skills** | Can install **any** git skill repo, not only the ones here |
-| ♻️ **Shared env** | One Python venv (`~/.ai-skills/.venv`) + global npm; **each skill installs its own deps there** (once, not per project) |
+| ♻️ **Shared env** | One Python venv (`~/.meta-skills/.venv`) + global npm; **each skill installs its own deps there** (once, not per project) |
 | 📦 **Shared cache** | External repos cloned **once** under `~/.meta-skills/ext/` |
 
 ## 🏛️ Architecture
@@ -33,8 +33,8 @@ parts live once; each tool only gets the `SKILL.md`.
 The heavy parts are shared under `~/.meta-skills`; each tool only receives the `SKILL.md`.
 
 ```
-~/.meta-skills/                       shared library ($AI_SKILLS_HOME)
-├── install.sh                      the meta-installer (driven by /ai-skills)
+~/.meta-skills/                       shared library ($META_SKILLS_HOME)
+├── install.sh                      the meta-installer (driven by /meta-skills)
 ├── ext/<repo>/                     external git skills, cloned ONCE
 |__ .venv/                          shared Python venv (all Python skills)
 
@@ -97,7 +97,7 @@ mkdir -p ./.cursor/skills/cool-skill && cp "$SRC/SKILL.md" ./.cursor/skills/cool
 
 > The installer **does not** run `pip install` for you: `fetch` (clone) + `cp` (register).
 > Each skill installs **its own** dependencies via `pip init` / `npm init` on first run,
-> into the shared venv (`~/.ai-skills/.venv`) — once per machine, reused across all projects.
+> into the shared venv (`~/.meta-skills/.venv`) — once per machine, reused across all projects.
 
 | Target (`tool` / `scope`) | Install folder |
 |--------------------------|-------------------|
@@ -145,7 +145,7 @@ conventions, security). Each sub-project contains:
 - a **`config.example.json`** / **`.env.example`** (real secrets are gitignored);
 - the executable **script**.
 
-A Python skill should target the **shared** interpreter `~/.ai-skills/.venv/bin/python` rather than
+A Python skill should target the **shared** interpreter `~/.meta-skills/.venv/bin/python` rather than
 a per-project venv.
 
 ---
