@@ -1,0 +1,5 @@
+Metadata-Version: 2.4
+Name: meta-skill-common
+Version: 0.1.0
+Summary: Shared helpers for Meta-Skills (importable as ``common``)
+Requires-Python: >=3.9
