@@ -9,6 +9,7 @@ Commands:
   setup.py --client-secret /path/to.json    # Store OAuth client credentials
   setup.py --auth-url                       # Print the OAuth URL for user to visit
   setup.py --auth-code CODE                 # Exchange auth code for token
+  setup.py --stop-http-local                # Find & kill leftover http-local.py servers
   setup.py --revoke                         # Revoke and delete stored token
   setup.py --install-deps                   # Install Python dependencies only
 
@@ -401,8 +402,17 @@ def _save_pending_auth(
 def _stop_oauth_http_server(pid: int | None) -> None:
     if not pid:
         return
+    pid = int(pid)
     try:
-        os.kill(int(pid), signal.SIGTERM)
+        if os.name == "nt":
+            subprocess.run(
+                ["taskkill", "/PID", str(pid), "/F"],
+                check=False,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        else:
+            os.kill(pid, signal.SIGTERM)
         print(f"Stopped OAuth HTTP server (pid {pid})")
     except ProcessLookupError:
         pass
@@ -410,11 +420,113 @@ def _stop_oauth_http_server(pid: int | None) -> None:
         print(f"WARNING: Could not stop OAuth HTTP server pid {pid}: {e}")
 
 
+def _parse_pid_lines(text: str) -> list[int]:
+    pids: list[int] = []
+    me = os.getpid()
+    for line in text.splitlines():
+        line = line.strip()
+        if line.isdigit():
+            pid = int(line)
+            if pid != me:
+                pids.append(pid)
+    return pids
+
+
+def _find_http_local_pids_windows(marker: str) -> list[int]:
+    """Find ``http-local.py`` PIDs on Windows via PowerShell (no pgrep/ps)."""
+    # Escape single quotes for PowerShell single-quoted string.
+    safe = marker.replace("'", "''")
+    script = (
+        "Get-CimInstance Win32_Process | "
+        f"Where-Object {{ $_.CommandLine -like '*{safe}*' }} | "
+        "Select-Object -ExpandProperty ProcessId"
+    )
+    try:
+        out = subprocess.check_output(
+            ["powershell", "-NoProfile", "-NonInteractive", "-Command", script],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return []
+    return _parse_pid_lines(out)
+
+
+def _find_http_local_pids_posix(marker: str) -> list[int]:
+    """Find ``http-local.py`` PIDs on macOS/Linux via pgrep, else ps."""
+    try:
+        out = subprocess.check_output(
+            ["pgrep", "-f", marker],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+        return _parse_pid_lines(out)
+    except subprocess.CalledProcessError:
+        return []
+    except FileNotFoundError:
+        pass
+
+    try:
+        out = subprocess.check_output(["ps", "-ax", "-o", "pid=,command="], text=True)
+    except Exception:
+        return []
+    pids: list[int] = []
+    me = os.getpid()
+    for line in out.splitlines():
+        line = line.strip()
+        if marker not in line:
+            continue
+        parts = line.split(None, 1)
+        if parts and parts[0].isdigit():
+            pid = int(parts[0])
+            if pid != me:
+                pids.append(pid)
+    return pids
+
+
+def _find_http_local_pids() -> list[int]:
+    """PIDs of running ``http-local.py`` processes (POSIX: pgrep/ps, Windows: PowerShell)."""
+    marker = str(HTTP_LOCAL.name)
+    if os.name == "nt":
+        return _find_http_local_pids_windows(marker)
+    return _find_http_local_pids_posix(marker)
+
+
+def stop_http_local_servers() -> None:
+    """Find all ``http-local.py`` processes and terminate them."""
+    pids = list(_find_http_local_pids())
+    if PENDING_AUTH_PATH.exists():
+        try:
+            pending = json.loads(PENDING_AUTH_PATH.read_text())
+            pid = pending.get("http_server_pid")
+            if pid is not None and int(pid) not in pids:
+                pids.append(int(pid))
+        except Exception:
+            pass
+
+    unique = sorted(set(pids))
+    if not unique:
+        print("No http-local.py processes found.")
+        return
+
+    for pid in unique:
+        _stop_oauth_http_server(pid)
+    print(f"Done: stopped {len(unique)} http-local.py process(es).")
+
+
 def _start_oauth_http_server(*, host: str, port: int, redirect_uri: str) -> int:
     """Spawn ``http-local.py`` in the background; return its pid."""
     if not HTTP_LOCAL.is_file():
         print(f"ERROR: Missing local OAuth server script: {HTTP_LOCAL}")
         sys.exit(1)
+    popen_kwargs: dict = {
+        "stdout": subprocess.DEVNULL,
+        "stderr": subprocess.DEVNULL,
+    }
+    if os.name == "nt":
+        popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+    else:
+        popen_kwargs["start_new_session"] = True
     proc = subprocess.Popen(
         [
             sys.executable,
@@ -424,9 +536,7 @@ def _start_oauth_http_server(*, host: str, port: int, redirect_uri: str) -> int:
             "--port",
             str(port),
         ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        start_new_session=True,
+        **popen_kwargs,
     )
     print(f"OAuth HTTP server listening on {redirect_uri} (pid {proc.pid})")
     return proc.pid
@@ -644,6 +754,11 @@ def main():
     group.add_argument("--client-secret", metavar="PATH", help="Store OAuth client_secret.json")
     group.add_argument("--auth-url", action="store_true", help="Print OAuth URL for user to visit")
     group.add_argument("--auth-code", metavar="CODE", help="Exchange auth code for token")
+    group.add_argument(
+        "--stop-http-local",
+        action="store_true",
+        help="Find and kill all leftover http-local.py OAuth redirect servers",
+    )
     group.add_argument("--revoke", action="store_true", help="Revoke and delete stored token")
     group.add_argument("--install-deps", action="store_true", help="Install Python dependencies")
     parser.add_argument(
@@ -665,6 +780,8 @@ def main():
         get_auth_url(services=services)
     elif args.auth_code:
         exchange_auth_code(args.auth_code)
+    elif args.stop_http_local:
+        stop_http_local_servers()
     elif args.revoke:
         revoke()
     elif args.install_deps:

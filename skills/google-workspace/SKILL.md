@@ -44,6 +44,7 @@ Always `cd` into `{SKILL_PATH}` before running scripts. Prefer the shared interp
 | `/google-workspace_setup_client-secret` | `python scripts/setup.py --client-secret PATH` | Store OAuth client JSON |
 | `/google-workspace_setup_auth-url` | `python scripts/setup.py --auth-url [--services …]` | Print OAuth URL (scopes: `references/oauth-services.md`) |
 | `/google-workspace_setup_auth-code` | `python scripts/setup.py --auth-code CODE` | Exchange code for token |
+| `/google-workspace_setup_stop-http-local` | `python scripts/setup.py --stop-http-local` | Kill leftover `http-local.py` servers |
 | `/google-workspace_setup_revoke` | `python scripts/setup.py --revoke` | Revoke + delete token |
 | `/google-workspace_setup_install-deps` | `python scripts/setup.py --install-deps` | Install Python deps |
 
