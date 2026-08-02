@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/logo.png" alt="AI-Skills" width="640" />
+<img src="assets/logo.png" alt="Meta-Skills" width="640" />
 
 # Meta-Skills
 
@@ -25,7 +25,7 @@ une fois, chaque outil ne reçoit que le `SKILL.md`.
 |---|---|
 | 🎯 **Multi-cibles** | Cursor · Claude · Hermes · OpenClaw *(OpenClaw en cours)* |
 | 🌐 **Skills externes** | Peut installer **n'importe quel** repo git de skill, pas seulement ceux d'ici |
-| ♻️ **Env partagé** | Un venv Python (`~/.ai-skills/.venv`) + npm global ; **chaque skill y installe ses propres deps** (une fois, pas par projet) |
+| ♻️ **Env partagé** | Un venv Python (`~/.meta-skills/.venv`) + npm global ; **chaque skill y installe ses propres deps** (une fois, pas par projet) |
 | 📦 **Cache partagé** | Repos externes clonés **une fois** dans `~/.meta-skills/ext/` |
 
 ## 🏛️ Architecture
@@ -33,8 +33,8 @@ une fois, chaque outil ne reçoit que le `SKILL.md`.
 Le lourd est mutualisé sous `~/.meta-skills` ; chaque outil ne reçoit que le `SKILL.md`.
 
 ```
-~/.meta-skills/                       librairie partagée ($AI_SKILLS_HOME)
-├── install.sh                      le méta-installeur (piloté par /ai-skills)
+~/.meta-skills/                       librairie partagée ($META_SKILLS_HOME)
+├── install.sh                      le méta-installeur (piloté par /meta-skills)
 ├── ext/<repo>/                     skills git externes, clonés UNE FOIS
 |__ .venv/                          venv Python partagé (tous les skills python)
 
@@ -97,7 +97,7 @@ mkdir -p ./.cursor/skills/cool-skill && cp "$SRC/SKILL.md" ./.cursor/skills/cool
 
 > L'installeur **ne fait pas** de `pip install` pour toi : `fetch` (clone) + `cp` (register).
 > Chaque skill installe **ses propres** dépendances via `pip init` / `npm init`, à son premier run,
-> dans le venv partagé (`~/.ai-skills/.venv`) — une fois par machine, réutilisé par tous les projets.
+> dans le venv partagé (`~/.meta-skills/.venv`) — une fois par machine, réutilisé par tous les projets.
 
 | Cible (`tool` / `scope`) | Dossier d'install |
 |--------------------------|-------------------|
@@ -146,7 +146,7 @@ conventions, sécurité). Chaque sous-projet contient :
 - un **`config.example.json`**/**`.env.example`** (les vrais secrets sont gitignorés) ;
 - le **script** exécutable.
 
-Un skill Python doit cibler l'interpréteur **partagé** `~/.ai-skills/.venv/bin/python` plutôt qu'un
+Un skill Python doit cibler l'interpréteur **partagé** `~/.meta-skills/.venv/bin/python` plutôt qu'un
 venv par projet.
 
 ---
