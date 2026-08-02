@@ -56,9 +56,31 @@ SCOPES = [
     "https://www.googleapis.com/auth/chat.messages",
 ]
 
+SERVICE_SCOPES: dict[str, list[str]] = {
+    "email": [
+        "https://www.googleapis.com/auth/gmail.readonly",
+        "https://www.googleapis.com/auth/gmail.send",
+        "https://www.googleapis.com/auth/gmail.modify",
+    ],
+    "gmail": [
+        "https://www.googleapis.com/auth/gmail.readonly",
+        "https://www.googleapis.com/auth/gmail.send",
+        "https://www.googleapis.com/auth/gmail.modify",
+    ],
+    "calendar": ["https://www.googleapis.com/auth/calendar"],
+    "drive": ["https://www.googleapis.com/auth/drive"],
+    "contacts": ["https://www.googleapis.com/auth/contacts.readonly"],
+    "sheets": ["https://www.googleapis.com/auth/spreadsheets"],
+    "docs": ["https://www.googleapis.com/auth/documents"],
+    "chat": [
+        "https://www.googleapis.com/auth/chat.spaces",
+        "https://www.googleapis.com/auth/chat.messages",
+    ],
+}
+
 REQUIRED_PACKAGES = ["google-api-python-client", "google-auth-oauthlib", "google-auth-httplib2"]
 
-# Local redirect catcher (scripts/http-local.py) — must match the OAuth client redirect URI.
+# Fallback if client_secret has no redirect_uris (prefer matching http-local.py).
 OAUTH_HTTP_HOST = "127.0.0.1"
 OAUTH_HTTP_PORT = 8765
 REDIRECT_URI = f"http://localhost:{OAUTH_HTTP_PORT}/"
@@ -84,6 +106,86 @@ def _missing_scopes_from_payload(payload: dict) -> list[str]:
         return []
     granted = {s.strip() for s in (raw.split() if isinstance(raw, str) else raw) if s.strip()}
     return sorted(scope for scope in SCOPES if scope not in granted)
+
+
+def _scopes_for_services(services: list[str] | None) -> list[str]:
+    """Resolve OAuth scopes from ``--services`` (email, calendar, …, all)."""
+    if not services or any(s.lower() == "all" for s in services):
+        return list(SCOPES)
+    out: list[str] = []
+    seen: set[str] = set()
+    unknown: list[str] = []
+    for raw in services:
+        key = raw.strip().lower()
+        if not key:
+            continue
+        scopes = SERVICE_SCOPES.get(key)
+        if scopes is None:
+            unknown.append(raw.strip())
+            continue
+        for scope in scopes:
+            if scope not in seen:
+                seen.add(scope)
+                out.append(scope)
+    if unknown:
+        known = ", ".join([*sorted(SERVICE_SCOPES), "all"])
+        print(f"ERROR: Unknown service(s): {', '.join(unknown)}. Use: {known}")
+        sys.exit(1)
+    if not out:
+        print("ERROR: No scopes selected. Pass --services email,calendar,… or all")
+        sys.exit(1)
+    return out
+
+
+def _load_client_secret() -> dict:
+    try:
+        return json.loads(CLIENT_SECRET_PATH.read_text())
+    except Exception as e:
+        print(f"ERROR: Could not read client secret at {CLIENT_SECRET_PATH}: {e}")
+        sys.exit(1)
+
+
+def _client_secret_block(data: dict) -> dict:
+    if "installed" in data and isinstance(data["installed"], dict):
+        return data["installed"]
+    if "web" in data and isinstance(data["web"], dict):
+        return data["web"]
+    print("ERROR: client secret missing 'installed' or 'web' block.")
+    sys.exit(1)
+
+
+def _redirect_uri_from_client_secret(data: dict | None = None) -> str:
+    """Pick redirect URI from client_secret.json (prefer localhost)."""
+    block = _client_secret_block(data if data is not None else _load_client_secret())
+    uris = [u.strip() for u in (block.get("redirect_uris") or []) if isinstance(u, str) and u.strip()]
+    if not uris:
+        print(
+            "WARNING: client_secret has no redirect_uris; "
+            f"falling back to {REDIRECT_URI}"
+        )
+        return REDIRECT_URI
+    localhost = [
+        u
+        for u in uris
+        if "localhost" in u.lower() or "127.0.0.1" in u
+    ]
+    return (localhost or uris)[0]
+
+
+def _bind_from_redirect_uri(redirect_uri: str) -> tuple[str, int] | None:
+    """Host/port for http-local when redirect is a localhost URL; else None."""
+    from urllib.parse import urlparse
+
+    parsed = urlparse(redirect_uri)
+    host = (parsed.hostname or "").lower()
+    if parsed.scheme not in ("http", "https") or host not in ("localhost", "127.0.0.1"):
+        return None
+    if parsed.port is not None:
+        port = parsed.port
+    else:
+        port = 443 if parsed.scheme == "https" else 80
+    bind_host = "127.0.0.1" if host == "localhost" else host
+    return bind_host, port
 
 
 def _format_missing_scopes(missing_scopes: list[str]) -> str:
@@ -276,12 +378,20 @@ def store_client_secret(path: str):
     print(f"OK: Client secret saved to {CLIENT_SECRET_PATH}")
 
 
-def _save_pending_auth(*, state: str, code_verifier: str, http_server_pid: int | None = None):
+def _save_pending_auth(
+    *,
+    state: str,
+    code_verifier: str,
+    redirect_uri: str,
+    scopes: list[str],
+    http_server_pid: int | None = None,
+):
     """Persist the OAuth session bits needed for a later token exchange."""
     payload = {
         "state": state,
         "code_verifier": code_verifier,
-        "redirect_uri": REDIRECT_URI,
+        "redirect_uri": redirect_uri,
+        "scopes": scopes,
     }
     if http_server_pid is not None:
         payload["http_server_pid"] = http_server_pid
@@ -300,7 +410,7 @@ def _stop_oauth_http_server(pid: int | None) -> None:
         print(f"WARNING: Could not stop OAuth HTTP server pid {pid}: {e}")
 
 
-def _start_oauth_http_server() -> int:
+def _start_oauth_http_server(*, host: str, port: int, redirect_uri: str) -> int:
     """Spawn ``http-local.py`` in the background; return its pid."""
     if not HTTP_LOCAL.is_file():
         print(f"ERROR: Missing local OAuth server script: {HTTP_LOCAL}")
@@ -310,15 +420,15 @@ def _start_oauth_http_server() -> int:
             sys.executable,
             str(HTTP_LOCAL),
             "--host",
-            OAUTH_HTTP_HOST,
+            host,
             "--port",
-            str(OAUTH_HTTP_PORT),
+            str(port),
         ],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         start_new_session=True,
     )
-    print(f"OAuth HTTP server listening on {REDIRECT_URI} (pid {proc.pid})")
+    print(f"OAuth HTTP server listening on {redirect_uri} (pid {proc.pid})")
     return proc.pid
 
 
@@ -360,7 +470,7 @@ def _extract_code_and_state(code_or_url: str) -> tuple[str, str | None]:
     return params["code"][0], state
 
 
-def get_auth_url():
+def get_auth_url(services: list[str] | None = None):
     """Print the OAuth authorization URL and start the local redirect HTTP server."""
     if not CLIENT_SECRET_PATH.exists():
         print("ERROR: No client secret stored. Run --client-secret first.")
@@ -373,26 +483,46 @@ def get_auth_url():
         except Exception:
             pass
 
+    client_secret = _load_client_secret()
+    redirect_uri = _redirect_uri_from_client_secret(client_secret)
+    scopes = _scopes_for_services(services)
+
     _ensure_deps()
     from google_auth_oauthlib.flow import Flow
 
     flow = Flow.from_client_secrets_file(
         str(CLIENT_SECRET_PATH),
-        scopes=SCOPES,
-        redirect_uri=REDIRECT_URI,
+        scopes=scopes,
+        redirect_uri=redirect_uri,
         autogenerate_code_verifier=True,
     )
     auth_url, state = flow.authorization_url(
         access_type="offline",
         prompt="consent",
     )
-    http_server_pid = _start_oauth_http_server()
+
+    http_server_pid = None
+    bind = _bind_from_redirect_uri(redirect_uri)
+    if bind is not None:
+        host, port = bind
+        http_server_pid = _start_oauth_http_server(
+            host=host, port=port, redirect_uri=redirect_uri
+        )
+    else:
+        print(
+            f"WARNING: redirect_uri is not localhost HTTP ({redirect_uri}); "
+            "not starting http-local.py — copy the code from the browser redirect."
+        )
+
     _save_pending_auth(
         state=state,
         code_verifier=flow.code_verifier,
+        redirect_uri=redirect_uri,
+        scopes=scopes,
         http_server_pid=http_server_pid,
     )
-    # Print just the URL so the agent can extract it cleanly
+    print(f"REDIRECT_URI={redirect_uri}")
+    print(f"SCOPES={','.join(scopes)}")
     print(auth_url)
 
 
@@ -416,7 +546,8 @@ def exchange_auth_code(code: str):
         from urllib.parse import parse_qs, urlparse
 
         # Extract granted scopes from the callback URL if the user pasted the full redirect URL.
-        granted_scopes = list(SCOPES)
+        requested_scopes = list(pending_auth.get("scopes") or SCOPES)
+        granted_scopes = list(requested_scopes)
         if isinstance(raw_callback, str) and raw_callback.startswith("http"):
             params = parse_qs(urlparse(raw_callback).query)
             scope_val = (params.get("scope") or [""])[0].strip()
@@ -449,7 +580,7 @@ def exchange_auth_code(code: str):
         actually_granted = list(creds.granted_scopes or []) if hasattr(creds, "granted_scopes") and creds.granted_scopes else []
         if actually_granted:
             token_payload["scopes"] = actually_granted
-        elif granted_scopes != SCOPES:
+        elif granted_scopes != requested_scopes:
             # granted_scopes was extracted from the callback URL
             token_payload["scopes"] = granted_scopes
 
@@ -515,6 +646,12 @@ def main():
     group.add_argument("--auth-code", metavar="CODE", help="Exchange auth code for token")
     group.add_argument("--revoke", action="store_true", help="Revoke and delete stored token")
     group.add_argument("--install-deps", action="store_true", help="Install Python dependencies")
+    parser.add_argument(
+        "--services",
+        default="all",
+        help="For --auth-url: comma-separated services "
+        "(email,calendar,drive,sheets,docs,chat,contacts,all)",
+    )
     args = parser.parse_args()
 
     if args.check:
@@ -524,7 +661,8 @@ def main():
     elif args.client_secret:
         store_client_secret(args.client_secret)
     elif args.auth_url:
-        get_auth_url()
+        services = [s.strip() for s in str(args.services).split(",") if s.strip()]
+        get_auth_url(services=services)
     elif args.auth_code:
         exchange_auth_code(args.auth_code)
     elif args.revoke:

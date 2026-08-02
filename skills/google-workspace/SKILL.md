@@ -42,8 +42,8 @@ Always `cd` into `{SKILL_PATH}` before running scripts. Prefer the shared interp
 |-------|-----|-------------|
 | `/google-workspace_setup_check` | `python scripts/setup.py --check` | Auth status |
 | `/google-workspace_setup_client-secret` | `python scripts/setup.py --client-secret PATH` | Store OAuth client JSON |
-| `/google-workspace_setup_auth-url` | `python scripts/setup.py --auth-url [--services …] --format json` | Print OAuth URL |
-| `/google-workspace_setup_auth-code` | `python scripts/setup.py --auth-code CODE --format json` | Exchange code for token |
+| `/google-workspace_setup_auth-url` | `python scripts/setup.py --auth-url [--services …]` | Print OAuth URL (scopes: `references/oauth-services.md`) |
+| `/google-workspace_setup_auth-code` | `python scripts/setup.py --auth-code CODE` | Exchange code for token |
 | `/google-workspace_setup_revoke` | `python scripts/setup.py --revoke` | Revoke + delete token |
 | `/google-workspace_setup_install-deps` | `python scripts/setup.py --install-deps` | Install Python deps |
 
@@ -111,14 +111,16 @@ Named teams only: `--filter 'spaceType = "SPACE"'`. Enable the **Google Chat API
 
 ### First-time OAuth (agent-driven)
 
-1. Ask which services: `email`, `calendar`, `drive`, `sheets`, `docs`, `chat`, or `all`.
+1. Ask which services (values + scopes: local `references/oauth-services.md`): `email`, `calendar`, `drive`, `sheets`, `docs`, `chat`, `contacts`, or `all`.
 2. User creates a Desktop OAuth client in [Google Cloud Console](https://console.cloud.google.com/apis/credentials), enables the needed APIs (**including Google Chat API** if using Chat), downloads `client_secret.json`.
 3. `python scripts/setup.py --client-secret /path/to/client_secret.json`
-4. `python scripts/setup.py --auth-url --format json` → send `auth_url` to the user.
-5. User pastes redirect URL or code → `python scripts/setup.py --auth-code "…" --format json`
+4. `python scripts/setup.py --auth-url --services …` → send the printed auth URL to the user.
+5. User pastes redirect URL or code → `python scripts/setup.py --auth-code "…"`
 6. `python scripts/setup.py --check` → expect `AUTHENTICATED`
 
-Gmail search operators: see local `references/gmail-search-syntax.md` in this skill folder.
+References in this skill folder:
+- `--services` / OAuth scopes → `references/oauth-services.md`
+- Gmail search operators → `references/gmail-search-syntax.md`
 
 ## Notes
 

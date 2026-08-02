@@ -176,7 +176,9 @@ Ask for any of:
 - an **external git URL** (any skill repo), or
 - a **local path** to a skill folder.
 
-Always also install the meta skill `meta-skills` (this file) into every chosen target.
+Do **not** re-install `meta-skills` here — the installer itself is **global only**
+(see [`INSTALL_PROMPT.md`](INSTALL_PROMPT.md)). When registering catalog skills, copy
+only the skills the user asked for.
 
 ### Skills catalog (show this to the user)
 
@@ -205,7 +207,7 @@ SRC=$(cd ~/.meta-skills && ./install.sh fetch <git-url> [name])
 # 4b) BUILT-IN: SRC=~/.meta-skills/skills/<name>
 # 4c) LOCAL: SRC is the given path
 
-# 5) Register = copy SKILL.md into each chosen tool/scope (+ always meta-skills),
+# 5) Register = copy ONLY the requested skill's SKILL.md into each chosen tool/scope,
 #    then substitute {IS_GLOBAL}, {TYPE_OF_AI_TOOLS}, {SKILL_PATH}:
 mkdir -p "$DEST/<name>"
 cp "$SRC/SKILL.md" "$DEST/<name>/SKILL.md"
@@ -213,8 +215,7 @@ cp "$SRC/SKILL.md" "$DEST/<name>/SKILL.md"
 #   {IS_GLOBAL}        → TRUE|FALSE
 #   {TYPE_OF_AI_TOOLS} → CURSOR|HERMES|OPENCLAW|CLAUDE
 #   {SKILL_PATH}       → absolute path of $DEST/<name>
-mkdir -p "$DEST/meta-skills"
-cp ~/.meta-skills/SKILL.md "$DEST/meta-skills/SKILL.md"
+# Do NOT also copy meta-skills — that installer is global-only (INSTALL_PROMPT.md).
 
 # 6) Reload Cursor / Claude / OpenClaw, or reload the Hermes agent.
 # NOTE: installer does NOT install skill deps. Each skill runs
@@ -228,11 +229,10 @@ cp ~/.meta-skills/SKILL.md "$DEST/meta-skills/SKILL.md"
 cd ~/.meta-skills
 
 # Built-in → Hermes (all profiles)
-mkdir -p ~/.hermes/skills/{google-workspace,meta-skills}
+mkdir -p ~/.hermes/skills/google-workspace
 cp ~/.meta-skills/skills/google-workspace/SKILL.md ~/.hermes/skills/google-workspace/SKILL.md
 # then substitute {IS_GLOBAL}=TRUE, {TYPE_OF_AI_TOOLS}=HERMES,
 # {SKILL_PATH}=$HOME/.hermes/skills/google-workspace in that file
-cp ~/.meta-skills/SKILL.md ~/.hermes/skills/meta-skills/SKILL.md
 
 # External git skill → Claude (global): fetch once, then cp + substitute
 SRC=$(./install.sh fetch https://github.com/some/cool-skill.git cool-skill)
@@ -256,7 +256,7 @@ cp "$SRC/SKILL.md" ./.cursor/skills/cool-skill/SKILL.md
 3. Ask scope; resolve `HERMES_HOME` for Hermes-profile.
 4. Ask what to install (built-in / external git URL / local path). Don't copy all by default.
 5. External repo → `./install.sh fetch <url> [name]` (clone once into `ext/`).
-6. **Register = `cp` the `SKILL.md`** into `$DEST/<name>/` for each chosen target; **replace** `{IS_GLOBAL}`, `{TYPE_OF_AI_TOOLS}`, `{SKILL_PATH}`; always also copy `meta-skills`.
+6. **Register = `cp` the `SKILL.md`** into `$DEST/<name>/` for each chosen target; **replace** `{IS_GLOBAL}`, `{TYPE_OF_AI_TOOLS}`, `{SKILL_PATH}`. Do **not** also copy `meta-skills` (global-only via [`INSTALL_PROMPT.md`](INSTALL_PROMPT.md)).
 7. **Dependencies are each skill's responsibility** — the skill runs `./install.sh pip init .` / `npm init .` on first run into `~/.meta-skills/.venv`.
 8. Remind: reload the tool(s).
 
@@ -267,9 +267,9 @@ Pick `DEST` from the [Targets table](#targets--scopes). Then `mkdir -p "$DEST/<n
 
 | Source (`~/.meta-skills/…`) | Target |
 |-----------------------------|--------|
-| `SKILL.md` | `$DEST/meta-skills/SKILL.md` |
 | `skills/<name>/SKILL.md` | `$DEST/<name>/SKILL.md` |
 | `ext/<name>/SKILL.md` | `$DEST/<name>/SKILL.md` |
+| `SKILL.md` (this installer) | **global only** — `~/.<tool>/skills/meta-skills/SKILL.md` via [`INSTALL_PROMPT.md`](INSTALL_PROMPT.md); never into project `./.<tool>/skills/` as a side effect of installing other skills |
 
 ## After install
 
