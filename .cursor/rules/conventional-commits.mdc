@@ -1,0 +1,57 @@
+---
+description: Conventional Commits — use feat:/fix:/chore: prefixes for git commit messages
+alwaysApply: true
+---
+
+# Conventional Commits
+
+Every commit message **must** start with a Conventional Commits type prefix.
+
+## Format
+
+```
+<type>: <short summary in English>
+```
+
+Optional scope: `feat(fathom): …` / `fix(install): …`
+
+## Types
+
+| Type | Use when |
+|------|----------|
+| `feat` | New capability or user-facing addition |
+| `fix` | Bug fix |
+| `chore` | Maintenance (deps, hooks, tooling, cleanup with no behavior change) |
+| `docs` | Documentation only |
+| `refactor` | Code change with no feature and no bug fix |
+| `test` | Adding or updating tests |
+| `style` | Formatting only (no logic change) |
+| `perf` | Performance improvement |
+| `ci` | CI / GitHub Actions / pipeline config |
+
+## Do
+
+- Prefer the **why** in the summary (not a file dump)
+- Keep the first line ≤ ~72 characters
+- Use imperative mood: `add`, `fix`, `update` (not `added` / `fixes`)
+
+## Don't
+
+- Don't commit without a type prefix
+- Don't use vague messages like `update`, `wip`, `fix stuff`
+- Don't put the whole changelog in the subject — use the body if needed
+
+## Examples
+
+```
+# ❌ BAD
+update fathom skill
+WIP
+fixed bug
+
+# ✅ GOOD
+feat(fathom): add video download via ffmpeg
+fix(install): keep shared venv when pip init fails
+chore: rename remaining ai-skills paths to meta-skills
+docs: clarify CURRENT_SKILL_DIRECTORY in fathom SKILL.md
+```
