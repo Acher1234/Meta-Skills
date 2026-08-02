@@ -187,6 +187,7 @@ only the skills the user asked for.
 | # | Name | Folder | What it does |
 |---|------|--------|--------------|
 | 1 | `google-workspace` | `skills/google-workspace/` | Gmail, Calendar, Drive, Docs, Sheets, Contacts, Chat |
+| 2 | `pc-report` | `skills/pc-report/` | Host monitoring report (Linux / macOS / Windows) |
 
 **External** — any git URL (cloned into `~/.meta-skills/ext/<name>`).
 
