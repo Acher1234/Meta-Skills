@@ -187,6 +187,7 @@ only the skills the user asked for.
 | # | Name | Folder | What it does |
 |---|------|--------|--------------|
 | 1 | `google-workspace` | `skills/google-workspace/` | Gmail, Calendar, Drive, Docs, Sheets, Contacts, Chat |
+| 2 | `gif-creator` | `skills/gif-creator/` | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
 
 **External** — any git URL (cloned into `~/.meta-skills/ext/<name>`).
 

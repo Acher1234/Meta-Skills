@@ -7,8 +7,8 @@ VENV_DIR="$META_SKILLS_HOME/.venv"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMMON_PKG="$REPO_ROOT/meta-skill-common"
 
-log() { printf '\033[1;36m[ai-skills]\033[0m %s\n' "$*"; }
-err() { printf '\033[1;31m[ai-skills] error:\033[0m %s\n' "$*" >&2; }
+log() { printf '\033[1;36m[meta-skills]\033[0m %s\n' "$*"; }
+err() { printf '\033[1;31m[meta-skills] error:\033[0m %s\n' "$*" >&2; }
 
 # fetch <git-url> [name] — clone ONCE into the shared cache, else pull to update.
 fetch_repo() {
