@@ -38,8 +38,11 @@ class GoDaddyClient:
         params: dict[str, Any] | None = None,
         json: Any = None,
         request_id: str | None = None,
+        extra_headers: dict[str, str] | None = None,
     ) -> Any:
         headers = {"X-Request-Id": request_id or str(uuid.uuid4())}
+        if extra_headers:
+            headers.update(extra_headers)
         url = f"{self.api_base}{path}"
         if params:
             clean: dict[str, Any] = {}
@@ -102,7 +105,37 @@ class GoDaddyClient:
             },
         )
 
-    # Domains — https://developer.godaddy.com/en/docs/references/rest/domains/v3/domains
+    # Domains v1 — https://developer.godaddy.com/en/docs/references/rest/domains/v1/manage-domain-settings
+
+    def list_domains(
+        self,
+        *,
+        statuses: list[str] | None = None,
+        status_groups: list[str] | None = None,
+        limit: int | None = None,
+        marker: str | None = None,
+        includes: list[str] | None = None,
+        modified_date: str | None = None,
+        shopper_id: str | None = None,
+    ) -> Any:
+        """GET /v1/domains — paginated list of domains for the authenticated shopper."""
+        params: dict[str, Any] = {
+            "limit": limit,
+            "marker": marker,
+            "modifiedDate": modified_date,
+        }
+        if statuses:
+            params["statuses"] = statuses
+        if status_groups:
+            params["statusGroups"] = status_groups
+        if includes:
+            params["includes"] = includes
+        headers = {"X-Shopper-Id": shopper_id} if shopper_id else None
+        return self.request(
+            "GET", "/v1/domains", params=params, extra_headers=headers
+        )
+
+    # Domains v3 — https://developer.godaddy.com/en/docs/references/rest/domains/v3/domains
 
     def get_domain(self, domain_name: str) -> Any:
         """GET /v3/domains/domain-names/{domain-name} — owned domain management view."""

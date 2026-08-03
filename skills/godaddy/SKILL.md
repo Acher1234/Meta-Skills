@@ -82,7 +82,17 @@ Prices/availability are **indicative**; locked price is only at quote time.
 | `/godaddy_suggest` | `python scripts/cli.py suggest --query "sunrise bakery" [--tlds com,net] [--page-size 10] [--sources EXTENSION,KEYWORD_SPIN]` | `GET /v3/domains/suggestions` |
 | `/godaddy_check` | `python scripts/cli.py check DOMAIN [--optimize-for SPEED\|ACCURACY] [--isc-code CODE]` | `GET /v3/domains/check-availability` |
 
-## Domains ([docs](https://developer.godaddy.com/en/docs/references/rest/domains/v3/domains))
+## Domains
+
+### List all domains — v1 ([docs](https://developer.godaddy.com/en/docs/references/rest/domains/v1/manage-domain-settings))
+
+Paginated list of domains owned by the authenticated account.
+
+| Slash | CLI | API |
+|-------|-----|-----|
+| `/godaddy_domain_list` | `python scripts/cli.py domain list [--statuses …] [--status-groups …] [--limit N] [--marker DOMAIN] [--includes authCode,contacts,nameServers] [--modified-date ISO] [--shopper-id ID]` | `GET /v1/domains` |
+
+### Get one domain — v3 ([docs](https://developer.godaddy.com/en/docs/references/rest/domains/v3/domains))
 
 Owned domain management view (status, nameservers, privacy, auto-renew, expiry).
 

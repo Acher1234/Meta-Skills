@@ -66,6 +66,22 @@ def cmd_check(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_domain_list(args: argparse.Namespace) -> int:
+    client = GoDaddyClient()
+    _print(
+        client.list_domains(
+            statuses=_split_csv(args.statuses),
+            status_groups=_split_csv(args.status_groups),
+            limit=args.limit,
+            marker=args.marker,
+            includes=_split_csv(args.includes),
+            modified_date=args.modified_date,
+            shopper_id=args.shopper_id,
+        )
+    )
+    return 0
+
+
 def cmd_domain_get(args: argparse.Namespace) -> int:
     client = GoDaddyClient()
     _print(client.get_domain(args.domain))
@@ -122,7 +138,7 @@ def cmd_dns_delete(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        description="GoDaddy Domains v3 CLI (discovery + domains + DNS)"
+        description="GoDaddy Domains CLI (v1 list + v3 discovery/domains/DNS)"
     )
     sub = p.add_subparsers(dest="command", required=True)
 
@@ -131,6 +147,38 @@ def build_parser() -> argparse.ArgumentParser:
 
     domain = sub.add_parser("domain", help="Owned domain records")
     domain_sub = domain.add_subparsers(dest="domain_command", required=True)
+
+    domain_list = domain_sub.add_parser(
+        "list",
+        help="GET /v1/domains — list all domains for the shopper",
+    )
+    domain_list.add_argument(
+        "--statuses",
+        help="Comma-separated status filter, e.g. ACTIVE,CANCELLED_REDEEMABLE",
+    )
+    domain_list.add_argument(
+        "--status-groups",
+        help="Comma-separated status groups filter",
+    )
+    domain_list.add_argument("--limit", type=int, help="Max domains to return")
+    domain_list.add_argument(
+        "--marker",
+        help="Marker domain used as offset for pagination",
+    )
+    domain_list.add_argument(
+        "--includes",
+        help="Comma-separated extras: authCode,contacts,nameServers",
+    )
+    domain_list.add_argument(
+        "--modified-date",
+        help="ISO datetime — only domains modified since this date",
+    )
+    domain_list.add_argument(
+        "--shopper-id",
+        help="X-Shopper-Id (reseller managing domains outside own account)",
+    )
+    domain_list.set_defaults(func=cmd_domain_list)
+
     domain_get = domain_sub.add_parser(
         "get",
         help="GET /v3/domains/domain-names/{domain-name} — status, NS, privacy, expiry",
