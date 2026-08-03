@@ -204,12 +204,13 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 | # | Name | Folder | What it does |
 |---|------|--------|--------------|
 | 5 | `eset` | `skills/mdm-antivirus/eset/` | ESET Connect OAuth + device / policy / incident / automation / patch APIs |
+| 6 | `hexnode` | `skills/mdm-antivirus/hexnode/` | Hexnode MDM API (devices / users / apps / policies / device groups; API key auth) |
 
 #### Design
 
 | # | Name | Folder | What it does |
 |---|------|--------|--------------|
-| 6 | `gif-creator` | `skills/design/gif-creator/` | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
+| 7 | `gif-creator` | `skills/design/gif-creator/` | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
 
 **External** — any git URL (cloned into `~/.meta-skills/ext/<name>`).
 
