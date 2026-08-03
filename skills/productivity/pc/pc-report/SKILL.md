@@ -30,10 +30,10 @@ export IS_GLOBAL="{IS_GLOBAL}"
 export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
 [ -f "$HOME/.meta-skills/.env" ] && set -a && . "$HOME/.meta-skills/.env" && set +a
 [ -f "{SKILL_PATH}/.env" ] && set -a && . "{SKILL_PATH}/.env" && set +a
-cd "$HOME/.meta-skills/skills/pc-report"
+cd "$HOME/.meta-skills/skills/productivity/pc/pc-report"
 ```
 
-Scripts live in the **shared library** (`~/.meta-skills/skills/pc-report/`). `{SKILL_PATH}` is the registered `SKILL.md` directory (credentials / overrides if any).
+Scripts live in the **shared library** (`~/.meta-skills/skills/productivity/pc/pc-report/`). `{SKILL_PATH}` is the registered `SKILL.md` directory (credentials / overrides if any).
 
 ## Layout
 
@@ -53,7 +53,7 @@ a Linux (`.sh`), macOS (`-mac.sh`) and Windows (`.ps1`) variant.
 
 ## How to run
 
-1. Apply the [working directory](#working-directory) exports, then `cd` to `~/.meta-skills/skills/pc-report`.
+1. Apply the [working directory](#working-directory) exports, then `cd` to `~/.meta-skills/skills/productivity/pc/pc-report`.
 2. Pick the script for language + OS (see slash table).
 3. On Linux, ensure `sysstat` / `sar` data is available (`SADIR` defaults to `/var/log/sysstat`).
 4. Run the script and return the full stdout to the user.

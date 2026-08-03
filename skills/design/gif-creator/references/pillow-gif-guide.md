@@ -23,7 +23,7 @@ python3 -m pip install pillow
 Via Meta-Skills (venv partagé) :
 
 ```bash
-cd ~/.meta-skills/skills/gif-creator
+cd ~/.meta-skills/skills/design/gif-creator
 ~/.meta-skills/install.sh pip init .
 ```
 

@@ -31,11 +31,11 @@ export IS_GLOBAL="{IS_GLOBAL}"
 export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
 [ -f "$HOME/.meta-skills/.env" ] && set -a && . "$HOME/.meta-skills/.env" && set +a
 [ -f "{SKILL_PATH}/.env" ] && set -a && . "{SKILL_PATH}/.env" && set +a
-cd ~/.meta-skills/skills/eset/script
+cd ~/.meta-skills/skills/mdm-antivirus/eset/script
 ```
 
 Prefer `~/.meta-skills/.venv/bin/python`. First deps:
-`cd ~/.meta-skills/skills/eset && ~/.meta-skills/install.sh pip init .`
+`cd ~/.meta-skills/skills/mdm-antivirus/eset && ~/.meta-skills/install.sh pip init .`
 
 ## Credentials — SkillCred `.env`
 
@@ -51,7 +51,7 @@ under `$CURRENT_SKILL_DIRECTORY` (via `script/env_load.py`).
 | `ESET_REFRESH_TOKEN` | Written on login — used to refresh without re-asking password |
 
 ```bash
-cp ~/.meta-skills/skills/eset/.env.example "{SKILL_PATH}/.env"
+cp ~/.meta-skills/skills/mdm-antivirus/eset/.env.example "{SKILL_PATH}/.env"
 # edit ESET_URL / ESET_USERNAME / ESET_PASSWORD
 python cli.py token          # POST /oauth/token → saves tokens into .env
 python cli.py env-check
@@ -236,7 +236,7 @@ List pending patches (unpatched apps / OS / packages) per device. Gateway: `ESET
 
 ## How to run
 
-1. `export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"` then `cd ~/.meta-skills/skills/eset/script`.
+1. `export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"` then `cd ~/.meta-skills/skills/mdm-antivirus/eset/script`.
 2. Ensure `.env` exists next to the registered skill; `/eset_env-check`.
 3. Map `/eset_<…>` → `~/.meta-skills/.venv/bin/python cli.py …`; return JSON.
 4. Tokens are stored in `.env` — do not log or echo them.

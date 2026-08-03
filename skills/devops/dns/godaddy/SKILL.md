@@ -42,7 +42,7 @@ export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
 cd "{SKILL_PATH}"
 ```
 
-Prefer `~/.meta-skills/.venv/bin/python` from `~/.meta-skills/skills/godaddy/`.
+Prefer `~/.meta-skills/.venv/bin/python` from `~/.meta-skills/skills/devops/dns/godaddy/`.
 
 ## Credentials — SkillCred `.env`
 
@@ -71,7 +71,7 @@ python scripts/cli.py env    # prints resolved .env path
 Docs: [How to Authenticate](https://developer.godaddy.com/docs/api-users/auth/how-to) · [PAT scopes](https://developer.godaddy.com/docs/api-users/auth#pat-scopes).  
 To revoke: same [PAT page](https://developer.godaddy.com/en/personal-access-token) → trash icon next to the token.
 
-First deps: `cd ~/.meta-skills/skills/godaddy && ~/.meta-skills/install.sh pip init .`
+First deps: `cd ~/.meta-skills/skills/devops/dns/godaddy && ~/.meta-skills/install.sh pip init .`
 
 ## Discovery ([docs](https://developer.godaddy.com/en/docs/references/rest/domains/v3/discovery))
 

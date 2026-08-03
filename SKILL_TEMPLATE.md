@@ -31,7 +31,7 @@ export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
 cd "{SKILL_PATH}"
 ```
 
-Always `cd` into `{SKILL_PATH}` before running scripts. Prefer the shared interpreter: `~/.meta-skills/.venv/bin/python` (run from the library skill tree when scripts live under `~/.meta-skills/skills/{SKILL_NAME}/`).
+Always `cd` into `{SKILL_PATH}` before running scripts. Prefer the shared interpreter: `~/.meta-skills/.venv/bin/python` (run from the library skill tree when scripts live under `~/.meta-skills/skills/<category>/…/{SKILL_NAME}/`).
 
 ## Slash commands
 
@@ -45,7 +45,7 @@ Always `cd` into `{SKILL_PATH}` before running scripts. Prefer the shared interp
 
 1. `cd` to the [working directory](#working-directory) that exists on this machine (after exports).
 2. Run the CLI for the slash command; parse JSON output when available.
-3. First Python run from the **library** skill folder: `cd ~/.meta-skills/skills/{SKILL_NAME} && ~/.meta-skills/install.sh pip init .`
+3. First Python run from the **library** skill folder: `cd ~/.meta-skills/skills/<category>/…/{SKILL_NAME} && ~/.meta-skills/install.sh pip init .`
 
 ## Notes
 

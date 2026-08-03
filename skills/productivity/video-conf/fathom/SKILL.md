@@ -25,7 +25,7 @@ The CLI code (`scripts/`) is shared once per machine — nothing is re-cloned pe
 
 | Target | Path |
 |--------|------|
-| **Canonical (after Meta-Skills clone)** | `~/.meta-skills/skills/fathom` |
+| **Canonical (after Meta-Skills clone)** | `~/.meta-skills/skills/productivity/video-conf/fathom` |
 | **Cursor** (full tree install) | `~/.cursor/skills/fathom` |
 | **Claude Code** (full tree install) | `~/.claude/skills/fathom` |
 | **Hermes — all profiles** | `~/.hermes/skills/fathom` |
@@ -71,7 +71,7 @@ to the registered skill dir** (the one that holds `.env`) before running —
 
 ```bash
 export CURRENT_SKILL_DIRECTORY="$PWD/.cursor/skills/fathom"  # or your install path
-cd ~/.meta-skills/skills/fathom
+cd ~/.meta-skills/skills/productivity/video-conf/fathom
 python scripts/fetch.py [options]
 ```
 

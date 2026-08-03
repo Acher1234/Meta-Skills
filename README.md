@@ -35,12 +35,13 @@ The heavy parts are shared under `~/.meta-skills`; each tool only receives the `
 ```
 ~/.meta-skills/                       shared library ($META_SKILLS_HOME)
 ├── install.sh                      the meta-installer (driven by /meta-skills)
+├── skills/<category>/…/<name>/     built-in skills (nested by domain)
 ├── ext/<repo>/                     external git skills, cloned ONCE
 |__ .venv/                          shared Python venv (all Python skills)
 
 npm i -g <pkg>                      shared global Node CLIs (agent-browser, …)
 
-        │ we ONLY copy SKILL.md into each tool ↓
+        │ we ONLY copy SKILL.md into each tool (flat by skill basename) ↓
 ~/.cursor/skills/<name>/SKILL.md     ~/.claude/skills/<name>/SKILL.md
 ~/.hermes/skills/<name>/SKILL.md     ~/.openclaw/skills/<name>/SKILL.md
 ```

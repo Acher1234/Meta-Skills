@@ -34,7 +34,7 @@ export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
 cd "{SKILL_PATH}"
 ```
 
-Always `cd` into `{SKILL_PATH}` before running scripts. Prefer the shared interpreter: `~/.meta-skills/.venv/bin/python` (run from the library skill tree when scripts live under `~/.meta-skills/skills/gif-creator/`).
+Always `cd` into `{SKILL_PATH}` before running scripts. Prefer the shared interpreter: `~/.meta-skills/.venv/bin/python` (run from the library skill tree when scripts live under `~/.meta-skills/skills/design/gif-creator/`).
 
 ## Slash commands
 
@@ -47,12 +47,12 @@ Always `cd` into `{SKILL_PATH}` before running scripts. Prefer the shared interp
 
 ## How to run
 
-1. `cd` to the [working directory](#working-directory) that exists on this machine (after exports). Prefer library path: `~/.meta-skills/skills/gif-creator`.
-2. First Python run: `cd ~/.meta-skills/skills/gif-creator && ~/.meta-skills/install.sh pip init .`
+1. `cd` to the [working directory](#working-directory) that exists on this machine (after exports). Prefer library path: `~/.meta-skills/skills/design/gif-creator`.
+2. First Python run: `cd ~/.meta-skills/skills/design/gif-creator && ~/.meta-skills/install.sh pip init .`
 3. Run the CLI; parse JSON stdout when available.
 
 ```bash
-cd ~/.meta-skills/skills/gif-creator
+cd ~/.meta-skills/skills/design/gif-creator
 ~/.meta-skills/.venv/bin/python scripts/create_gif.py toss ./logo.png ./out.gif
 ```
 

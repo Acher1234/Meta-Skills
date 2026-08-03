@@ -4,7 +4,7 @@ GoDaddy Domains API v3 — discovery, owned domain get, and DNS CLI.
 
 ```bash
 export CURRENT_SKILL_DIRECTORY="$PWD/.cursor/skills/godaddy"
-cd ~/.meta-skills/skills/godaddy
+cd ~/.meta-skills/skills/devops/dns/godaddy
 ~/.meta-skills/install.sh pip init .
 cp .env.example "$CURRENT_SKILL_DIRECTORY/.env"   # set GODADDY_PAT
 python scripts/cli.py check example.com

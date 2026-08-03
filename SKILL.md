@@ -28,13 +28,13 @@ tool only gets the lightweight `SKILL.md`.
 ~/.meta-skills/                 shared library root (this repo, or $META_SKILLS_HOME)
 ├── install.sh                  installer helper (fetch / pip init / npm init)
 ├── meta-skill-common/          shared Python package (import as ``common`` — SkillCred, …)
-├── skills/<name>/              built-in skills (CLI + SKILL.md)
+├── skills/<category>/…/<name>/ built-in skills (nested by domain; CLI + SKILL.md)
 ├── ext/<name>/                 external skill repos, cloned ONCE
 ├── .venv/                      shared Python venv — every python skill reuses it
 └── .env                        optional machine-wide secrets (sourced by skills)
 
         │ register = cp ONLY SKILL.md (with placeholders filled); credentials next to it ↓
-~/.cursor/skills/<name>/{SKILL.md,.env}   (or ./.cursor/skills/<name>/ per project)
+~/.cursor/skills/<name>/{SKILL.md,.env}   (flat by skill basename; or ./.cursor/skills/<name>/)
 ```
 
 **Hybrid model:** CLI code is **shared** under `~/.meta-skills/…`; credentials
@@ -51,7 +51,7 @@ explicitly documents a full-tree exception).
 
 | Layer | Location | Shared? |
 |-------|----------|---------|
-| CLI / Python code | `~/.meta-skills/skills/<name>/` (or `ext/<name>/`) | **Yes** |
+| CLI / Python code | `~/.meta-skills/skills/<category>/…/<name>/` (or `ext/<name>/`) | **Yes** |
 | Shared helpers | `~/.meta-skills/meta-skill-common/` (pip-installed as `common`) | **Yes** |
 | Python deps | `~/.meta-skills/.venv` | **Yes** |
 | Registered skill | `$DEST/<name>/SKILL.md` only | Lightweight discovery copy |
@@ -63,7 +63,7 @@ in their Working directory section before running CLIs. `SkillCred` reads that e
 (see `meta-skill-common/skill_cred.py`); if unset, it falls back to the process cwd.
 
 **Authoring a skill that uses it:** start from [`SKILL_TEMPLATE.md`](SKILL_TEMPLATE.md)
-(same Working directory + placeholder block as `skills/google-workspace/SKILL.md`).
+(same Working directory + placeholder block as `skills/productivity/google/google-workspace/SKILL.md`).
 
 ```python
 from common.skill_cred import SkillCred
@@ -172,27 +172,44 @@ Check in order:
 ### 3) Which skills
 
 Ask for any of:
-- **built-in** skills from Meta-Skills (`skills/<name>/`, catalog below),
+- **built-in** skills from Meta-Skills (nested under `skills/<category>/…/<name>/`, catalog below),
 - an **external git URL** (any skill repo), or
 - a **local path** to a skill folder.
 
 Do **not** re-install `meta-skills` here — the installer itself is **global only**
 (see [`INSTALL_PROMPT.md`](INSTALL_PROMPT.md)). When registering catalog skills, copy
-only the skills the user asked for.
+only the skills the user asked for. Use the **catalog Folder** as `SRC` (not a flat `skills/<name>`).
+Register into `$DEST/<name>/` using the skill **basename** (destinations stay flat).
 
 ### Skills catalog (show this to the user)
 
-**Built-in (`skills/`)**
+**Built-in (`skills/` — nested by category)**
+
+#### Productivity
 
 | # | Name | Folder | What it does |
 |---|------|--------|--------------|
-| 1 | `google-workspace` | `skills/google-workspace/` | Gmail, Calendar, Drive, Docs, Sheets, Contacts, Chat |
-| 2 | `pc-report` | `skills/pc-report/` | Host monitoring report (Linux / macOS / Windows) |
-| 3 | `fathom` | `skills/fathom/` | Fathom meetings, transcripts, AI summaries, action items |
-| 4 | `godaddy` | `skills/godaddy/` | GoDaddy v3 discovery, owned domains, DNS CLI |
-| 5 | `gif-creator` | `skills/gif-creator/` | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
-| 6 | `eset` | `skills/eset/` | ESET Connect OAuth + device / policy / incident / automation / patch APIs |
+| 1 | `google-workspace` | `skills/productivity/google/google-workspace/` | Gmail, Calendar, Drive, Docs, Sheets, Contacts, Chat |
+| 2 | `pc-report` | `skills/productivity/pc/pc-report/` | Host monitoring report (Linux / macOS / Windows) |
+| 3 | `fathom` | `skills/productivity/video-conf/fathom/` | Fathom meetings, transcripts, AI summaries, action items |
 
+#### DevOps / DNS
+
+| # | Name | Folder | What it does |
+|---|------|--------|--------------|
+| 4 | `godaddy` | `skills/devops/dns/godaddy/` | GoDaddy v3 discovery, owned domains, DNS CLI |
+
+#### MDM & Antivirus
+
+| # | Name | Folder | What it does |
+|---|------|--------|--------------|
+| 5 | `eset` | `skills/mdm-antivirus/eset/` | ESET Connect OAuth + device / policy / incident / automation / patch APIs |
+
+#### Design
+
+| # | Name | Folder | What it does |
+|---|------|--------|--------------|
+| 6 | `gif-creator` | `skills/design/gif-creator/` | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
 
 **External** — any git URL (cloned into `~/.meta-skills/ext/<name>`).
 
@@ -210,7 +227,8 @@ Else:                      git clone https://github.com/Acher1234/Meta-Skills.gi
 
 # 4a) EXTERNAL git skill → fetch once:
 SRC=$(cd ~/.meta-skills && ./install.sh fetch <git-url> [name])
-# 4b) BUILT-IN: SRC=~/.meta-skills/skills/<name>
+# 4b) BUILT-IN: SRC=~/.meta-skills/<catalog Folder>  (e.g. skills/mdm-antivirus/eset)
+#     <name> for DEST = basename of that folder (eset), NOT the category path
 # 4c) LOCAL: SRC is the given path
 
 # 5) Register = copy ONLY the requested skill's SKILL.md into each chosen tool/scope,
@@ -234,9 +252,10 @@ cp "$SRC/SKILL.md" "$DEST/<name>/SKILL.md"
 ```bash
 cd ~/.meta-skills
 
-# Built-in → Hermes (all profiles)
+# Built-in → Hermes (all profiles); SRC is nested, DEST stays flat by basename
 mkdir -p ~/.hermes/skills/google-workspace
-cp ~/.meta-skills/skills/google-workspace/SKILL.md ~/.hermes/skills/google-workspace/SKILL.md
+cp ~/.meta-skills/skills/productivity/google/google-workspace/SKILL.md \
+  ~/.hermes/skills/google-workspace/SKILL.md
 # then substitute {IS_GLOBAL}=TRUE, {TYPE_OF_AI_TOOLS}=HERMES,
 # {SKILL_PATH}=$HOME/.hermes/skills/google-workspace in that file
 
@@ -273,13 +292,13 @@ Pick `DEST` from the [Targets table](#targets--scopes). Then `mkdir -p "$DEST/<n
 
 | Source (`~/.meta-skills/…`) | Target |
 |-----------------------------|--------|
-| `skills/<name>/SKILL.md` | `$DEST/<name>/SKILL.md` |
+| `skills/<category>/…/<name>/SKILL.md` | `$DEST/<name>/SKILL.md` (flat basename) |
 | `ext/<name>/SKILL.md` | `$DEST/<name>/SKILL.md` |
 | `SKILL.md` (this installer) | **global only** — `~/.<tool>/skills/meta-skills/SKILL.md` via [`INSTALL_PROMPT.md`](INSTALL_PROMPT.md); never into project `./.<tool>/skills/` as a side effect of installing other skills |
 
 ## After install
 
-- CLI working dirs stay under `~/.meta-skills/skills/<name>` (or `~/.meta-skills/ext/<name>`).
+- CLI working dirs stay under the nested catalog path (e.g. `~/.meta-skills/skills/mdm-antivirus/eset`) or `~/.meta-skills/ext/<name>`.
 - Python skills should use `~/.meta-skills/.venv/bin/python` (has `common` installed).
 - Credentials / tokens resolve under `$CURRENT_SKILL_DIRECTORY` (the registered skill dir).
 - Re-run `/meta-skills` anytime to **pull + ask targets/skills again + re-register**.

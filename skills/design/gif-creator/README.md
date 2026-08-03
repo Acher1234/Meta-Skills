@@ -5,7 +5,7 @@ Generate animated GIFs with **Pillow** (palette + binary transparency, toss / li
 Shared CLI under Meta-Skills; no credentials required.
 
 ```bash
-cd ~/.meta-skills/skills/gif-creator
+cd ~/.meta-skills/skills/design/gif-creator
 ~/.meta-skills/install.sh pip init .
 ~/.meta-skills/.venv/bin/python scripts/create_gif.py toss logo.png out.gif
 ```
