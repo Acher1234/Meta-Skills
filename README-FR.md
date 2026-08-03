@@ -138,7 +138,7 @@ Les secrets vivent dans le `.env` de l'outil (`~/.cursor/.env`, `~/.claude/.env`
 
 ## 🧩 Créer un nouveau skill
 
-Voir **[`SKILL_TEMPLATE.md`](SKILL_TEMPLATE.md)** (structure, `SKILL.md`, slash `/{skill}_{command}`,
+Voir **[`SKILL_TEMPLATE.md`](SKILL_TEMPLATE.md)**, **[`META_SKILL_TEMPLATE.md`](META_SKILL_TEMPLATE.md)** (pour les meta-skills installateurs), et **[`ORIGIN_TEMPLATE.md`](ORIGIN_TEMPLATE.md)** (structure, `SKILL.md`, slash `/{skill}_{command}`,
 conventions, sécurité). Chaque sous-projet contient :
 
 - un **`SKILL.md`** (EN) — agent skill + actions `/{skill}_{command}` ;

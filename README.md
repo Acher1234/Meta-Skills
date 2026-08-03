@@ -137,7 +137,7 @@ Secrets live in the tool `.env` (`~/.cursor/.env`, `~/.claude/.env`, `$HERMES_HO
 
 ## 🧩 Create a new skill
 
-See **[`SKILL_TEMPLATE.md`](SKILL_TEMPLATE.md)** (structure, `SKILL.md`, slash `/{skill}_{command}`,
+See **[`SKILL_TEMPLATE.md`](SKILL_TEMPLATE.md)**, **[`META_SKILL_TEMPLATE.md`](META_SKILL_TEMPLATE.md)** (for installer meta-skills), and **[`ORIGIN_TEMPLATE.md`](ORIGIN_TEMPLATE.md)** (structure, `SKILL.md`, slash `/{skill}_{command}`,
 conventions, security). Each sub-project contains:
 
 - a **`SKILL.md`** (EN) — agent skill + `/{skill}_{command}` actions;

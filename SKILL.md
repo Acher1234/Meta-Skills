@@ -62,7 +62,7 @@ that contains the **registered** `SKILL.md` (where credentials live). Skills exp
 in their Working directory section before running CLIs. `SkillCred` reads that env
 (see `meta-skill-common/skill_cred.py`); if unset, it falls back to the process cwd.
 
-**Authoring a skill that uses it:** start from [`SKILL_TEMPLATE.md`](SKILL_TEMPLATE.md)
+**Authoring a skill that uses it:** start from [`SKILL_TEMPLATE.md`](SKILL_TEMPLATE.md) (or [`META_SKILL_TEMPLATE.md`](META_SKILL_TEMPLATE.md) for installer/hub skills like meta-jira); document provenance with [`ORIGIN_TEMPLATE.md`](ORIGIN_TEMPLATE.md)
 (same Working directory + placeholder block as `skills/productivity/google/google-workspace/SKILL.md`).
 
 ```python
@@ -192,24 +192,25 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 | 1 | `google-workspace` | `skills/productivity/google/google-workspace/` | Gmail, Calendar, Drive, Docs, Sheets, Contacts, Chat |
 | 2 | `pc-report` | `skills/productivity/pc/pc-report/` | Host monitoring report (Linux / macOS / Windows) |
 | 3 | `fathom` | `skills/productivity/video-conf/fathom/` | Fathom meetings, transcripts, AI summaries, action items |
+| 4 | `meta-jira` | `skills/productivity/meta-jira/` | Installs Jira sub-skills (issue, search, agile, admin, …) + shared SkillCred `.env` |
 
 #### DevOps / DNS
 
 | # | Name | Folder | What it does |
 |---|------|--------|--------------|
-| 4 | `godaddy` | `skills/devops/dns/godaddy/` | GoDaddy v3 discovery, owned domains, DNS CLI |
+| 5 | `godaddy` | `skills/devops/dns/godaddy/` | GoDaddy v3 discovery, owned domains, DNS CLI |
 
 #### MDM & Antivirus
 
 | # | Name | Folder | What it does |
 |---|------|--------|--------------|
-| 5 | `eset` | `skills/mdm-antivirus/eset/` | ESET Connect OAuth + device / policy / incident / automation / patch APIs |
+| 6 | `eset` | `skills/mdm-antivirus/eset/` | ESET Connect OAuth + device / policy / incident / automation / patch APIs |
 
 #### Design
 
 | # | Name | Folder | What it does |
 |---|------|--------|--------------|
-| 6 | `gif-creator` | `skills/design/gif-creator/` | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
+| 7 | `gif-creator` | `skills/design/gif-creator/` | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
 
 **External** — any git URL (cloned into `~/.meta-skills/ext/<name>`).
 
