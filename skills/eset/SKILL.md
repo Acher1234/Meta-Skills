@@ -62,14 +62,15 @@ python cli.py env-check
 [`POST /oauth/token`](https://help.eset.com/eset_connect/en-US/authentication_oauth_token_post.html)
 lives in `authentication.py` (`TOKEN_PATH = "/oauth/token"`).
 
-Token resolution order for every API command:
+Token resolution (inside each API request via `BaseClient`):
 
-1. `--token` if passed
+1. `--token` if passed (one-shot override)
 2. else `ESET_ACCESS_TOKEN` from `.env`
 3. else refresh via `ESET_REFRESH_TOKEN`
 4. else password grant with `ESET_USERNAME` / `ESET_PASSWORD`
 
-Successful exchanges **upsert** `ESET_ACCESS_TOKEN` / `ESET_REFRESH_TOKEN` into the SkillCred `.env`.
+On **401**, the client forces a new token (refresh → password) and **retries the request once**.
+Successful exchanges upsert `ESET_ACCESS_TOKEN` / `ESET_REFRESH_TOKEN` into the SkillCred `.env`.
 
 ## Slash commands
 
@@ -218,6 +219,21 @@ Convenience builders (one per documented `task.action.name`; all accept `--devic
 
 `--postpone` values: `Cannot` `OneHour` `ThreeHours` `FiveHours` `OneDay` `ThreeDays` `SevenDays` `FifteenDays` `TwentyDays` `ThirtyDays`. For any action not covered by a flag (or to send raw params), use `tasks create --action NAME --params-file params.json` or a full `--file body.json`.
 
+**`RunCommand` + MFA:** if `tasks run-command` returns **HTTP 400 or 500**, the tenant usually needs **MFA enabled** for this action in ESET PROTECT / Business Account. Fix MFA first — do not treat it as a bad CLI payload.
+
+### Patch Management ([API docs](https://help.eset.com/eset_connect/en-US/patch_management.html))
+
+List pending patches (unpatched apps / OS / packages) per device. Gateway: `ESET_PATCH_URL` or `https://<region>.patch-management.eset.systems`. Apply uses the **Automation** gateway (`ApplyApplicationPatch`), same as `/eset_tasks_apply-patch`.
+
+| Slash | CLI | Notes |
+|-------|-----|--------|
+| `/eset_patches_list` | `python cli.py patches list [--device UUID] [--group UUID] [--patch-type PATCH_TYPE_APPLICATION\|…] [--page-size N]` | pending patches |
+| `/eset_patches_recent` | `python cli.py patches recent` | recent app patching details |
+| `/eset_patches_details` | `python cli.py patches details [--page-size N]` | process details |
+| `/eset_patches_apply` | `python cli.py patches apply --device UUID --application-uuid UUID [--display-name N] [--expire-time RFC3339]` | Automation `ApplyApplicationPatch` |
+
+**UUID mapping:** from `patches list`, use **`devices[].uuid`** as `--application-uuid` (same value as `applicationUuid` in `patches recent` / `patches details`). It is *not* the device UUID. Prefer `--device` on list (unfiltered can timeout) and `--expire-time` on apply. Confirm target app + device with the user before applying. Equivalent: `/eset_tasks_apply-patch`.
+
 ## How to run
 
 1. `export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"` then `cd ~/.meta-skills/skills/eset/script`.
@@ -240,7 +256,7 @@ python cli.py devices list          # reuses ESET_ACCESS_TOKEN from .env
 
 - `authentication.py` owns `TOKEN_PATH=/oauth/token`, token exchange, and `.env` persistence.
 - `env_load.py` resolves the SkillCred `.env` (`CURRENT_SKILL_DIRECTORY`).
-- API clients keep only implemented endpoints; gateways: `automation` / `application-management` / `incident-management`.
+- API clients keep only implemented endpoints; gateways: `automation` / `application-management` / `incident-management` / `patch-management`.
 - Never commit `.env` or echo tokens.
 - `202` = request cached; retry with `response-id`.
 - Docs: [POST /oauth/token](https://help.eset.com/eset_connect/en-US/authentication_oauth_token_post.html).

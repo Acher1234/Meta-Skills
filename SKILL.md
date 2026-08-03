@@ -191,7 +191,7 @@ only the skills the user asked for.
 | 3 | `fathom` | `skills/fathom/` | Fathom meetings, transcripts, AI summaries, action items |
 | 4 | `godaddy` | `skills/godaddy/` | GoDaddy v3 discovery, owned domains, DNS CLI |
 | 5 | `gif-creator` | `skills/gif-creator/` | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
-| 6 | `eset` | `skills/eset/` | ESET Connect OAuth + device / policy / incident / automation APIs |
+| 6 | `eset` | `skills/eset/` | ESET Connect OAuth + device / policy / incident / automation / patch APIs |
 
 
 **External** — any git URL (cloned into `~/.meta-skills/ext/<name>`).

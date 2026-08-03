@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ESET Connect CLI — OAuth + Device / App / Asset / Policy / Incident / Automation APIs."""
+"""ESET Connect CLI — OAuth + Device / App / Asset / Policy / Incident / Automation / Patch APIs."""
 
 from __future__ import annotations
 
@@ -24,6 +24,7 @@ import device_management as dm  # noqa: E402
 import incident_detections as idet  # noqa: E402
 import incident_edr as iedr  # noqa: E402
 import incident_incidents as iinc  # noqa: E402
+import patch_management as patchm  # noqa: E402
 import policy_management as pm  # noqa: E402
 from _client import ApiError  # noqa: E402
 from env_load import (  # noqa: E402
@@ -97,6 +98,10 @@ def resolve_incident_url(base_url: str) -> str:
     return _service_url(base_url, "incident-management", "ESET_INCIDENT_URL")
 
 
+def resolve_patch_url(base_url: str) -> str:
+    return _service_url(base_url, "patch-management", "ESET_PATCH_URL")
+
+
 def load_config(require_credentials: bool = True) -> dict:
     load_env()
     base = normalize_base_url(os.getenv("ESET_URL", ""))
@@ -122,66 +127,65 @@ def load_config(require_credentials: bool = True) -> dict:
         "asset_url": resolve_asset_url(base),
         "policy_url": resolve_policy_url(base),
         "incident_url": resolve_incident_url(base),
+        "patch_url": resolve_patch_url(base),
         "username": username,
         "password": password,
         "env_path": str(env_path()),
     }
 
 
-def _resolve_token(args: argparse.Namespace, cfg: dict) -> str:
-    """Reuse ESET_ACCESS_TOKEN from `.env`, else refresh / password grant and save."""
-    try:
-        result = auth.ensure_access_token(
-            cfg["token_url"],
-            username=cfg.get("username"),
-            password=cfg.get("password"),
-            access_token=getattr(args, "token", None),
-            refresh_token=os.getenv("ESET_REFRESH_TOKEN", "").strip() or None,
-            force=bool(getattr(args, "force_token", False)),
-        )
-    except auth.AuthError as exc:
-        raise ConfigError(str(exc)) from exc
-    return result["access_token"]
+def _auth_kwargs(args: argparse.Namespace, cfg: dict) -> dict:
+    return {
+        "token_url": cfg["token_url"],
+        "username": cfg.get("username") or None,
+        "password": cfg.get("password") or None,
+        "access_token": getattr(args, "token", None) or None,
+    }
 
 
 def _client(args: argparse.Namespace) -> "dm.DeviceManagementClient":
     cfg = load_config(require_credentials=False)
-    return dm.DeviceManagementClient(cfg["api_url"], _resolve_token(args, cfg))
+    return dm.DeviceManagementClient(cfg["api_url"], **_auth_kwargs(args, cfg))
 
 
 def _app_client(args: argparse.Namespace) -> "am.ApplicationManagementClient":
     cfg = load_config(require_credentials=False)
-    return am.ApplicationManagementClient(cfg["app_url"], _resolve_token(args, cfg))
+    return am.ApplicationManagementClient(cfg["app_url"], **_auth_kwargs(args, cfg))
 
 
 def _automation_client(args: argparse.Namespace) -> "autom.AutomationClient":
     cfg = load_config(require_credentials=False)
-    return autom.AutomationClient(cfg["automation_url"], _resolve_token(args, cfg))
+    return autom.AutomationClient(cfg["automation_url"], **_auth_kwargs(args, cfg))
 
 
 def _asset_client(args: argparse.Namespace) -> "asm.AssetManagementClient":
     cfg = load_config(require_credentials=False)
-    return asm.AssetManagementClient(cfg["asset_url"], _resolve_token(args, cfg))
+    return asm.AssetManagementClient(cfg["asset_url"], **_auth_kwargs(args, cfg))
 
 
 def _policy_client(args: argparse.Namespace) -> "pm.PolicyManagementClient":
     cfg = load_config(require_credentials=False)
-    return pm.PolicyManagementClient(cfg["policy_url"], _resolve_token(args, cfg))
+    return pm.PolicyManagementClient(cfg["policy_url"], **_auth_kwargs(args, cfg))
 
 
 def _detections_client(args: argparse.Namespace) -> "idet.DetectionsClient":
     cfg = load_config(require_credentials=False)
-    return idet.DetectionsClient(cfg["incident_url"], _resolve_token(args, cfg))
+    return idet.DetectionsClient(cfg["incident_url"], **_auth_kwargs(args, cfg))
 
 
 def _edr_client(args: argparse.Namespace) -> "iedr.EdrClient":
     cfg = load_config(require_credentials=False)
-    return iedr.EdrClient(cfg["incident_url"], _resolve_token(args, cfg))
+    return iedr.EdrClient(cfg["incident_url"], **_auth_kwargs(args, cfg))
 
 
 def _incidents_client(args: argparse.Namespace) -> "iinc.IncidentsClient":
     cfg = load_config(require_credentials=False)
-    return iinc.IncidentsClient(cfg["incident_url"], _resolve_token(args, cfg))
+    return iinc.IncidentsClient(cfg["incident_url"], **_auth_kwargs(args, cfg))
+
+
+def _patch_client(args: argparse.Namespace) -> "patchm.PatchManagementClient":
+    cfg = load_config(require_credentials=False)
+    return patchm.PatchManagementClient(cfg["patch_url"], **_auth_kwargs(args, cfg))
 
 
 def _print_json(data: Any) -> None:
@@ -214,11 +218,52 @@ def cmd_env_check(args: argparse.Namespace) -> int:
             "asset_url": cfg["asset_url"],
             "policy_url": cfg["policy_url"],
             "incident_url": cfg["incident_url"],
+            "patch_url": cfg["patch_url"],
             "username": cfg["username"],
             "has_access_token": bool(os.getenv("ESET_ACCESS_TOKEN", "").strip()),
             "has_refresh_token": bool(os.getenv("ESET_REFRESH_TOKEN", "").strip()),
         }
     )
+    return 0
+
+
+def cmd_patches(args: argparse.Namespace) -> int:
+    """Patch Management — list pending patches / apply via Automation."""
+    cmd = args.patches_cmd
+    if cmd == "apply":
+        # ApplyApplicationPatch lives on Automation, not Patch Management REST.
+        client = _automation_client(args)
+        body = autom.build_task(
+            "ApplyApplicationPatch",
+            params=autom.build_apply_patch_params(args.application_uuid),
+            targets=autom.build_targets(devices=args.device, groups=args.group),
+            display_name=args.display_name,
+            description=args.description,
+            expire_time=args.expire_time,
+        )
+        _print_json(client.create_task(body))
+        return 0
+
+    client = _patch_client(args)
+    if cmd == "list":
+        _print_json(
+            client.list_device_patches(
+                device_uuid=args.device,
+                device_group_uuid=args.group,
+                patch_type=args.patch_type,
+                page_size=args.page_size,
+                page_token=args.page_token,
+            )
+        )
+    elif cmd == "recent":
+        _print_json(client.list_recent_application_patching_details())
+    elif cmd == "details":
+        _print_json(
+            client.list_patching_process_details(
+                page_size=args.page_size,
+                page_token=args.page_token,
+            )
+        )
     return 0
 
 
@@ -672,8 +717,8 @@ def build_parser() -> argparse.ArgumentParser:
         prog="cli.py",
         description=(
             "ESET Connect CLI: OAuth token (/oauth/token), Device / Application / "
-            "Asset / Policy Management, Automation (Device tasks) and Incident "
-            "Management (detections, EDR rules, incidents) APIs "
+            "Asset / Policy Management, Automation (Device tasks), Incident "
+            "Management, and Patch Management APIs "
             "(resolves .env + regional gateway URLs)."
         ),
     )
@@ -1128,6 +1173,66 @@ def build_parser() -> argparse.ArgumentParser:
     t_patch.add_argument("--application-uuid", required=True, help="UUID of the application to patch")
 
     p_tasks.set_defaults(func=cmd_tasks)
+
+    p_patches = sub.add_parser(
+        "patches",
+        parents=[api_common],
+        help="Patch Management (pending device patches + apply)",
+    )
+    patches_sub = p_patches.add_subparsers(dest="patches_cmd", required=True)
+    pt_list = patches_sub.add_parser("list", help="GET /v1/device-patches")
+    pt_list.add_argument("--device", help="Filter by device UUID")
+    pt_list.add_argument("--group", help="Filter by device-group UUID (nested groups included)")
+    pt_list.add_argument(
+        "--patch-type",
+        choices=[
+            "PATCH_TYPE_UNSPECIFIED",
+            "PATCH_TYPE_APPLICATION",
+            "PATCH_TYPE_OPERATING_SYSTEM",
+            "PATCH_TYPE_PACKAGE",
+        ],
+        help="Filter by patch category",
+    )
+    _add_paging(pt_list)
+    patches_sub.add_parser(
+        "recent",
+        help="GET /v1/application-patching-processes/recent/details",
+    )
+    pt_details = patches_sub.add_parser(
+        "details", help="GET /v1/patching-process-details"
+    )
+    _add_paging(pt_details)
+    pt_apply = patches_sub.add_parser(
+        "apply",
+        help="POST /v1/device_tasks ApplyApplicationPatch (Automation)",
+    )
+    pt_apply.add_argument(
+        "--device",
+        action="append",
+        default=[],
+        metavar="UUID",
+        help="Target device UUID (repeatable)",
+    )
+    pt_apply.add_argument(
+        "--group",
+        action="append",
+        default=[],
+        metavar="UUID",
+        help="Target device-group UUID (repeatable)",
+    )
+    pt_apply.add_argument(
+        "--application-uuid",
+        required=True,
+        help="Application UUID from patches list (devices[].uuid / applicationUuid)",
+    )
+    pt_apply.add_argument("--display-name", help="Task display name")
+    pt_apply.add_argument("--description", help="Task description")
+    pt_apply.add_argument(
+        "--expire-time",
+        metavar="RFC3339",
+        help="Manual trigger expireTime (e.g. 2026-03-21T11:30:34Z)",
+    )
+    p_patches.set_defaults(func=cmd_patches)
 
     return parser
 
