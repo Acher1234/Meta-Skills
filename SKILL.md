@@ -188,6 +188,8 @@ only the skills the user asked for.
 |---|------|--------|--------------|
 | 1 | `google-workspace` | `skills/google-workspace/` | Gmail, Calendar, Drive, Docs, Sheets, Contacts, Chat |
 | 2 | `pc-report` | `skills/pc-report/` | Host monitoring report (Linux / macOS / Windows) |
+| 3 | `fathom` | `skills/fathom/` | Fathom meetings, transcripts, AI summaries, action items |
+| 4 | `godaddy` | `skills/godaddy/` | GoDaddy v3 discovery, owned domains, DNS CLI |
 
 **External** — any git URL (cloned into `~/.meta-skills/ext/<name>`).
 
