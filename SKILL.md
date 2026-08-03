@@ -190,6 +190,8 @@ only the skills the user asked for.
 | 2 | `pc-report` | `skills/pc-report/` | Host monitoring report (Linux / macOS / Windows) |
 | 3 | `fathom` | `skills/fathom/` | Fathom meetings, transcripts, AI summaries, action items |
 | 4 | `godaddy` | `skills/godaddy/` | GoDaddy v3 discovery, owned domains, DNS CLI |
+| 5 | `gif-creator` | `skills/gif-creator/` | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
+
 
 **External** — any git URL (cloned into `~/.meta-skills/ext/<name>`).
 
