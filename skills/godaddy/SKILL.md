@@ -51,14 +51,25 @@ Prefer `~/.meta-skills/.venv/bin/python` from `~/.meta-skills/skills/godaddy/`.
 | `GODADDY_PAT` | Required — Personal Access Token |
 | `BASE_URL` | Default `https://api.godaddy.com` |
 
+### Create a Personal Access Token (PAT)
+
+1. Open **[Personal Access Token](https://developer.godaddy.com/en/personal-access-token)** and sign in to your GoDaddy account.
+2. Click **+ Generate Token**.
+3. Fill **Name**, **Expiration**, and **Scopes**:
+   - `domains.domain:read` — discovery (`suggest` / `check`) + `domain get`
+   - `domains.dns:update` — DNS add / delete (optional if you only need read/discovery)
+   - Or pick the **Domains & DNS** bundle for full domain/DNS access
+4. Click **Generate Token**, then **copy the token immediately** — it is shown only once.
+5. Store it in the skill `.env` (never commit it, never paste it into chat):
+
 ```bash
 cp .env.example "{SKILL_PATH}/.env"
-# edit: GODADDY_PAT=...
+# edit: GODADDY_PAT=<paste token>
 python scripts/cli.py env    # prints resolved .env path
 ```
 
-Scopes: `domains.domain:read` for discovery / owned domain get; `domains.dns:update` for DNS add/delete.
-Generate a PAT: [How to Authenticate](https://developer.godaddy.com/docs/api-users/auth/how-to).
+Docs: [How to Authenticate](https://developer.godaddy.com/docs/api-users/auth/how-to) · [PAT scopes](https://developer.godaddy.com/docs/api-users/auth#pat-scopes).  
+To revoke: same [PAT page](https://developer.godaddy.com/en/personal-access-token) → trash icon next to the token.
 
 First deps: `cd ~/.meta-skills/skills/godaddy && ~/.meta-skills/install.sh pip init .`
 
