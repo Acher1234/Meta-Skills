@@ -187,7 +187,9 @@ only the skills the user asked for.
 | # | Name | Folder | What it does |
 |---|------|--------|--------------|
 | 1 | `google-workspace` | `skills/google-workspace/` | Gmail, Calendar, Drive, Docs, Sheets, Contacts, Chat |
-| 2 | `pc-report` | `skills/pc-report/` | Host monitoring report (Linux / macOS / Windows) |
+| 2 | `gif-creator` | `skills/gif-creator/` | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
+| 3 | `pc-report` | `skills/pc-report/` | Host monitoring report (Linux / macOS / Windows) |
+| 4 | `fathom` | `skills/fathom/` | Fathom meetings, transcripts, AI summaries, action items |
 
 **External** — any git URL (cloned into `~/.meta-skills/ext/<name>`).
 
