@@ -10,10 +10,10 @@ import subprocess
 from pathlib import Path
 from datetime import date
 
-from utils import FathomClient, format_meeting_markdown, meeting_filename, ENV_PATH
+from utils import FathomClient, format_meeting_markdown, meeting_filename
+from skill_env import ENV
 
-# Registered skill dir (`$CURRENT_SKILL_DIRECTORY`) — .env, meetings output, etc.
-SKILL_DIR = ENV_PATH.workspace
+SKILL_DIR = ENV.env_cred().workspace
 DEFAULT_OUTPUT = SKILL_DIR / "meetings"
 TRANSCRIPT_ANALYZER = SKILL_DIR / "transcript-analyzer" / "scripts"
 # CLI code stays in the shared library next to this file.

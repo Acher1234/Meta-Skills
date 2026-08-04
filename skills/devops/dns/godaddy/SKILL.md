@@ -40,7 +40,7 @@ export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
 ~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/devops/dns/godaddy/scripts/cli.py env
 ```
 
-`env_load.py` loads `.env` via SkillCred — do not `source` it in the shell. `CURRENT_SKILL_DIRECTORY` is the only required export.
+`skill_env.py` loads `.env` via SkillCred — do not `source` it in the shell. `CURRENT_SKILL_DIRECTORY` is the only required export.
 
 Prefer `~/.meta-skills/.venv/bin/python` from `~/.meta-skills/skills/devops/dns/godaddy/`.
 

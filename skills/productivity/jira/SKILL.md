@@ -21,7 +21,23 @@ cd ~/.meta-skills/skills/productivity/jira
 jira-as --help
 ```
 
-`install.sh pip init` reads `requirements.txt` (includes `jira-as`). All commands in `command.md/` and `exemple.md/` assume `jira-as` is on `PATH` (via `~/.meta-skills/.venv/bin`).
+`install.sh pip init` reads `requirements.txt` (includes `jira-as`). Load credentials into the shell, then call `jira-as` directly:
+
+```bash
+export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
+eval "$(~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/productivity/jira/scripts/skill_env.py)"
+jira-as issue get PROJ-123
+```
+
+PowerShell:
+
+```powershell
+$env:CURRENT_SKILL_DIRECTORY = "{SKILL_PATH}"
+~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/productivity/jira/scripts/skill_env.py --shell powershell | Invoke-Expression
+jira-as issue get PROJ-123
+```
+
+`skill_env.py` reads `.env` via SkillCred and prints export commands for the detected OS/shell — no manual `source .env`.
 
 ## When to use
 
@@ -40,10 +56,9 @@ Before running, point SkillCred at the registered skill dir (credentials live in
 
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/productivity/jira/scripts/cli.py env
+eval "$(~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/productivity/jira/scripts/skill_env.py)"
+jira-as <subcommand> …
 ```
-
-`env_load.py` loads `.env` via SkillCred — no need to `source` it in bash. `CURRENT_SKILL_DIRECTORY` is the only required export so Python resolves `{SKILL_PATH}/.env` instead of the library tree.
 
 Docs and command lists live in `~/.meta-skills/skills/productivity/jira/`. `{SKILL_PATH}` is the registered `SKILL.md` directory (credentials only).
 

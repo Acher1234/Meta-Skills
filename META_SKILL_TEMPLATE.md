@@ -18,7 +18,7 @@ skills/<category>/…/meta-{domain}/
 ├── requirements.txt
 ├── scripts/              # shared CLI (at least env / env-check)
 │   ├── cli.py
-│   └── env_load.py
+│   └── skill_env.py      # SkillEnv subclass (verify only)
 └── sub_skills/
     ├── <sub-a>/SKILL.md  # installable unit
     ├── <sub-b>/SKILL.md
@@ -150,7 +150,17 @@ export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
 ~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/<category>/…/meta-{domain}/scripts/cli.py env
 ```
 
-Do **not** load `.env` via shell (`source`, `set -a`, `[ -f … ]`) — that is bash-specific and breaks on Windows / PowerShell / other shells. Let Python resolve credentials through `SkillCred` / `env_load.py` (cross-platform).
+Do **not** `source .env` by hand — run `python scripts/skill_env.py` (prints exports for bash / PowerShell / cmd).
+
+### How credentials reach commands
+
+| Pattern | When | How the agent runs commands |
+|---------|------|-----------------------------|
+| **Python CLI** | Meta CLI wraps every API call | `python cli.py <subcommand> …` |
+| **Python scripts** | Sub-skill ships its own script | `python scripts/<script>.py …` |
+| **External CLI** | Sub-skill documents a third-party binary | `eval "$(python scripts/skill_env.py)"` then `<binary> <args>` |
+
+`cli.py env` / `env-check` are diagnostics. `skill_env.py` creates the shell-specific export commands.
 
 Prefer `~/.meta-skills/.venv/bin/python`. First deps:
 `cd ~/.meta-skills/skills/<category>/…/meta-{domain} && ~/.meta-skills/install.sh pip init .`
@@ -206,7 +216,7 @@ cp ~/.meta-skills/skills/<category>/…/meta-{domain}/.env.example "{SKILL_PATH}
 - [ ] Folder `skills/<category>/…/meta-{domain}/` + `sub_skills/<id>/SKILL.md`
 - [ ] Meta `SKILL.md` from this template (catalog complete)
 - [ ] Each sub-skill `SKILL.md` links to meta **Working directory** (no shell `.env` loading)
-- [ ] `.env.example` + `scripts/env_load.py` + `scripts/cli.py` (`env`, `env-check`)
+- [ ] `.env.example` + `scripts/skill_env.py` + `scripts/cli.py` (`env`, `env-check`)
 - [ ] `ORIGIN.md` from [`ORIGIN_TEMPLATE.md`](ORIGIN_TEMPLATE.md)
 - [ ] Row added to root [`SKILL.md`](SKILL.md) skills catalog
 - [ ] `requirements.txt` if Python deps are needed

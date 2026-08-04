@@ -27,7 +27,19 @@ export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
 ~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/<category>/…/{SKILL_NAME}/scripts/cli.py env
 ```
 
-Do **not** load `.env` via shell (`source`, `set -a`, `[ -f … ]`) — that is bash-specific and breaks on Windows / PowerShell / other shells. Let Python resolve credentials through `SkillCred` / `env_load.py` (cross-platform).
+Do **not** `source .env` by hand — run `python scripts/skill_env.py` (prints exports for bash / PowerShell / cmd).
+
+Each skill ships a thin `scripts/skill_env.py`: subclass `common.skill_env_export.SkillEnv` and implement `verify()`.
+
+### How credentials reach commands
+
+| Pattern | When | How the agent runs commands |
+|---------|------|-----------------------------|
+| **Python CLI** | All operations go through `scripts/cli.py` (GoDaddy, ESET, …) | `python cli.py <subcommand> …` — credentials read from `.env` via `ENV.read_env()` (no `os.environ` mutation) |
+| **Python scripts** | Standalone scripts read `SkillCred` directly (Google Workspace, Fathom, …) | `python scripts/<script>.py …` |
+| **External CLI** | Skill documents a third-party binary (`jira-as`, …) | `eval "$(python scripts/skill_env.py)"` then `<binary> <args>` (PowerShell: pipe to `Invoke-Expression`) |
+
+`cli.py env` / `env-check` are **diagnostics**. `skill_env.py` creates the shell-specific export commands.
 
 Library scripts: `~/.meta-skills/skills/<category>/…/{SKILL_NAME}/`.
 

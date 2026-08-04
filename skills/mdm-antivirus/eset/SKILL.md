@@ -32,7 +32,7 @@ export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
 ~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/mdm-antivirus/eset/script/cli.py env-check
 ```
 
-`env_load.py` loads `.env` via SkillCred — do not `source` it in the shell. `CURRENT_SKILL_DIRECTORY` is the only required export.
+`skill_env.py` (extends `SkillEnv`) loads `.env` via SkillCred — do not `source` it in the shell. `CURRENT_SKILL_DIRECTORY` is the only required export.
 
 Prefer `~/.meta-skills/.venv/bin/python`. First deps:
 `cd ~/.meta-skills/skills/mdm-antivirus/eset && ~/.meta-skills/install.sh pip init .`
@@ -40,7 +40,7 @@ Prefer `~/.meta-skills/.venv/bin/python`. First deps:
 ## Credentials — SkillCred `.env`
 
 `.env` is next to the **registered** skill, resolved by `SkillCred("eset", [".env"])`
-under `$CURRENT_SKILL_DIRECTORY` (via `script/env_load.py`).
+under `$CURRENT_SKILL_DIRECTORY` (via `script/skill_env.py`).
 
 | Variable | Notes |
 |----------|--------|
@@ -255,7 +255,7 @@ python cli.py devices list          # reuses ESET_ACCESS_TOKEN from .env
 ## Notes
 
 - `authentication.py` owns `TOKEN_PATH=/oauth/token`, token exchange, and `.env` persistence.
-- `env_load.py` resolves the SkillCred `.env` (`CURRENT_SKILL_DIRECTORY`).
+- `skill_env.py` resolves the SkillCred `.env` (`CURRENT_SKILL_DIRECTORY`).
 - API clients keep only implemented endpoints; gateways: `automation` / `application-management` / `incident-management` / `patch-management`.
 - Never commit `.env` or echo tokens.
 - `202` = request cached; retry with `response-id`.
