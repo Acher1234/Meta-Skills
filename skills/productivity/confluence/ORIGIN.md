@@ -5,7 +5,7 @@ Adapted from an earlier AI-skills Confluence skill that wraps
 
 Meta-Skills hybrid model: shared CLI under
 `~/.meta-skills/skills/productivity/confluence`, per-workspace credentials via
-`$CURRENT_SKILL_DIRECTORY` / `SkillCred("confluence", [".env"])`.
+`$CURRENT_SKILL_DIRECTORY` / `scripts/skill_env.py` (`SkillEnv`).
 
-Python is only for resolving / loading `.env`; all Confluence work uses
-`confluence-cli` directly after env is loaded.
+Python is only for resolving / exporting `.env`; all Confluence work uses
+`confluence-cli` directly after `eval "$(python scripts/skill_env.py)"`.

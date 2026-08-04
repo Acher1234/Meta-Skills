@@ -3,7 +3,6 @@ name: confluence
 description: >-
   Confluence via confluence-cli (read, search, create, update, move, delete,
   attachments, comments). Shared npm CLI; per-workspace .env via SkillCred.
-  Always load credentials with `python scripts/cli.py env` / `env-check` first.
   Use when the user mentions Confluence, wiki pages, CQL search, or
   /confluence_*.
 disable-model-invocation: true
@@ -19,6 +18,33 @@ Use for Atlassian Confluence page/space work. Triggers: "Confluence page", "wiki
 Confirm with the user before **write** ops (create, update, move, delete, upload).
 Prefer `CONFLUENCE_READ_ONLY=true` for research-only agents.
 
+## Prerequisites
+
+This skill documents **`confluence-cli`** ([npm](https://www.npmjs.com/package/confluence-cli)). Install once per machine:
+
+```bash
+npm install -g confluence-cli
+confluence --version
+```
+
+Load credentials into the shell, then call `confluence` directly:
+
+```bash
+export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
+eval "$(~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/productivity/confluence/scripts/skill_env.py)"
+confluence read 123456789 --format markdown
+```
+
+PowerShell:
+
+```powershell
+$env:CURRENT_SKILL_DIRECTORY = "{SKILL_PATH}"
+~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/productivity/confluence/scripts/skill_env.py --shell powershell | Invoke-Expression
+confluence read 123456789 --format markdown
+```
+
+`skill_env.py` reads `.env` via SkillCred and prints export commands for the detected OS/shell.
+
 ## Working directory
 
 Placeholders changed by `/meta-skills` at copy time (NAME => {PLACEHOLDER}):
@@ -29,33 +55,13 @@ SKILL_PATH => {SKILL_PATH}
 
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-export IS_GLOBAL="{IS_GLOBAL}"
-export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
-[ -f "$HOME/.meta-skills/.env" ] && set -a && . "$HOME/.meta-skills/.env" && set +a
-[ -f "{SKILL_PATH}/.env" ] && set -a && . "{SKILL_PATH}/.env" && set +a
-cd ~/.meta-skills/skills/productivity/confluence/scripts
+eval "$(~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/productivity/confluence/scripts/skill_env.py)"
+confluence <subcommand> …
 ```
-
-Prefer `~/.meta-skills/.venv/bin/python`. First deps:
-`cd ~/.meta-skills/skills/productivity/confluence && ~/.meta-skills/install.sh pip init .`
 
 Register = copy **only** `SKILL.md` (+ `.env.example` → `.env`). Do **not** copy the full tree.
 
-## Install CLI (once per machine)
-
-```bash
-npm install -g confluence-cli
-confluence --version
-```
-
-## Credentials — SkillCred `.env` (required)
-
-`.env` is next to the **registered** skill, resolved by
-`SkillCred("confluence", [".env"])` under `$CURRENT_SKILL_DIRECTORY`
-(via `scripts/env_load.py`).
-
-**Agents must load the `.env` through this skill’s Python CLI before any
-`confluence …` call** — do not assume credentials are already in the shell.
+## Credentials — SkillCred `.env`
 
 | Variable | Example |
 |----------|---------|
@@ -65,53 +71,15 @@ confluence --version
 | `CONFLUENCE_EMAIL` | `user@company.com` (required when `basic`) |
 | `CONFLUENCE_API_TOKEN` | API token / PAT |
 
-Optional: `CONFLUENCE_PROFILE`, `CONFLUENCE_READ_ONLY=true`, `CONFLUENCE_FORCE_CLOUD`,
-`CONFLUENCE_LINK_STYLE`, `CONFLUENCE_ENV_PATH` (absolute override path to a `.env`).
+Optional: `CONFLUENCE_PROFILE`, `CONFLUENCE_READ_ONLY=true`, `CONFLUENCE_FORCE_CLOUD`, `CONFLUENCE_LINK_STYLE`.
 
 ```bash
 cp ~/.meta-skills/skills/productivity/confluence/.env.example "{SKILL_PATH}/.env"
-# edit CONFLUENCE_DOMAIN / CONFLUENCE_EMAIL / CONFLUENCE_API_TOKEN / …
 ```
-
-## How to run (agent)
-
-Python is **only** for resolving / checking / exporting the `.env`. All Confluence
-work uses **`confluence-cli` directly** after env is loaded.
-
-```bash
-export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-cd ~/.meta-skills/skills/productivity/confluence/scripts
-
-# 1) Required — load + verify .env + confluence-cli on PATH
-python cli.py env-check
-# or just load: python cli.py env
-
-# 2) Export credentials into the shell (pick one)
-eval "$(python cli.py print-exports)"
-# or: set -a && source "$(python cli.py env-path)" && set +a
-
-# 3) Run confluence-cli
-confluence read 123456789 --format markdown
-confluence search "deployment pipeline" --limit 20
-```
-
-If `env-check` already succeeded in this shell and vars were exported, you may
-call `confluence …` directly. Otherwise run `env` / `env-check` / `print-exports`
-again — **never skip the load step on a fresh shell**.
 
 ## Slash commands
 
-Map `/confluence_<action>` → `confluence <action> …` (**after** env is loaded).
-Use `python cli.py env` / `env-check` / `env-path` / `print-exports` for setup only.
-
-### Setup (Python — load `.env` first)
-
-| Slash | CLI | Description |
-|-------|-----|-------------|
-| `/confluence_env` | `python cli.py env` | Load `.env` into process env; show paths |
-| `/confluence_env-check` | `python cli.py env-check` | Verify required keys + `confluence` on PATH |
-| `/confluence_env-path` | `python cli.py env-path` | Print `.env` path |
-| `/confluence_print-exports` | `python cli.py print-exports` | `export` lines for `eval` |
+Map `/confluence_<action>` → `confluence <action> …` (**after** `skill_env.py` exports are eval'd).
 
 ### Read / search (`confluence`)
 
@@ -177,8 +145,7 @@ If you must use `content/search`, follow `_links.next` (cursor), never a bare `s
 
 ## Agent tips
 
-- **Always** run `python cli.py env` or `env-check` (then `print-exports`) before
-  `confluence …` when credentials are not already in the process env.
+- Run `eval "$(python scripts/skill_env.py)"` once per shell before `confluence …`.
 - Destructive commands: always pass `--yes`.
 - Prefer `--format markdown` for agent text; `--format json` for parsing.
 - Read-only agents: `CONFLUENCE_READ_ONLY=true` in the workspace `.env`.
@@ -187,15 +154,6 @@ If you must use `content/search`, follow `_links.next` (cursor), never a bare `s
   [List all pages in a space](#list-all-pages-in-a-space).
 - Full reference: `confluence --help` / [confluence-cli](https://www.npmjs.com/package/confluence-cli).
 
-## Files
+## Notes
 
-```
-~/.meta-skills/skills/productivity/confluence/
-├── SKILL.md
-├── ORIGIN.md
-├── .env.example
-├── requirements.txt
-└── scripts/
-    ├── cli.py          # env / env-check / env-path / print-exports
-    └── env_load.py     # SkillCred + dotenv
-```
+- Never commit `.env` or API tokens.
