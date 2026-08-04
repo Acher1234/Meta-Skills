@@ -14,7 +14,7 @@ if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
 from client import GoDaddyClient, GoDaddyError  # noqa: E402
-from env_load import env_cred, load_env  # noqa: E402
+from skill_env import ENV  # noqa: E402
 
 
 def _print(data: Any) -> None:
@@ -28,12 +28,12 @@ def _split_csv(value: str | None) -> list[str] | None:
 
 
 def cmd_env(_: argparse.Namespace) -> int:
-    path = load_env()
+    path = ENV.env_path()
     _print(
         {
             "env_path": str(path),
             "exists": path.is_file(),
-            "CURRENT_SKILL_DIRECTORY": str(env_cred().workspace),
+            "CURRENT_SKILL_DIRECTORY": str(ENV.env_cred().workspace),
         }
     )
     return 0

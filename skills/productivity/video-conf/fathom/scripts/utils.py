@@ -1,32 +1,14 @@
 #!/usr/bin/env python3
 """Fathom API client utilities."""
 
-import os
 import time
 from datetime import datetime, date
 from typing import List
 
 import requests
-from dotenv import load_dotenv
 
-from common.skill_cred import WORKSPACE_ENV, SkillCred, default_skill_dir
+from skill_env import ENV
 
-_SKILL_DIR = default_skill_dir(__file__)
-os.environ.setdefault(WORKSPACE_ENV, str(_SKILL_DIR))
-
-ENV_PATH = SkillCred("fathom", [".env"])
-
-
-def _load_env() -> None:
-    if ENV_PATH.exists():
-        load_dotenv(ENV_PATH.file_path())
-    else:
-        load_dotenv()
-
-
-_load_env()
-
-API_KEY = os.getenv('FATHOM_API_KEY')
 BASE_URL = 'https://api.fathom.ai/external/v1'
 RATE_LIMIT_DELAY = 1.0  # seconds between requests (60/min limit)
 
@@ -35,9 +17,7 @@ class FathomClient:
     """Client for Fathom API."""
 
     def __init__(self, api_key: str = None):
-        self.api_key = api_key or API_KEY
-        if not self.api_key:
-            raise ValueError("FATHOM_API_KEY not set")
+        self.api_key = api_key or ENV.env["FATHOM_API_KEY"]
         self.headers = {'X-Api-Key': self.api_key}
         self._last_request_time = 0
 

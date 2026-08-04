@@ -7,7 +7,7 @@ from typing import Any
 
 import requests
 
-from env_load import base_url, require_pat
+from skill_env import ENV
 
 
 class GoDaddyError(RuntimeError):
@@ -19,8 +19,8 @@ class GoDaddyError(RuntimeError):
 
 class GoDaddyClient:
     def __init__(self, pat: str | None = None, api_base: str | None = None):
-        self.pat = pat or require_pat()
-        self.api_base = (api_base or base_url()).rstrip("/")
+        self.pat = pat or ENV.pat()
+        self.api_base = (api_base or ENV.base_url()).rstrip("/")
         self.session = requests.Session()
         self.session.headers.update(
             {

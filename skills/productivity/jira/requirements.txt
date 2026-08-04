@@ -1,1 +1,2 @@
 python-dotenv>=1.0.0
+jira-as>=1.1.0

@@ -8,11 +8,11 @@ description: >-
 disable-model-invocation: true
 ---
 
+### TO COPY
+
 # google-workspace
 
-## When to use
-
-Use for Google Workspace API work. Trigger phrases: "check my email", "create calendar event", "upload to Drive", "update Sheet", "Google Docs", "Google Chat", "Chat space", `/google-workspace_gmail_*`, `/google-workspace_calendar_*`, `/google-workspace_chat_*`.
+Per-workspace registration slice. OAuth JSON files live in `{SKILL_PATH}/`.
 
 ## Working directory
 
@@ -22,18 +22,23 @@ IS_GLOBAL => {IS_GLOBAL}
 TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
 SKILL_PATH => {SKILL_PATH}
 
-Before `cd`, export the local skill directory and source `.env` files (shared library, then this skill dir):
-
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-export IS_GLOBAL="{IS_GLOBAL}"
-export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
-[ -f "$HOME/.meta-skills/.env" ] && set -a && . "$HOME/.meta-skills/.env" && set +a
-[ -f "{SKILL_PATH}/.env" ] && set -a && . "{SKILL_PATH}/.env" && set +a
-cd "{SKILL_PATH}"
+~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/productivity/google/google-workspace/scripts/setup.py --check
 ```
 
-Always `cd` into `{SKILL_PATH}` before running scripts. Prefer the shared interpreter: `~/.meta-skills/.venv/bin/python` (run from the library skill tree when scripts live there).
+##### END TO COPY
+
+# google-workspace
+
+## When to use
+
+Use for Google Workspace API work. Trigger phrases: "check my email", "create calendar event", "upload to Drive", "update Sheet", "Google Docs", "Google Chat", "Chat space", `/google-workspace_gmail_*`, `/google-workspace_calendar_*`, `/google-workspace_chat_*`.
+
+`setup.py` / `google_api.py` resolve credentials via SkillCred — do not `source` `.env` in the shell (not portable across Windows, macOS, and Linux).
+
+Library scripts: `~/.meta-skills/skills/productivity/google/google-workspace/`.
+
 ## Slash commands
 
 ### Setup
@@ -106,7 +111,7 @@ Named teams only: `--filter 'spaceType = "SPACE"'`. Enable the **Google Chat API
 
 ## How to run
 
-1. `cd` to the [working directory](#working-directory) that exists on this machine.
+1. Set `CURRENT_SKILL_DIRECTORY` to `{SKILL_PATH}`, then run scripts from `~/.meta-skills/skills/productivity/google/google-workspace/`.
 2. First use: `/google-workspace_setup_check`. If not authenticated, run setup below.
 3. Run the CLI for the slash command; parse JSON output.
 

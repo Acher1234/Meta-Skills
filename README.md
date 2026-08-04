@@ -137,7 +137,7 @@ Secrets live in the tool `.env` (`~/.cursor/.env`, `~/.claude/.env`, `$HERMES_HO
 
 ## 🧩 Create a new skill
 
-See **[`SKILL_TEMPLATE.md`](SKILL_TEMPLATE.md)** (structure, `SKILL.md`, slash `/{skill}_{command}`,
+See **[`SKILL_TEMPLATE.md`](SKILL_TEMPLATE.md)**, **[`META_SKILL_TEMPLATE.md`](META_SKILL_TEMPLATE.md)** (for installer meta-skills), and **[`ORIGIN_TEMPLATE.md`](ORIGIN_TEMPLATE.md)** (structure, `SKILL.md`, slash `/{skill}_{command}`,
 conventions, security). Each sub-project contains:
 
 - a **`SKILL.md`** (EN) — agent skill + `/{skill}_{command}` actions;
@@ -148,6 +148,14 @@ conventions, security). Each sub-project contains:
 
 A Python skill should target the **shared** interpreter `~/.meta-skills/.venv/bin/python` rather than
 a per-project venv.
+
+---
+
+## License
+
+This project is licensed under the **[PolyForm Noncommercial License 1.0.0](LICENSE)**.
+
+You may use, modify, and share the code for **noncommercial** purposes (personal, educational, research, hobby, nonprofit, government). **Commercial use is not permitted** without a separate agreement from the copyright holders — including selling, sublicensing, or offering the software (or derivatives) as part of a paid product or service.
 
 ---
 

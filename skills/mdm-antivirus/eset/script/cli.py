@@ -27,12 +27,7 @@ import incident_incidents as iinc  # noqa: E402
 import patch_management as patchm  # noqa: E402
 import policy_management as pm  # noqa: E402
 from _client import ApiError  # noqa: E402
-from env_load import (  # noqa: E402
-    display_env_path,
-    display_skill_home,
-    env_path,
-    load_env,
-)
+from skill_env import ENV  # noqa: E402
 
 KNOWN_REGIONS = {
     "eu": "https://eu.business-account.iam.eset.systems",
@@ -64,8 +59,10 @@ def _region_from_base(base_url: str) -> str:
     return host.split(".", 1)[0] if host else ""
 
 
-def _service_url(base_url: str, service_host: str, override_env: str) -> str:
-    override = os.getenv(override_env, "").strip()
+def _service_url(
+    base_url: str, service_host: str, override_key: str, values: dict[str, str]
+) -> str:
+    override = values.get(override_key, "").strip()
     if override:
         return override.rstrip("/")
     region = _region_from_base(base_url)
@@ -74,39 +71,39 @@ def _service_url(base_url: str, service_host: str, override_env: str) -> str:
     return f"https://{region}.{service_host}.eset.systems"
 
 
-def resolve_api_url(base_url: str) -> str:
-    return _service_url(base_url, "automation", "ESET_API_URL")
+def resolve_api_url(base_url: str, values: dict[str, str]) -> str:
+    return _service_url(base_url, "automation", "ESET_API_URL", values)
 
 
-def resolve_automation_url(base_url: str) -> str:
-    return _service_url(base_url, "automation", "ESET_AUTOMATION_URL")
+def resolve_automation_url(base_url: str, values: dict[str, str]) -> str:
+    return _service_url(base_url, "automation", "ESET_AUTOMATION_URL", values)
 
 
-def resolve_app_url(base_url: str) -> str:
-    return _service_url(base_url, "application-management", "ESET_APP_URL")
+def resolve_app_url(base_url: str, values: dict[str, str]) -> str:
+    return _service_url(base_url, "application-management", "ESET_APP_URL", values)
 
 
-def resolve_asset_url(base_url: str) -> str:
-    return _service_url(base_url, "automation", "ESET_ASSET_URL")
+def resolve_asset_url(base_url: str, values: dict[str, str]) -> str:
+    return _service_url(base_url, "automation", "ESET_ASSET_URL", values)
 
 
-def resolve_policy_url(base_url: str) -> str:
-    return _service_url(base_url, "automation", "ESET_POLICY_URL")
+def resolve_policy_url(base_url: str, values: dict[str, str]) -> str:
+    return _service_url(base_url, "automation", "ESET_POLICY_URL", values)
 
 
-def resolve_incident_url(base_url: str) -> str:
-    return _service_url(base_url, "incident-management", "ESET_INCIDENT_URL")
+def resolve_incident_url(base_url: str, values: dict[str, str]) -> str:
+    return _service_url(base_url, "incident-management", "ESET_INCIDENT_URL", values)
 
 
-def resolve_patch_url(base_url: str) -> str:
-    return _service_url(base_url, "patch-management", "ESET_PATCH_URL")
+def resolve_patch_url(base_url: str, values: dict[str, str]) -> str:
+    return _service_url(base_url, "patch-management", "ESET_PATCH_URL", values)
 
 
 def load_config(require_credentials: bool = True) -> dict:
-    load_env()
-    base = normalize_base_url(os.getenv("ESET_URL", ""))
-    username = os.getenv("ESET_USERNAME", "").strip()
-    password = os.getenv("ESET_PASSWORD", "")
+    values = ENV.read_env()
+    base = normalize_base_url(values.get("ESET_URL", ""))
+    username = values.get("ESET_USERNAME", "").strip()
+    password = values.get("ESET_PASSWORD", "")
 
     required = [("ESET_URL", base)]
     if require_credentials:
@@ -114,23 +111,24 @@ def load_config(require_credentials: bool = True) -> dict:
     missing = [name for name, val in required if not val]
     if missing:
         raise ConfigError(
-            f"Missing in {display_env_path()}: {', '.join(missing)}. "
+            f"Missing in {ENV.display_env_path()}: {', '.join(missing)}. "
             f"Copy .env.example there and fill it in."
         )
 
     return {
         "base_url": base,
         "token_url": auth.token_url(base),
-        "api_url": resolve_api_url(base),
-        "automation_url": resolve_automation_url(base),
-        "app_url": resolve_app_url(base),
-        "asset_url": resolve_asset_url(base),
-        "policy_url": resolve_policy_url(base),
-        "incident_url": resolve_incident_url(base),
-        "patch_url": resolve_patch_url(base),
+        "api_url": resolve_api_url(base, values),
+        "automation_url": resolve_automation_url(base, values),
+        "app_url": resolve_app_url(base, values),
+        "asset_url": resolve_asset_url(base, values),
+        "policy_url": resolve_policy_url(base, values),
+        "incident_url": resolve_incident_url(base, values),
+        "patch_url": resolve_patch_url(base, values),
         "username": username,
         "password": password,
-        "env_path": str(env_path()),
+        "env_path": str(ENV.env_path()),
+        "env_values": values,
     }
 
 
@@ -199,8 +197,8 @@ def cmd_env_check(args: argparse.Namespace) -> int:
         _print_json(
             {
                 "ok": False,
-                "env": str(env_path()),
-                "library": display_skill_home(),
+                "env": str(ENV.env_path()),
+                "library": ENV.display_skill_home(),
                 "error": str(exc),
             }
         )
@@ -208,8 +206,8 @@ def cmd_env_check(args: argparse.Namespace) -> int:
     _print_json(
         {
             "ok": True,
-            "env": str(env_path()),
-            "library": display_skill_home(),
+            "env": str(ENV.env_path()),
+            "library": ENV.display_skill_home(),
             "base_url": cfg["base_url"],
             "token_url": cfg["token_url"],
             "api_url": cfg["api_url"],
@@ -292,7 +290,7 @@ def cmd_token(args: argparse.Namespace) -> int:
             cfg["token_url"],
             username=cfg["username"],
             password=cfg["password"],
-            refresh_token=args.refresh or os.getenv("ESET_REFRESH_TOKEN", "").strip() or None,
+            refresh_token=args.refresh or cfg["env_values"].get("ESET_REFRESH_TOKEN", "").strip() or None,
             force=True,
         )
     except auth.AuthError as exc:
@@ -311,7 +309,7 @@ def cmd_token(args: argparse.Namespace) -> int:
     safe["access_token"] = "***"
     if result.get("refresh_token"):
         safe["refresh_token"] = "***"
-    safe["saved_to"] = str(env_path())
+    safe["saved_to"] = str(ENV.env_path())
     _print_json(safe)
     return 0 if result.get("ok") else 1
 
