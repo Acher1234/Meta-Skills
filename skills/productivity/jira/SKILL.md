@@ -11,6 +11,18 @@ disable-model-invocation: true
 
 Router to specialized `jira-as` sub-skills. Command references and examples live in the **shared library**; this registered `SKILL.md` holds credentials (`.env`).
 
+## Prerequisites
+
+This skill documents the **`jira-as` CLI** ([PyPI](https://pypi.org/project/jira-as/) · [upstream](https://github.com/grandcamel/jira-as)). It is **not** bundled in Meta-Skills — install it once in the shared venv:
+
+```bash
+cd ~/.meta-skills/skills/productivity/jira
+~/.meta-skills/install.sh pip init .
+jira-as --help
+```
+
+`install.sh pip init` reads `requirements.txt` (includes `jira-as`). All commands in `command.md/` and `exemple.md/` assume `jira-as` is on `PATH` (via `~/.meta-skills/.venv/bin`).
+
 ## When to use
 
 Trigger phrases: "create a Jira ticket", "search JQL", "move to Done", "log time",
