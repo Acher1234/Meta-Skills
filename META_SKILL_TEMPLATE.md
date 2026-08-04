@@ -12,15 +12,14 @@ Also add [`ORIGIN.md`](ORIGIN_TEMPLATE.md) (vendored upstream or API docs).
 
 ```
 skills/<category>/…/meta-{domain}/
-├── SKILL.md              # this meta-skill (installer)
+├── SKILL.md              # canonical doc (library — never copied wholesale)
 ├── ORIGIN.md
 ├── .env.example          # shared credentials for all sub-skills
 ├── requirements.txt
-├── scripts/              # shared CLI (at least env / env-check)
-│   ├── cli.py
+├── scripts/
 │   └── skill_env.py      # SkillEnv subclass (verify only)
 └── sub_skills/
-    ├── <sub-a>/SKILL.md  # installable unit
+    ├── <sub-a>/SKILL.md  # canonical sub-skill doc
     ├── <sub-b>/SKILL.md
     └── shared/           # optional docs — not a standalone install target
 ```
@@ -33,17 +32,86 @@ skills/<category>/…/meta-{domain}/
    global) → **which** sub-skills (never install all by default).
 3. Register the **meta-skill itself** into `$DEST/meta-{domain}/` (credentials
    home) **and** each chosen sub-skill as a **flat** `$DEST/<sub-id>/`.
-4. Default register = **`cp` `SKILL.md` only** (+ substitute placeholders). Do
-   not copy full `sub_skills/<id>/` trees unless the user asks.
-5. Shared secrets live next to the registered meta-skill
-   (`SkillCred("meta-{domain}", [".env"])`). Sub-skills link to the meta-skill
-   **Working directory** — do not repeat shell `.env` loading in each sub-skill.
+4. **Do not `cp` library `SKILL.md` files** — write a **stub** in `$DEST` that
+   sets `CURRENT_SKILL_DIRECTORY` / placeholders and **links** the canonical file
+   under `~/.meta-skills/…`. `git pull` updates behavior without re-registering.
+5. Shared secrets live next to the registered meta-skill stub
+   (`SkillCred("meta-{domain}", [".env"])`). Sub-skills point credentials at
+   `$DEST/meta-{domain}/`, not their own stub dir.
 6. List every installable sub-skill in a **catalog table** (id + one-line goal).
 7. Add the meta-skill to the root [`SKILL.md`](SKILL.md) built-in catalog.
 
-## `SKILL.md` body to copy
+## Registration stubs (not full copy)
 
-Replace `{…}` placeholders. Keep section order.
+When installing, **write** these minimal files. Substitute `{IS_GLOBAL}`,
+`{TYPE_OF_AI_TOOLS}`, `{SKILL_PATH}`, `{META_SKILL_PATH}`, `{LIB_*}` with real paths.
+
+### Meta-skill stub → `$DEST/meta-{domain}/SKILL.md`
+
+```markdown
+---
+name: meta-{domain}
+description: >-
+  Meta-skill hub for {Domain} — read the library SKILL.md for install flow and sub-skills.
+disable-model-invocation: true
+---
+
+# meta-{domain}
+
+Shared credentials: `{SKILL_PATH}/.env`
+
+```bash
+export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
+export IS_GLOBAL="{IS_GLOBAL}"
+export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
+```
+
+---
+
+## Library reference
+
+`{LIB_META_SKILL}`
+```
+
+`{SKILL_PATH}` = absolute `$DEST/meta-{domain}`.  
+`{LIB_META_SKILL}` = `~/.meta-skills/skills/<category>/…/meta-{domain}/SKILL.md`.
+
+### Sub-skill stub → `$DEST/<sub-id>/SKILL.md`
+
+```markdown
+---
+name: {sub-id}
+description: >-
+  {Domain} {sub-id} — read the library SKILL.md for commands and examples.
+disable-model-invocation: true
+---
+
+# {sub-id}
+
+Shared credentials: `{META_SKILL_PATH}/.env`
+
+```bash
+export CURRENT_SKILL_DIRECTORY="{META_SKILL_PATH}"
+export IS_GLOBAL="{IS_GLOBAL}"
+export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
+```
+
+---
+
+## Library reference
+
+`{LIB_SUB_SKILL}`
+```
+
+`{META_SKILL_PATH}` = absolute `$DEST/meta-{domain}`.  
+`{LIB_SUB_SKILL}` = `~/.meta-skills/skills/<category>/…/meta-{domain}/sub_skills/<sub-id>/SKILL.md`.
+
+Agents **must read** the library path for slash commands, catalogs, and examples.
+
+## `SKILL.md` body (library — canonical)
+
+Replace `{…}` placeholders. This file lives only under `~/.meta-skills/…` — it is
+**not** copied into `$DEST`. Keep section order.
 
 ```markdown
 ---
@@ -51,8 +119,7 @@ name: meta-{domain}
 description: >-
   Meta-skill that installs {Domain} sub-skills ({examples…}) into Cursor /
   Claude / Hermes / OpenClaw. Ask scope (project vs global) and which
-  sub-skills to register, then copy each sub-skill SKILL.md + shared
-  credentials via SkillCred `.env`. Use when the user mentions {Domain}
+  sub-skills to register. Use when the user mentions {Domain}
   skills, /meta-{domain}, or wants to install {sub-example}.
 disable-model-invocation: true
 ---
@@ -73,7 +140,7 @@ Upstream / provenance: see [ORIGIN.md](ORIGIN.md).
 
 ## Ask first (required)
 
-Before copying anything, ask the user (same pattern as `/meta-skills`):
+Before registering anything, ask the user (same pattern as `/meta-skills`):
 
 1. **Target tool** (if not obvious): `cursor` | `claude` | `hermes` | `openclaw`
 2. **Scope** — where skills are installed:
@@ -91,9 +158,8 @@ Before copying anything, ask the user (same pattern as `/meta-skills`):
 3. **Which sub-skills** to install — do **not** install all by default. Show the
    catalog below and let the user pick one, several, or all.
 
-Also register **`meta-{domain}` itself** into `$DEST/meta-{domain}/` so
-credentials and the installer stay discoverable. Sub-skills install as **flat**
-basenames under `$DEST`.
+Also register **`meta-{domain}` itself** into `$DEST/meta-{domain}/` (credentials
+home + stub). Sub-skills install as **flat** basenames under `$DEST` (stub only).
 
 ## Sub-skills catalog
 
@@ -108,49 +174,33 @@ Optional `sub_skills/shared/` is reference material only (not installable alone)
 
 ## How to install
 
-Placeholders filled when copying (NAME => value):
-
-IS_GLOBAL => {IS_GLOBAL}
-TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
-SKILL_PATH => {SKILL_PATH}
-
-For **meta-{domain}** (credentials home):
+Write **registration stubs** (see [Registration stubs](#registration-stubs-not-full-copy))
+— do **not** copy this library file into `$DEST`.
 
 ```bash
-mkdir -p "$DEST/meta-{domain}"
-cp ~/.meta-skills/skills/<category>/…/meta-{domain}/SKILL.md "$DEST/meta-{domain}/SKILL.md"
-# substitute {IS_GLOBAL}, {TYPE_OF_AI_TOOLS}, {SKILL_PATH} → absolute $DEST/meta-{domain}
-cp ~/.meta-skills/skills/<category>/…/meta-{domain}/.env.example "$DEST/meta-{domain}/.env"
+LIB=~/.meta-skills/skills/<category>/…/meta-{domain}
+META_DEST="$DEST/meta-{domain}"
+mkdir -p "$META_DEST"
+# write $META_DEST/SKILL.md stub → library link $LIB/SKILL.md
+cp "$LIB/.env.example" "$META_DEST/.env"
 # edit credential keys
+
+# for each chosen sub-skill <id>:
+SUB_DEST="$DEST/<id>"
+mkdir -p "$SUB_DEST"
+# write $SUB_DEST/SKILL.md stub → $LIB/sub_skills/<id>/SKILL.md
 ```
 
-For **each chosen sub-skill** `<id>`:
-
-```bash
-mkdir -p "$DEST/<id>"
-cp ~/.meta-skills/skills/<category>/…/meta-{domain}/sub_skills/<id>/SKILL.md "$DEST/<id>/SKILL.md"
-# substitute placeholders; {SKILL_PATH} → $DEST/<id>
-# Credentials: CURRENT_SKILL_DIRECTORY=$DEST/meta-{domain} + meta CLI env
-```
-
-Default register is **SKILL.md only**. Remind the user to reload skills after install.
+Remind the user to reload skills after install.
 
 ## Working directory
 
-Placeholders changed by `/meta-skills` at copy time (NAME => {PLACEHOLDER}):
-
-IS_GLOBAL => {IS_GLOBAL}
-TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
-SKILL_PATH => {SKILL_PATH}
-
-Point SkillCred at the registered meta-skill dir (credentials live in `{SKILL_PATH}/.env`):
+Credentials resolve from the **registered meta-skill dir** (`$DEST/meta-{domain}/`):
 
 ```bash
-export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/<category>/…/meta-{domain}/scripts/cli.py env
+export CURRENT_SKILL_DIRECTORY="$DEST/meta-{domain}"
+eval "$(~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/<category>/…/meta-{domain}/scripts/skill_env.py)"
 ```
-
-Do **not** `source .env` by hand — run `python scripts/skill_env.py` (prints exports for bash / PowerShell / cmd).
 
 ### How credentials reach commands
 
@@ -160,63 +210,51 @@ Do **not** `source .env` by hand — run `python scripts/skill_env.py` (prints e
 | **Python scripts** | Sub-skill ships its own script | `python scripts/<script>.py …` |
 | **External CLI** | Sub-skill documents a third-party binary | `eval "$(python scripts/skill_env.py)"` then `<binary> <args>` |
 
-`cli.py env` / `env-check` are diagnostics. `skill_env.py` creates the shell-specific export commands.
-
 Prefer `~/.meta-skills/.venv/bin/python`. First deps:
 `cd ~/.meta-skills/skills/<category>/…/meta-{domain} && ~/.meta-skills/install.sh pip init .`
 
-When a **sub-skill** is active, set `CURRENT_SKILL_DIRECTORY` to the registered meta dir (`$DEST/meta-{domain}`), then run the meta CLI:
-
-```bash
-export CURRENT_SKILL_DIRECTORY="$DEST/meta-{domain}"
-~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/<category>/…/meta-{domain}/scripts/cli.py env-check
-```
-
 ## Credentials — SkillCred `.env`
 
-`.env` next to the registered **meta-{domain}** skill:
+`.env` next to the registered **meta-{domain}** stub:
 `SkillCred("meta-{domain}", [".env"])` under `$CURRENT_SKILL_DIRECTORY`.
 
 | Variable | Notes |
 |----------|--------|
 | `{ENV_KEY}` | {what it is} |
 
-```bash
-cp ~/.meta-skills/skills/<category>/…/meta-{domain}/.env.example "{SKILL_PATH}/.env"
-~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/<category>/…/meta-{domain}/scripts/cli.py env-check
-```
-
 ## Slash commands
 
-### Installer / env
+### Installer
 
-| Slash | CLI | Description |
-|-------|-----|-------------|
-| `/meta-{domain}_install` | (agent flow) | Ask tool + scope + sub-skills; `cp` SKILL.md files |
-| `/meta-{domain}_env` | `python cli.py env` | Load `.env` into the process environment |
-| `/meta-{domain}_env_check` | `python cli.py env-check` | Verify required credential keys |
+| Slash | Action | Description |
+|-------|--------|-------------|
+| `/meta-{domain}_install` | (agent flow) | Ask tool + scope + sub-skills; write stubs + `.env` |
+
+### Product (read library sub-skill `SKILL.md`)
+
+{list sub-skill slashes here — agents follow `$LIB/sub_skills/<id>/SKILL.md`}
 
 ## How to run
 
 1. Ask tool, scope, and which sub-skills.
-2. Register `meta-{domain}` + chosen sub-skills into `$DEST`.
+2. Write stubs for `meta-{domain}` + chosen sub-skills into `$DEST`.
 3. Copy `.env.example` → `$DEST/meta-{domain}/.env` and fill credentials.
-4. Run `python cli.py env-check`.
-5. Follow the installed sub-skill `SKILL.md` for the user’s task.
+4. Read the relevant **library** `SKILL.md` for the user’s task.
 
 ## Notes
 
 - Confirm before **global** installs or overwrites.
 - Never commit `.env`, tokens, or client secrets.
-- Keep product docs under `sub_skills/`; keep install + env CLI in the meta-skill.
+- Keep product docs under `sub_skills/`; keep install flow in this library file.
 ```
 
 ## Checklist when authoring
 
 - [ ] Folder `skills/<category>/…/meta-{domain}/` + `sub_skills/<id>/SKILL.md`
-- [ ] Meta `SKILL.md` from this template (catalog complete)
-- [ ] Each sub-skill `SKILL.md` links to meta **Working directory** (no shell `.env` loading)
-- [ ] `.env.example` + `scripts/skill_env.py` + `scripts/cli.py` (`env`, `env-check`)
+- [ ] Library meta `SKILL.md` from this template (catalog complete)
+- [ ] Each sub-skill library `SKILL.md` documents commands (no shell `.env` loading)
+- [ ] `.env.example` + `scripts/skill_env.py`
 - [ ] `ORIGIN.md` from [`ORIGIN_TEMPLATE.md`](ORIGIN_TEMPLATE.md)
 - [ ] Row added to root [`SKILL.md`](SKILL.md) skills catalog
 - [ ] `requirements.txt` if Python deps are needed
+- [ ] Registration = **stub + library link** only (never `cp` full `SKILL.md`)

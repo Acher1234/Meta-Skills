@@ -8,9 +8,10 @@ disable-model-invocation: true
 
 # {SKILL_NAME}
 
-## When to use
+Per-workspace registration slice — copied into `$DEST/{SKILL_NAME}/SKILL.md` by
+`/meta-skills` (placeholders substituted). Credentials live in `{SKILL_PATH}/.env`.
 
-Use for {domain}. Trigger phrases: "{example phrase}", `/{SKILL_NAME}_*`.
+### TO COPY
 
 ## Working directory
 
@@ -20,11 +21,26 @@ IS_GLOBAL => {IS_GLOBAL}
 TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
 SKILL_PATH => {SKILL_PATH}
 
+```bash
+export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
+export IS_GLOBAL="{IS_GLOBAL}"
+export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
+```
+
+##### END TO COPY
+
+# {SKILL_NAME}
+
+## When to use
+
+Use for {domain}. Trigger phrases: "{example phrase}", `/{SKILL_NAME}_*`.
+
+## Working directory
+
 Point SkillCred at the registered skill dir (credentials live in `{SKILL_PATH}/`):
 
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/<category>/…/{SKILL_NAME}/scripts/cli.py env
 ```
 
 Do **not** `source .env` by hand — run `python scripts/skill_env.py` (prints exports for bash / PowerShell / cmd).
@@ -37,9 +53,7 @@ Each skill ships a thin `scripts/skill_env.py`: subclass `common.skill_env_expor
 |---------|------|-----------------------------|
 | **Python CLI** | All operations go through `scripts/cli.py` (GoDaddy, ESET, …) | `python cli.py <subcommand> …` — credentials read from `.env` via `ENV.read_env()` (no `os.environ` mutation) |
 | **Python scripts** | Standalone scripts read `SkillCred` directly (Google Workspace, Fathom, …) | `python scripts/<script>.py …` |
-| **External CLI** | Skill documents a third-party binary (`jira-as`, …) | `eval "$(python scripts/skill_env.py)"` then `<binary> <args>` (PowerShell: pipe to `Invoke-Expression`) |
-
-`cli.py env` / `env-check` are **diagnostics**. `skill_env.py` creates the shell-specific export commands.
+| **External CLI** | Skill documents a third-party binary (`jira-as`, …) | `eval "$(python scripts/skill_env.py)"` then `<binary> <args>` |
 
 Library scripts: `~/.meta-skills/skills/<category>/…/{SKILL_NAME}/`.
 
@@ -60,5 +74,5 @@ Library scripts: `~/.meta-skills/skills/<category>/…/{SKILL_NAME}/`.
 ## Notes
 
 - Confirm with the user before **destructive** or **side-effect** actions (send, delete, write, …).
-- Credentials live next to the registered `SKILL.md` (`$CURRENT_SKILL_DIRECTORY`); resolve with `from common.skill_cred import SkillCred`.
+- Credentials live next to the registered `SKILL.md` (`$CURRENT_SKILL_DIRECTORY`).
 - Never commit `.env`, tokens, or client secrets.

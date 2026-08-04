@@ -7,9 +7,30 @@ description: >-
 disable-model-invocation: true
 ---
 
+### TO COPY
+
+# jira
+
+Per-workspace registration slice. Credentials live in `{SKILL_PATH}/.env`.
+
+## Working directory
+
+Placeholders changed by `/meta-skills` at copy time (NAME => {PLACEHOLDER}):
+
+IS_GLOBAL => {IS_GLOBAL}
+TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
+SKILL_PATH => {SKILL_PATH}
+
+```bash
+export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
+eval "$(~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/productivity/jira/scripts/skill_env.py)"
+```
+
+##### END TO COPY
+
 # jira — Command Index
 
-Router to specialized `jira-as` sub-skills. Command references and examples live in the **shared library**; this registered `SKILL.md` holds credentials (`.env`).
+Router to specialized `jira-as` sub-skills. Command references and examples live in the **shared library** (`~/.meta-skills/skills/productivity/jira/`).
 
 ## Prerequisites
 
@@ -43,24 +64,6 @@ jira-as issue get PROJ-123
 
 Trigger phrases: "create a Jira ticket", "search JQL", "move to Done", "log time",
 "sprint backlog", "service desk request", "Jira admin", `/jira_*`.
-
-## Working directory
-
-Placeholders changed by `/meta-skills` at copy time (NAME => {PLACEHOLDER}):
-
-IS_GLOBAL => {IS_GLOBAL}
-TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
-SKILL_PATH => {SKILL_PATH}
-
-Before running, point SkillCred at the registered skill dir (credentials live in `{SKILL_PATH}/.env`):
-
-```bash
-export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-eval "$(~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/productivity/jira/scripts/skill_env.py)"
-jira-as <subcommand> …
-```
-
-Docs and command lists live in `~/.meta-skills/skills/productivity/jira/`. `{SKILL_PATH}` is the registered `SKILL.md` directory (credentials only).
 
 ## jira-issue
 
