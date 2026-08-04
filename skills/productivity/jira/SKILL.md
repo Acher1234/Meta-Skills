@@ -1,7 +1,7 @@
 ---
 name: jira
 description: >-
-  Jira Cloud automation via jira-as CLI — router to 13 specialized sub-skills
+  Jira Cloud automation via jira-as CLI — router to 13 command domains
   (issue, search, agile, lifecycle, admin, …). Use when the user asks about
   Jira tickets, JQL, sprints, worklogs, service desk, or invokes /jira_*.
 disable-model-invocation: true
@@ -30,7 +30,7 @@ eval "$(~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/productivity/jira/
 
 # jira — Command Index
 
-Router to specialized `jira-as` sub-skills. Command references and examples live in the **shared library** (`~/.meta-skills/skills/productivity/jira/`).
+Router to `jira-as` command domains. References live in `command.md/` and `exemple.md/` under the **shared library** (`~/.meta-skills/skills/productivity/jira/`).
 
 ## Prerequisites
 

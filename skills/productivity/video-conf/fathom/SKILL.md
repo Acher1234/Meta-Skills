@@ -8,13 +8,11 @@ description: >-
 disable-model-invocation: true
 ---
 
-# fathom — Fathom meeting fetcher
+### TO COPY
 
-Fetches meeting data directly from the Fathom API: transcripts, AI summaries, action items, participant info, and (optionally) the video recording.
+# fathom
 
-## When to use
-
-Trigger phrases: "get my Fathom meetings", "sync meeting transcripts", "fetch today's calls", "download Fathom recording", `/fathom_list`, `/fathom_today`, `/fathom_since`, `/fathom_get`.
+Per-workspace registration slice. Credentials live in `{SKILL_PATH}/.env`.
 
 ## Working directory
 
@@ -24,12 +22,20 @@ IS_GLOBAL => {IS_GLOBAL}
 TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
 SKILL_PATH => {SKILL_PATH}
 
-Point SkillCred at the registered skill dir (credentials live in `{SKILL_PATH}/.env`):
-
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
 ~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/productivity/video-conf/fathom/scripts/fetch.py --list
 ```
+
+##### END TO COPY
+
+# fathom — Fathom meeting fetcher
+
+Fetches meeting data directly from the Fathom API: transcripts, AI summaries, action items, participant info, and (optionally) the video recording.
+
+## When to use
+
+Trigger phrases: "get my Fathom meetings", "sync meeting transcripts", "fetch today's calls", "download Fathom recording", `/fathom_list`, `/fathom_today`, `/fathom_since`, `/fathom_get`.
 
 `scripts/skill_env.py` resolves `.env` via SkillCred — scripts call `ENV.read_env()` / `ENV.get_secured_env()` in-process (no `source .env` in the shell).
 

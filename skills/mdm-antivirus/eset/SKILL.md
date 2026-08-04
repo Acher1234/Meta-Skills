@@ -9,6 +9,27 @@ description: >-
 disable-model-invocation: true
 ---
 
+### TO COPY
+
+# eset
+
+Per-workspace registration slice. Credentials live in `{SKILL_PATH}/.env`.
+
+## Working directory
+
+Placeholders changed by `/meta-skills` at copy time (NAME => {PLACEHOLDER}):
+
+IS_GLOBAL => {IS_GLOBAL}
+TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
+SKILL_PATH => {SKILL_PATH}
+
+```bash
+export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
+~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/mdm-antivirus/eset/script/cli.py env-check
+```
+
+##### END TO COPY
+
 # eset
 
 ## When to use
@@ -16,21 +37,6 @@ disable-model-invocation: true
 Use to get an ESET Connect OAuth token (Bearer) for calling ESET Connect APIs.
 Trigger phrases: "ESET token", "authenticate to ESET Connect", "ESET Business
 Account login", `/eset_*`.
-
-## Working directory
-
-Placeholders changed by `/meta-skills` at copy time:
-
-IS_GLOBAL => {IS_GLOBAL}
-TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
-SKILL_PATH => {SKILL_PATH}
-
-Point SkillCred at the registered skill dir (credentials live in `{SKILL_PATH}/.env`):
-
-```bash
-export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/mdm-antivirus/eset/script/cli.py env-check
-```
 
 `skill_env.py` (extends `SkillEnv`) loads `.env` via SkillCred — do not `source` it in the shell. `CURRENT_SKILL_DIRECTORY` is the only required export.
 

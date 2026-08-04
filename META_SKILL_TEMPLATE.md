@@ -4,7 +4,7 @@ Use this instead of [`SKILL_TEMPLATE.md`](SKILL_TEMPLATE.md) when the skill is a
 **installer / hub**: it registers several **sub-skills** into Cursor / Claude /
 Hermes / OpenClaw, and usually shares one credential `.env` via SkillCred.
 
-Reference implementation: [`skills/productivity/meta-jira/SKILL.md`](skills/productivity/meta-jira/SKILL.md).
+Reference layout: `skills/<category>/…/meta-{domain}/` (see below). No reference implementation in-tree yet
 
 Also add [`ORIGIN.md`](ORIGIN_TEMPLATE.md) (vendored upstream or API docs).
 

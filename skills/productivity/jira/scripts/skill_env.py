@@ -12,7 +12,7 @@ class JiraSkillEnv(SkillEnv):
     required_keys = ("JIRA_SITE_URL", "JIRA_EMAIL", "JIRA_API_TOKEN")
 
     def __init__(self) -> None:
-        super().__init__("meta-jira", Path(__file__))
+        super().__init__("jira", Path(__file__))
 
     def verify(self, values: dict[str, str]) -> dict[str, str]:
         return self.verify_required_keys(values)

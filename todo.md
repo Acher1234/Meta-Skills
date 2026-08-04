@@ -67,3 +67,12 @@ Make the PolyForm Noncommercial license visible and consistent across the projec
 - Optional: SPDX header in shared Python modules (`SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0`).
 - Document commercial licensing contact path in README if offering paid use later.
 
+---
+
+## Remove legacy `meta-jira/` tree
+
+Delete `skills/productivity/meta-jira/` — superseded by consolidated `skills/productivity/jira/` (`command.md/`, single `SKILL.md`, `SkillCred("jira")`).
+
+- Grep repo for remaining `meta-jira` references after deletion.
+- Do not document or install from `meta-jira` paths in installer catalog or agent skills.
+

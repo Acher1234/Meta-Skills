@@ -8,11 +8,11 @@ description: >-
 disable-model-invocation: true
 ---
 
+### TO COPY
+
 # google-workspace
 
-## When to use
-
-Use for Google Workspace API work. Trigger phrases: "check my email", "create calendar event", "upload to Drive", "update Sheet", "Google Docs", "Google Chat", "Chat space", `/google-workspace_gmail_*`, `/google-workspace_calendar_*`, `/google-workspace_chat_*`.
+Per-workspace registration slice. OAuth JSON files live in `{SKILL_PATH}/`.
 
 ## Working directory
 
@@ -22,16 +22,23 @@ IS_GLOBAL => {IS_GLOBAL}
 TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
 SKILL_PATH => {SKILL_PATH}
 
-Point SkillCred at the registered skill dir (OAuth JSON files live in `{SKILL_PATH}/`):
-
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
 ~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/productivity/google/google-workspace/scripts/setup.py --check
 ```
 
+##### END TO COPY
+
+# google-workspace
+
+## When to use
+
+Use for Google Workspace API work. Trigger phrases: "check my email", "create calendar event", "upload to Drive", "update Sheet", "Google Docs", "Google Chat", "Chat space", `/google-workspace_gmail_*`, `/google-workspace_calendar_*`, `/google-workspace_chat_*`.
+
 `setup.py` / `google_api.py` resolve credentials via SkillCred — do not `source` `.env` in the shell (not portable across Windows, macOS, and Linux).
 
 Library scripts: `~/.meta-skills/skills/productivity/google/google-workspace/`.
+
 ## Slash commands
 
 ### Setup

@@ -8,6 +8,28 @@ description: >-
 disable-model-invocation: true
 ---
 
+### TO COPY
+
+# confluence
+
+Per-workspace registration slice. Credentials live in `{SKILL_PATH}/.env`.
+
+## Working directory
+
+Placeholders changed by `/meta-skills` at copy time (NAME => {PLACEHOLDER}):
+
+IS_GLOBAL => {IS_GLOBAL}
+TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
+SKILL_PATH => {SKILL_PATH}
+
+```bash
+export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
+eval "$(~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/productivity/confluence/scripts/skill_env.py)"
+confluence <subcommand> …
+```
+
+##### END TO COPY
+
 # confluence
 
 ## When to use
@@ -44,22 +66,6 @@ confluence read 123456789 --format markdown
 ```
 
 `skill_env.py` reads `.env` via SkillCred and prints export commands for the detected OS/shell.
-
-## Working directory
-
-Placeholders changed by `/meta-skills` at copy time (NAME => {PLACEHOLDER}):
-
-IS_GLOBAL => {IS_GLOBAL}
-TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
-SKILL_PATH => {SKILL_PATH}
-
-```bash
-export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-eval "$(~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/productivity/confluence/scripts/skill_env.py)"
-confluence <subcommand> …
-```
-
-Register = copy **only** `SKILL.md` (+ `.env.example` → `.env`). Do **not** copy the full tree.
 
 ## Credentials — SkillCred `.env`
 

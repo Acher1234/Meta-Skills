@@ -7,6 +7,26 @@ description: >-
 disable-model-invocation: true
 ---
 
+### TO COPY
+
+# gif-creator
+
+Per-workspace registration slice. No credentials.
+
+## Working directory
+
+Placeholders changed by `/meta-skills` at copy time (NAME => {PLACEHOLDER}):
+
+IS_GLOBAL => {IS_GLOBAL}
+TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
+SKILL_PATH => {SKILL_PATH}
+
+```bash
+export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
+```
+
+##### END TO COPY
+
 # gif-creator
 
 Generate animated GIFs with **Pillow** (GIF87a/GIF89a, LZW, max 256 colors, one transparent palette index). Full Pillow 12.3.0 guide: [`references/pillow-gif-guide.md`](references/pillow-gif-guide.md).
@@ -15,11 +35,7 @@ Generate animated GIFs with **Pillow** (GIF87a/GIF89a, LZW, max 256 colors, one 
 
 Trigger phrases: "create a GIF", "animate this logo", "make a toss GIF", "frames to GIF", "GIF transparency", `/gif-creator_toss`, `/gif-creator_from-frames`, `/gif-creator_info`.
 
-## Working directory
-
-Library: `~/.meta-skills/skills/design/gif-creator/`. No credentials.
-
-Run with `~/.meta-skills/.venv/bin/python scripts/create_gif.py …` from that directory. Do not use shell-specific `.env` loading — not needed and not portable across Windows, macOS, and Linux shells.
+Library: `~/.meta-skills/skills/design/gif-creator/`. Run with `~/.meta-skills/.venv/bin/python scripts/create_gif.py …` from that directory.
 
 ## Slash commands
 

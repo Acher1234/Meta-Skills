@@ -7,12 +7,11 @@ description: >-
 disable-model-invocation: true
 ---
 
+### TO COPY
+
 # pc-report
 
-## When to use
-
-Use for host health summaries on Linux, macOS, or Windows. Trigger phrases:
-"machine report", "host report", "rapport machine", "sar CPU RAM", `/pc-report_*`.
+Per-workspace registration slice. No credentials.
 
 ## Working directory
 
@@ -22,9 +21,20 @@ IS_GLOBAL => {IS_GLOBAL}
 TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
 SKILL_PATH => {SKILL_PATH}
 
-Scripts live in `~/.meta-skills/skills/productivity/pc/pc-report/`. No credentials or `.env`.
+```bash
+export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
+```
 
-Run the script for your OS from that directory (see [slash commands](#slash-commands)). Do not use shell-specific `.env` loading (`source`, `set -a`) — not portable across Windows, macOS, and Linux shells.
+##### END TO COPY
+
+# pc-report
+
+## When to use
+
+Use for host health summaries on Linux, macOS, or Windows. Trigger phrases:
+"machine report", "host report", "rapport machine", "sar CPU RAM", `/pc-report_*`.
+
+Scripts live in `~/.meta-skills/skills/productivity/pc/pc-report/`. Run the script for your OS from that directory (see [slash commands](#slash-commands)).
 
 ## Layout
 
