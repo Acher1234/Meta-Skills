@@ -192,25 +192,26 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 | 1 | `google-workspace` | `skills/productivity/google/google-workspace/` | Gmail, Calendar, Drive, Docs, Sheets, Contacts, Chat |
 | 2 | `pc-report` | `skills/productivity/pc/pc-report/` | Host monitoring report (Linux / macOS / Windows) |
 | 3 | `fathom` | `skills/productivity/video-conf/fathom/` | Fathom meetings, transcripts, AI summaries, action items |
-| 4 | `meta-jira` | `skills/productivity/meta-jira/` | Installs Jira sub-skills (issue, search, agile, admin, …) + shared SkillCred `.env` |
+| 4 | `jira` | `skills/productivity/jira/` | Installs Jira sub-skills (issue, search, agile, admin, …) + shared SkillCred `.env` |
+| 5 | `confluence` | `skills/productivity/confluence/` | Confluence via confluence-cli + SkillCred `.env` (read/search/write) |
 
 #### DevOps / DNS
 
 | # | Name | Folder | What it does |
 |---|------|--------|--------------|
-| 5 | `godaddy` | `skills/devops/dns/godaddy/` | GoDaddy v3 discovery, owned domains, DNS CLI |
+| 1 | `godaddy` | `skills/devops/dns/godaddy/` | GoDaddy v3 discovery, owned domains, DNS CLI |
 
 #### MDM & Antivirus
 
 | # | Name | Folder | What it does |
 |---|------|--------|--------------|
-| 6 | `eset` | `skills/mdm-antivirus/eset/` | ESET Connect OAuth + device / policy / incident / automation / patch APIs |
+| 1 | `eset` | `skills/mdm-antivirus/eset/` | ESET Connect OAuth + device / policy / incident / automation / patch APIs |
 
 #### Design
 
 | # | Name | Folder | What it does |
 |---|------|--------|--------------|
-| 7 | `gif-creator` | `skills/design/gif-creator/` | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
+| 1 | `gif-creator` | `skills/design/gif-creator/` | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
 
 **External** — any git URL (cloned into `~/.meta-skills/ext/<name>`).
 
