@@ -25,14 +25,14 @@ IS_GLOBAL => {IS_GLOBAL}
 TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
 SKILL_PATH => {SKILL_PATH}
 
+Point SkillCred at the registered skill dir (credentials live in `{SKILL_PATH}/.env`):
+
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-export IS_GLOBAL="{IS_GLOBAL}"
-export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
-[ -f "$HOME/.meta-skills/.env" ] && set -a && . "$HOME/.meta-skills/.env" && set +a
-[ -f "{SKILL_PATH}/.env" ] && set -a && . "{SKILL_PATH}/.env" && set +a
-cd ~/.meta-skills/skills/mdm-antivirus/eset/script
+~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/mdm-antivirus/eset/script/cli.py env-check
 ```
+
+`env_load.py` loads `.env` via SkillCred — do not `source` it in the shell. `CURRENT_SKILL_DIRECTORY` is the only required export.
 
 Prefer `~/.meta-skills/.venv/bin/python`. First deps:
 `cd ~/.meta-skills/skills/mdm-antivirus/eset && ~/.meta-skills/install.sh pip init .`

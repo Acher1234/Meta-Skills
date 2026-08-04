@@ -22,18 +22,9 @@ IS_GLOBAL => {IS_GLOBAL}
 TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
 SKILL_PATH => {SKILL_PATH}
 
-Before running, export the registered skill dir and source `.env` files (shared library, then this skill dir):
+Scripts live in `~/.meta-skills/skills/productivity/pc/pc-report/`. No credentials or `.env`.
 
-```bash
-export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-export IS_GLOBAL="{IS_GLOBAL}"
-export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
-[ -f "$HOME/.meta-skills/.env" ] && set -a && . "$HOME/.meta-skills/.env" && set +a
-[ -f "{SKILL_PATH}/.env" ] && set -a && . "{SKILL_PATH}/.env" && set +a
-cd "$HOME/.meta-skills/skills/productivity/pc/pc-report"
-```
-
-Scripts live in the **shared library** (`~/.meta-skills/skills/productivity/pc/pc-report/`). `{SKILL_PATH}` is the registered `SKILL.md` directory (credentials / overrides if any).
+Run the script for your OS from that directory (see [slash commands](#slash-commands)). Do not use shell-specific `.env` loading (`source`, `set -a`) — not portable across Windows, macOS, and Linux shells.
 
 ## Layout
 
@@ -53,7 +44,7 @@ a Linux (`.sh`), macOS (`-mac.sh`) and Windows (`.ps1`) variant.
 
 ## How to run
 
-1. Apply the [working directory](#working-directory) exports, then `cd` to `~/.meta-skills/skills/productivity/pc/pc-report`.
+1. `cd` to `~/.meta-skills/skills/productivity/pc/pc-report`.
 2. Pick the script for language + OS (see slash table).
 3. On Linux, ensure `sysstat` / `sar` data is available (`SADIR` defaults to `/var/log/sysstat`).
 4. Run the script and return the full stdout to the user.
@@ -62,5 +53,5 @@ a Linux (`.sh`), macOS (`-mac.sh`) and Windows (`.ps1`) variant.
 
 - Bash / PowerShell scripts (no Python CLI).
 - See `dependencies.md` for packages (Linux: `sysstat`).
-- No per-workspace OAuth tokens; host metrics only. `$CURRENT_SKILL_DIRECTORY` is still set for Meta-Skills consistency.
+- No per-workspace OAuth tokens; host metrics only.
 - Docs: [`README.md`](README.md) (EN), [`README-FR.md`](README-FR.md) (FR).

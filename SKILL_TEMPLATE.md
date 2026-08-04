@@ -20,18 +20,16 @@ IS_GLOBAL => {IS_GLOBAL}
 TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
 SKILL_PATH => {SKILL_PATH}
 
-Before `cd`, export the local skill directory and source `.env` files (shared library, then this skill dir):
+Point SkillCred at the registered skill dir (credentials live in `{SKILL_PATH}/`):
 
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-export IS_GLOBAL="{IS_GLOBAL}"
-export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
-[ -f "$HOME/.meta-skills/.env" ] && set -a && . "$HOME/.meta-skills/.env" && set +a
-[ -f "{SKILL_PATH}/.env" ] && set -a && . "{SKILL_PATH}/.env" && set +a
-cd "{SKILL_PATH}"
+~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/<category>/…/{SKILL_NAME}/scripts/cli.py env
 ```
 
-Always `cd` into `{SKILL_PATH}` before running scripts. Prefer the shared interpreter: `~/.meta-skills/.venv/bin/python` (run from the library skill tree when scripts live under `~/.meta-skills/skills/<category>/…/{SKILL_NAME}/`).
+Do **not** load `.env` via shell (`source`, `set -a`, `[ -f … ]`) — that is bash-specific and breaks on Windows / PowerShell / other shells. Let Python resolve credentials through `SkillCred` / `env_load.py` (cross-platform).
+
+Library scripts: `~/.meta-skills/skills/<category>/…/{SKILL_NAME}/`.
 
 ## Slash commands
 
@@ -43,7 +41,7 @@ Always `cd` into `{SKILL_PATH}` before running scripts. Prefer the shared interp
 
 ## How to run
 
-1. `cd` to the [working directory](#working-directory) that exists on this machine (after exports).
+1. Set `CURRENT_SKILL_DIRECTORY` to `{SKILL_PATH}`, then run from the library path above.
 2. Run the CLI for the slash command; parse JSON output when available.
 3. First Python run from the **library** skill folder: `cd ~/.meta-skills/skills/<category>/…/{SKILL_NAME} && ~/.meta-skills/install.sh pip init .`
 

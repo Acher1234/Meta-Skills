@@ -36,9 +36,8 @@ skills/<category>/…/meta-{domain}/
 4. Default register = **`cp` `SKILL.md` only** (+ substitute placeholders). Do
    not copy full `sub_skills/<id>/` trees unless the user asks.
 5. Shared secrets live next to the registered meta-skill
-   (`SkillCred("meta-{domain}", [".env"])`). Sub-skills must say (at the top of
-   their `SKILL.md`) to run the meta CLI `env` / `env-check` with
-   `CURRENT_SKILL_DIRECTORY` pointing at `$DEST/meta-{domain}`.
+   (`SkillCred("meta-{domain}", [".env"])`). Sub-skills link to the meta-skill
+   **Working directory** — do not repeat shell `.env` loading in each sub-skill.
 6. List every installable sub-skill in a **catalog table** (id + one-line goal).
 7. Add the meta-skill to the root [`SKILL.md`](SKILL.md) built-in catalog.
 
@@ -144,25 +143,23 @@ IS_GLOBAL => {IS_GLOBAL}
 TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
 SKILL_PATH => {SKILL_PATH}
 
+Point SkillCred at the registered meta-skill dir (credentials live in `{SKILL_PATH}/.env`):
+
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-export IS_GLOBAL="{IS_GLOBAL}"
-export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
-[ -f "$HOME/.meta-skills/.env" ] && set -a && . "$HOME/.meta-skills/.env" && set +a
-[ -f "{SKILL_PATH}/.env" ] && set -a && . "{SKILL_PATH}/.env" && set +a
-cd ~/.meta-skills/skills/<category>/…/meta-{domain}/scripts
+~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/<category>/…/meta-{domain}/scripts/cli.py env
 ```
+
+Do **not** load `.env` via shell (`source`, `set -a`, `[ -f … ]`) — that is bash-specific and breaks on Windows / PowerShell / other shells. Let Python resolve credentials through `SkillCred` / `env_load.py` (cross-platform).
 
 Prefer `~/.meta-skills/.venv/bin/python`. First deps:
 `cd ~/.meta-skills/skills/<category>/…/meta-{domain} && ~/.meta-skills/install.sh pip init .`
 
-When a **sub-skill** is active, load credentials from the registered meta dir:
+When a **sub-skill** is active, set `CURRENT_SKILL_DIRECTORY` to the registered meta dir (`$DEST/meta-{domain}`), then run the meta CLI:
 
 ```bash
 export CURRENT_SKILL_DIRECTORY="$DEST/meta-{domain}"
-cd ~/.meta-skills/skills/<category>/…/meta-{domain}/scripts
-python cli.py env
-# or: python cli.py env-check
+~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/<category>/…/meta-{domain}/scripts/cli.py env-check
 ```
 
 ## Credentials — SkillCred `.env`
@@ -176,8 +173,7 @@ python cli.py env
 
 ```bash
 cp ~/.meta-skills/skills/<category>/…/meta-{domain}/.env.example "{SKILL_PATH}/.env"
-python cli.py env
-python cli.py env-check
+~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/<category>/…/meta-{domain}/scripts/cli.py env-check
 ```
 
 ## Slash commands
@@ -209,7 +205,7 @@ python cli.py env-check
 
 - [ ] Folder `skills/<category>/…/meta-{domain}/` + `sub_skills/<id>/SKILL.md`
 - [ ] Meta `SKILL.md` from this template (catalog complete)
-- [ ] Each sub-skill `SKILL.md` starts with prerequisite: run meta `cli.py env`
+- [ ] Each sub-skill `SKILL.md` links to meta **Working directory** (no shell `.env` loading)
 - [ ] `.env.example` + `scripts/env_load.py` + `scripts/cli.py` (`env`, `env-check`)
 - [ ] `ORIGIN.md` from [`ORIGIN_TEMPLATE.md`](ORIGIN_TEMPLATE.md)
 - [ ] Row added to root [`SKILL.md`](SKILL.md) skills catalog

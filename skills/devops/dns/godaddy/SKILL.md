@@ -33,14 +33,14 @@ IS_GLOBAL => {IS_GLOBAL}
 TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
 SKILL_PATH => {SKILL_PATH}
 
+Point SkillCred at the registered skill dir (credentials live in `{SKILL_PATH}/.env`):
+
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-export IS_GLOBAL="{IS_GLOBAL}"
-export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
-[ -f "$HOME/.meta-skills/.env" ] && set -a && . "$HOME/.meta-skills/.env" && set +a
-[ -f "{SKILL_PATH}/.env" ] && set -a && . "{SKILL_PATH}/.env" && set +a
-cd "{SKILL_PATH}"
+~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/devops/dns/godaddy/scripts/cli.py env
 ```
+
+`env_load.py` loads `.env` via SkillCred — do not `source` it in the shell. `CURRENT_SKILL_DIRECTORY` is the only required export.
 
 Prefer `~/.meta-skills/.venv/bin/python` from `~/.meta-skills/skills/devops/dns/godaddy/`.
 
