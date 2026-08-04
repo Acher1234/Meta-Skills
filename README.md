@@ -151,6 +151,14 @@ a per-project venv.
 
 ---
 
+## License
+
+This project is licensed under the **[PolyForm Noncommercial License 1.0.0](LICENSE)**.
+
+You may use, modify, and share the code for **noncommercial** purposes (personal, educational, research, hobby, nonprofit, government). **Commercial use is not permitted** without a separate agreement from the copyright holders — including selling, sublicensing, or offering the software (or derivatives) as part of a paid product or service.
+
+---
+
 *Maintained by the community.*
 
 > French version: [`README-FR.md`](README-FR.md)

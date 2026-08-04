@@ -152,6 +152,14 @@ venv par projet.
 
 ---
 
+## Licence
+
+Ce projet est sous **[PolyForm Noncommercial License 1.0.0](LICENSE)**.
+
+Vous pouvez utiliser, modifier et partager le code à des fins **non commerciales** (personnel, éducation, recherche, hobby, associations, administration). **L'usage commercial est interdit** sans accord séparé des titulaires des droits — y compris la vente, la sous-licence ou l'intégration dans un produit ou service payant.
+
+---
+
 *Maintenu par la communauté.*
 
 > Version anglaise : [`README.md`](README.md)
