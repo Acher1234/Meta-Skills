@@ -9,21 +9,8 @@ import re
 import argparse
 
 import requests
-from dotenv import load_dotenv
 
-from common.skill_cred import WORKSPACE_ENV, SkillCred, default_skill_dir
-
-_SKILL_DIR = default_skill_dir(__file__)
-os.environ.setdefault(WORKSPACE_ENV, str(_SKILL_DIR))
-
-ENV_PATH = SkillCred("fathom", [".env"])
-
-
-def _load_env() -> None:
-    if ENV_PATH.exists():
-        load_dotenv(ENV_PATH.file_path())
-    else:
-        load_dotenv()
+from skill_env import ENV
 
 
 def get_m3u8_content(url):
@@ -198,7 +185,7 @@ def _validate_video_output(path):
 
 
 if __name__ == "__main__":
-    _load_env()  # Load environment variables (.env), location-aware when possible
+    env = ENV.read_env()
 
     parser = argparse.ArgumentParser(description="Download a Fathom video.")
     parser.add_argument("fathom_url", help="The base URL of the Fathom video.")
@@ -235,7 +222,7 @@ if __name__ == "__main__":
     output_filename = f"{final_output_name}.mp4"
 
     # Get output directory from environment variable, default to current directory
-    output_dir = os.getenv("OUTPUT_DIR", ".")
+    output_dir = env.get("OUTPUT_DIR", ".")
     os.makedirs(output_dir, exist_ok=True)  # Create directory if it doesn't exist
 
     full_output_path = os.path.join(output_dir, output_filename)

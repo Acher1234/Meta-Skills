@@ -3,14 +3,13 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Any
 
 import requests
 
 import _http
-from env_load import upsert_env_vars
+from skill_env import ENV
 
 TOKEN_PATH = "/oauth/token"
 
@@ -118,13 +117,13 @@ def save_tokens(
     access_token: str,
     refresh_token: str | None = None,
     expires_in: Any = None,
-) -> Path:
+) -> tuple[Path, str]:
     updates = {"ESET_ACCESS_TOKEN": access_token}
     if refresh_token:
         updates["ESET_REFRESH_TOKEN"] = refresh_token
     if expires_in is not None:
         updates["ESET_TOKEN_EXPIRES_IN"] = str(expires_in)
-    return upsert_env_vars(updates)
+    return ENV.upsert_env_vars(updates)
 
 
 def ensure_access_token(
@@ -139,13 +138,14 @@ def ensure_access_token(
     """Return a usable token; reload from `.env` or fetch and persist.
 
     Order: existing access_token (unless force) → refresh_token grant → password grant.
-    Successful exchanges write ``ESET_ACCESS_TOKEN`` / ``ESET_REFRESH_TOKEN`` to `.env`.
+    Successful exchanges write ``ESET_ACCESS_TOKEN`` / ``ESET_REFRESH_TOKEN`` to `.env``.
     """
-    cached = (access_token or os.getenv("ESET_ACCESS_TOKEN", "")).strip()
+    env = ENV.read_env()
+    cached = (access_token or env.get("ESET_ACCESS_TOKEN", "")).strip()
     if cached and not force:
         return {"ok": True, "access_token": cached, "source": "env"}
 
-    refresh = (refresh_token or os.getenv("ESET_REFRESH_TOKEN", "")).strip() or None
+    refresh = (refresh_token or env.get("ESET_REFRESH_TOKEN", "")).strip() or None
     if refresh:
         result = request_token(url, refresh_token=refresh)
         if result.get("ok") and result.get("access_token"):

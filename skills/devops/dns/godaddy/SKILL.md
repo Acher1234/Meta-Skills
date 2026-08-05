@@ -8,6 +8,27 @@ description: >-
 disable-model-invocation: true
 ---
 
+### TO COPY
+
+# godaddy
+
+Per-workspace registration slice. Credentials live in `{SKILL_PATH}/.env`.
+
+## Working directory
+
+Placeholders changed by `/meta-skills` at copy time (NAME => {PLACEHOLDER}):
+
+IS_GLOBAL => {IS_GLOBAL}
+TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
+SKILL_PATH => {SKILL_PATH}
+
+```bash
+export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
+~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/devops/dns/godaddy/scripts/cli.py env
+```
+
+##### END TO COPY
+
 # godaddy
 
 GoDaddy Domains API **v3** CLI:
@@ -25,22 +46,7 @@ Trigger phrases: "check if domain is available on GoDaddy", "suggest domains",
 "get my GoDaddy domain", "domain expiry / auto-renew", "list GoDaddy DNS",
 "add A record", `/godaddy_*`.
 
-## Working directory
-
-Placeholders changed by `/meta-skills` at copy time (NAME => {PLACEHOLDER}):
-
-IS_GLOBAL => {IS_GLOBAL}
-TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
-SKILL_PATH => {SKILL_PATH}
-
-```bash
-export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-export IS_GLOBAL="{IS_GLOBAL}"
-export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
-[ -f "$HOME/.meta-skills/.env" ] && set -a && . "$HOME/.meta-skills/.env" && set +a
-[ -f "{SKILL_PATH}/.env" ] && set -a && . "{SKILL_PATH}/.env" && set +a
-cd "{SKILL_PATH}"
-```
+`skill_env.py` loads `.env` via SkillCred — do not `source` it in the shell. `CURRENT_SKILL_DIRECTORY` is the only required export.
 
 Prefer `~/.meta-skills/.venv/bin/python` from `~/.meta-skills/skills/devops/dns/godaddy/`.
 

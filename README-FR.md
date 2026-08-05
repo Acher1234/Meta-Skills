@@ -138,7 +138,7 @@ Les secrets vivent dans le `.env` de l'outil (`~/.cursor/.env`, `~/.claude/.env`
 
 ## 🧩 Créer un nouveau skill
 
-Voir **[`SKILL_TEMPLATE.md`](SKILL_TEMPLATE.md)** (structure, `SKILL.md`, slash `/{skill}_{command}`,
+Voir **[`SKILL_TEMPLATE.md`](SKILL_TEMPLATE.md)**, **[`META_SKILL_TEMPLATE.md`](META_SKILL_TEMPLATE.md)** (pour les meta-skills installateurs), et **[`ORIGIN_TEMPLATE.md`](ORIGIN_TEMPLATE.md)** (structure, `SKILL.md`, slash `/{skill}_{command}`,
 conventions, sécurité). Chaque sous-projet contient :
 
 - un **`SKILL.md`** (EN) — agent skill + actions `/{skill}_{command}` ;
@@ -149,6 +149,14 @@ conventions, sécurité). Chaque sous-projet contient :
 
 Un skill Python doit cibler l'interpréteur **partagé** `~/.meta-skills/.venv/bin/python` plutôt qu'un
 venv par projet.
+
+---
+
+## Licence
+
+Ce projet est sous **[PolyForm Noncommercial License 1.0.0](LICENSE)**.
+
+Vous pouvez utiliser, modifier et partager le code à des fins **non commerciales** (personnel, éducation, recherche, hobby, associations, administration). **L'usage commercial est interdit** sans accord séparé des titulaires des droits — y compris la vente, la sous-licence ou l'intégration dans un produit ou service payant.
 
 ---
 

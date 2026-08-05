@@ -8,9 +8,10 @@ disable-model-invocation: true
 
 # {SKILL_NAME}
 
-## When to use
+Per-workspace registration slice — copied into `$DEST/{SKILL_NAME}/SKILL.md` by
+`/meta-skills` (placeholders substituted). Credentials live in `{SKILL_PATH}/.env`.
 
-Use for {domain}. Trigger phrases: "{example phrase}", `/{SKILL_NAME}_*`.
+### TO COPY
 
 ## Working directory
 
@@ -20,18 +21,41 @@ IS_GLOBAL => {IS_GLOBAL}
 TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
 SKILL_PATH => {SKILL_PATH}
 
-Before `cd`, export the local skill directory and source `.env` files (shared library, then this skill dir):
-
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
 export IS_GLOBAL="{IS_GLOBAL}"
 export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
-[ -f "$HOME/.meta-skills/.env" ] && set -a && . "$HOME/.meta-skills/.env" && set +a
-[ -f "{SKILL_PATH}/.env" ] && set -a && . "{SKILL_PATH}/.env" && set +a
-cd "{SKILL_PATH}"
 ```
 
-Always `cd` into `{SKILL_PATH}` before running scripts. Prefer the shared interpreter: `~/.meta-skills/.venv/bin/python` (run from the library skill tree when scripts live under `~/.meta-skills/skills/<category>/…/{SKILL_NAME}/`).
+##### END TO COPY
+
+# {SKILL_NAME}
+
+## When to use
+
+Use for {domain}. Trigger phrases: "{example phrase}", `/{SKILL_NAME}_*`.
+
+## Working directory
+
+Point SkillCred at the registered skill dir (credentials live in `{SKILL_PATH}/`):
+
+```bash
+export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
+```
+
+Do **not** `source .env` by hand — run `python scripts/skill_env.py` (prints exports for bash / PowerShell / cmd).
+
+Each skill ships a thin `scripts/skill_env.py`: subclass `common.skill_env_export.SkillEnv` and implement `verify()`.
+
+### How credentials reach commands
+
+| Pattern | When | How the agent runs commands |
+|---------|------|-----------------------------|
+| **Python CLI** | All operations go through `scripts/cli.py` (GoDaddy, ESET, …) | `python cli.py <subcommand> …` — credentials read from `.env` via `ENV.read_env()` (no `os.environ` mutation) |
+| **Python scripts** | Standalone scripts read `SkillCred` directly (Google Workspace, Fathom, …) | `python scripts/<script>.py …` |
+| **External CLI** | Skill documents a third-party binary (`jira-as`, …) | `eval "$(python scripts/skill_env.py)"` then `<binary> <args>` |
+
+Library scripts: `~/.meta-skills/skills/<category>/…/{SKILL_NAME}/`.
 
 ## Slash commands
 
@@ -43,12 +67,12 @@ Always `cd` into `{SKILL_PATH}` before running scripts. Prefer the shared interp
 
 ## How to run
 
-1. `cd` to the [working directory](#working-directory) that exists on this machine (after exports).
+1. Set `CURRENT_SKILL_DIRECTORY` to `{SKILL_PATH}`, then run from the library path above.
 2. Run the CLI for the slash command; parse JSON output when available.
 3. First Python run from the **library** skill folder: `cd ~/.meta-skills/skills/<category>/…/{SKILL_NAME} && ~/.meta-skills/install.sh pip init .`
 
 ## Notes
 
 - Confirm with the user before **destructive** or **side-effect** actions (send, delete, write, …).
-- Credentials live next to the registered `SKILL.md` (`$CURRENT_SKILL_DIRECTORY`); resolve with `from common.skill_cred import SkillCred`.
+- Credentials live next to the registered `SKILL.md` (`$CURRENT_SKILL_DIRECTORY`).
 - Never commit `.env`, tokens, or client secrets.
