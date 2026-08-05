@@ -42,6 +42,7 @@ SENSITIVE_KEYS = frozenset(
 )
 
 HIDDEN_FIELD_TYPE = 1
+AMBIGUOUS_MATCH = "More than one result was found"
 
 
 class BitwardenError(RuntimeError):
@@ -122,6 +123,15 @@ def run(
         raise BitwardenError(f"bw {args[0]} timed out after {timeout}s", code="timeout") from exc
     if proc.returncode != 0:
         message = (proc.stderr or proc.stdout or "").strip() or f"bw {args[0]} failed"
+        if AMBIGUOUS_MATCH in message:
+            # bw dumps every matching id — dozens of bare UUIDs, useless without names.
+            matches = sum(1 for line in message.splitlines()[1:] if line.strip())
+            raise BitwardenError(
+                f"{matches} objects match that search term. Narrow it, or run "
+                "`list items --search <term>` to pick an id from names.",
+                code="ambiguous",
+                detail={"command": args[0], "matches": matches},
+            )
         code = "locked" if "locked" in message.lower() else "bw_error"
         # Only the subcommand is echoed back: argv can carry secrets.
         raise BitwardenError(message, code=code, detail={"command": args[0]})

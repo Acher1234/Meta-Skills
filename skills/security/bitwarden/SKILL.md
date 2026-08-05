@@ -126,8 +126,12 @@ different workspaces can hold different accounts.
 | `/bitwarden_get_attachment` | `python scripts/cli.py get-attachment FILENAME --itemid ID --output DIR/` |
 | `/bitwarden_generate` | `python scripts/cli.py generate [--length 20 -ulns] [--passphrase --words 4 --separator -]` |
 
-`get` accepts a search term instead of an id, but errors when several items match —
-narrow the term or use `list --search` first to pick an id.
+`get` accepts a search term instead of an id, but returns `"code": "ambiguous"` when
+several objects match — narrow the term, or use `list --search` first to pick an id from
+the names.
+
+A **folder** is private to the user; a **collection** belongs to an organization and is
+visible to everyone with access to it. Say which one is meant before creating either.
 
 ### Getting a secret out
 
@@ -145,6 +149,7 @@ obtain the real value, in order of preference:
 |-------|-----|
 | `/bitwarden_create_item` | `python scripts/cli.py create item --name X [--type login\|note\|card\|identity] [--username U] [--generate\|--password-stdin\|--password P] [--uri URL] [--totp SECRET] [--notes N] [--folderid ID] [--field k=v] [--hidden-field k=v]` |
 | `/bitwarden_create_folder` | `python scripts/cli.py create folder --name X` |
+| `/bitwarden_create_collection` | `python scripts/cli.py create org-collection --name X --organizationid ID [--external-id E] [--manage-user MEMBER_ID]` |
 | `/bitwarden_create_attachment` | `python scripts/cli.py create attachment --file PATH --itemid ID` |
 | `/bitwarden_edit_item` | `python scripts/cli.py edit item ID [--name X] [--username U] [--generate] [--totp S] [--uri URL] [--notes N]` |
 | `/bitwarden_edit_folder` | `python scripts/cli.py edit folder ID --name X` |
@@ -185,6 +190,7 @@ Item payloads are piped through stdin for the same reason.
 
 Error codes worth branching on: `locked` (ask the user to run `unlock_command`),
 `missing_credentials` (`.env` incomplete — point at `setup`), `twofa_required` (re-run
-`unlock --code`), `binary_missing` (run `install.sh npm init .`), `no_tty` (the command
-needs a real terminal, hand it to the user), `confirmation_required` (a destructive flag
-is missing), `server_mismatch` (`logout` first).
+`unlock --code`), `ambiguous` (the search term matches several objects — narrow it),
+`binary_missing` (run `install.sh npm init .`), `no_tty` (the command needs a real
+terminal, hand it to the user), `confirmation_required` (a destructive flag is missing),
+`server_mismatch` (`logout` first).

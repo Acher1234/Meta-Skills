@@ -561,6 +561,27 @@ def cmd_create_folder(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_create_org_collection(args: argparse.Namespace) -> int:
+    session = bw.ensure_session()
+    template = bw.run_json(["get", "template", "org-collection"], session=session)
+    template["organizationId"] = args.organizationid
+    template["name"] = args.name
+    template["externalId"] = args.external_id or None
+    # The template ships placeholder groups/users; sending them back would be rejected.
+    template["groups"] = []
+    template["users"] = [
+        {"id": user, "readOnly": False, "hidePasswords": False, "manage": True}
+        for user in args.manage_user or []
+    ]
+    created = bw.run_json(
+        ["create", "org-collection", "--organizationid", args.organizationid],
+        session=session,
+        stdin=bw.encode(template),
+    )
+    _print(created)
+    return 0
+
+
 def cmd_create_attachment(args: argparse.Namespace) -> int:
     session = bw.ensure_session()
     path = str(Path(args.file).expanduser().resolve())
@@ -850,7 +871,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_secret_output_flags(gen)
     gen.set_defaults(func=cmd_generate)
 
-    create = sub.add_parser("create", help="Create an item, folder, or attachment")
+    create = sub.add_parser("create", help="Create an item, folder, collection, or attachment")
     create_sub = create.add_subparsers(dest="create_command", required=True)
 
     create_item = create_sub.add_parser("item", help="Create a login, note, card, or identity")
@@ -863,6 +884,20 @@ def build_parser() -> argparse.ArgumentParser:
     create_folder = create_sub.add_parser("folder", help="Create a folder")
     create_folder.add_argument("--name", required=True)
     create_folder.set_defaults(func=cmd_create_folder)
+
+    create_collection = create_sub.add_parser(
+        "org-collection", help="Create a collection in an organization (shared)"
+    )
+    create_collection.add_argument("--name", required=True)
+    create_collection.add_argument("--organizationid", required=True)
+    create_collection.add_argument("--external-id", help="Your own identifier for sync tooling")
+    create_collection.add_argument(
+        "--manage-user",
+        action="append",
+        metavar="ORG_MEMBER_ID",
+        help="Grant manage access to an org member (repeatable; see `list org-members`)",
+    )
+    create_collection.set_defaults(func=cmd_create_org_collection)
 
     create_attachment = create_sub.add_parser("attachment", help="Attach a file to an item")
     create_attachment.add_argument("--file", required=True)
