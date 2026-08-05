@@ -310,7 +310,7 @@ sed -n '/^### TO COPY$/,/^##### END TO COPY$/p' "$LIB_SKILL" | sed '1d;$d' > /tm
 
 # 5c) Assemble registered file: frontmatter + slice + library pointer
 {
-  awk 'BEGIN{p=0} /^---$/{p++; print; if(p==2){print ""; exit}} p' "$LIB_SKILL"
+  awk '/^---$/{n++} {print} n==2{print ""; exit}' "$LIB_SKILL"
   cat /tmp/skill-slice.md
   echo ""
   echo "---"
