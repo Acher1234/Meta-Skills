@@ -63,15 +63,16 @@ state at any time.
 
 Two auth methods, pick one — `env` reports which via `auth_method`.
 
-| Variable | Notes |
-|----------|-------|
-| `BW_EMAIL` | Method A — account email. `bw login` then also unlocks, so no API key needed |
+| Variable                          | Notes                                                                                                                                  |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `BW_EMAIL`                        | Method A — account email. `bw login` then also unlocks, so no API key needed                                                           |
 | `BW_CLIENTID` / `BW_CLIENTSECRET` | Method B — personal API key. Web Vault → **Account settings → Security → Keys** ([docs](https://bitwarden.com/help/personal-api-key/)) |
-| `BW_SERVER` | Default `https://vault.bitwarden.com` (EU: `https://vault.bitwarden.eu`, or self-hosted) |
-| `BW_SESSION_TTL` | Minutes a cached session stays valid (default `15`) |
-| `BW_PASSWORD_KEYCHAIN_SERVICE` | Optional, macOS — enables silent unlock (set by `keychain set`) |
-| `BW_PASSWORD_KEYCHAIN_ACCOUNT` | Optional — defaults to `BW_EMAIL` |
-| `NODE_EXTRA_CA_CERTS` | Only behind a TLS-inspecting proxy or a private CA |
+| `BW_SERVER`                       | Default `https://vault.bitwarden.com` (EU: `https://vault.bitwarden.eu`, or self-hosted)                                               |
+| `BW_SESSION_TTL`                  | Minutes the **file** session cache stays valid (default `15`); ignored when the keychain is used                                       |
+| `BW_KEYCHAIN_SERVICE`             | Optional, macOS — caches the session in the keychain (set by `keychain set`)                                                           |
+| `BW_KEYCHAIN_ACCOUNT`             | Optional — defaults to `BW_EMAIL`                                                                                                      |
+| `BW_TRUST_PATH_BINARY`            | Set to `true` only if `bw` comes from your own install rather than the pinned one                                                      |
+| `NODE_EXTRA_CA_CERTS`             | Only behind a TLS-inspecting proxy or a private CA                                                                                     |
 
 Method A is simpler; method B is the one that survives **two-step login**, which blocks a
 non-interactive `bw login`. On `"code": "twofa_required"`, tell the user to re-run
@@ -86,45 +87,45 @@ Vault data needs a session key, and producing it always requires the **master pa
    are one gesture, done by `unlock`.
    **Method B** — the API key logs in automatically but does **not** unlock; `unlock`
    is still needed.
-2. `unlock` caches the session key in `{SKILL_PATH}/.bw_session` (`chmod 600`, expires
-   after `BW_SESSION_TTL`).
+2. `unlock` caches the resulting session key. **The master password is never stored**,
+   anywhere, by any code path — it exists only for the duration of that one command.
 3. Every other command reuses that cache.
 
-Where the master password comes from depends on the setup:
+Where the session lands, and how long it lives, depends on the storage:
 
-- **macOS keychain configured** (`keychain set`) — unlocking is silent and automatic,
-  including from the agent. Nothing else to do.
-- **Otherwise** — only the user can type it. On `"code": "locked"`, do not retry: give
-  them the `unlock_command` from the response, wait, then resume.
+- **macOS keychain configured** (`keychain set`) — encrypted at rest, valid until `lock`
+  or `logout` revokes it. The agent works on its own until then.
+- **Otherwise** — `{SKILL_PATH}/.bw_session`, `chmod 600` but plaintext, so it expires
+  after `BW_SESSION_TTL`.
 
-An expired session behaves the same way: the cache self-destructs and the next command
-either re-unlocks from the keychain or reports `locked`.
+Either way, once the cache is gone only the user can restore it. On `"code": "locked"`,
+do not retry: hand them the `unlock_command` from the response, wait, then resume.
 
 Login state is isolated per registered skill dir (`BITWARDENCLI_APPDATA_DIR`), so
 different workspaces can hold different accounts.
 
 ## Session
 
-| Slash | CLI |
-|-------|-----|
-| `/bitwarden_setup` | `python scripts/cli.py setup` — **user-run**, guided first-run config |
-| `/bitwarden_env` | `python scripts/cli.py env` |
-| `/bitwarden_status` | `python scripts/cli.py status` |
-| `/bitwarden_login` | `python scripts/cli.py login` — API key only |
-| `/bitwarden_unlock` | `python scripts/cli.py unlock [--code 123456 --method authenticator\|email\|yubikey]` — **user-run**, prompts for the master password |
-| `/bitwarden_keychain` | `python scripts/cli.py keychain set\|status\|clear` — **`set` is user-run** (macOS prompts on a terminal) |
-| `/bitwarden_lock` | `python scripts/cli.py lock` |
-| `/bitwarden_logout` | `python scripts/cli.py logout` |
-| `/bitwarden_sync` | `python scripts/cli.py sync [--last]` |
+| Slash                 | CLI                                                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `/bitwarden_setup`    | `python scripts/cli.py setup` — **user-run**, guided first-run config                                                                 |
+| `/bitwarden_env`      | `python scripts/cli.py env`                                                                                                           |
+| `/bitwarden_status`   | `python scripts/cli.py status`                                                                                                        |
+| `/bitwarden_login`    | `python scripts/cli.py login` — API key only                                                                                          |
+| `/bitwarden_unlock`   | `python scripts/cli.py unlock [--code 123456 --method authenticator\|email\|yubikey]` — **user-run**, prompts for the master password |
+| `/bitwarden_keychain` | `python scripts/cli.py keychain set\|status\|clear` — **`set` is user-run** (macOS prompts on a terminal)                             |
+| `/bitwarden_lock`     | `python scripts/cli.py lock`                                                                                                          |
+| `/bitwarden_logout`   | `python scripts/cli.py logout`                                                                                                        |
+| `/bitwarden_sync`     | `python scripts/cli.py sync [--last]`                                                                                                 |
 
 ## Read
 
-| Slash | CLI |
-|-------|-----|
-| `/bitwarden_list` | `python scripts/cli.py list items\|folders\|collections\|organizations\|org-collections\|org-members [--search X] [--folderid ID] [--collectionid ID] [--organizationid ID] [--url URL] [--trash] [--archived] [--limit N]` |
-| `/bitwarden_get` | `python scripts/cli.py get item\|username\|password\|uri\|totp\|notes\|exposed\|folder\|collection\|organization\|org-collection\|template\|fingerprint <id-or-search>` |
-| `/bitwarden_get_attachment` | `python scripts/cli.py get-attachment FILENAME --itemid ID --output DIR/` |
-| `/bitwarden_generate` | `python scripts/cli.py generate [--length 20 -ulns] [--passphrase --words 4 --separator -]` |
+| Slash                       | CLI                                                                                                                                                                                                                         |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/bitwarden_list`           | `python scripts/cli.py list items\|folders\|collections\|organizations\|org-collections\|org-members [--search X] [--folderid ID] [--collectionid ID] [--organizationid ID] [--url URL] [--trash] [--archived] [--limit N]` |
+| `/bitwarden_get`            | `python scripts/cli.py get item\|username\|password\|uri\|totp\|notes\|exposed\|folder\|collection\|organization\|org-collection\|template\|fingerprint <id-or-search>`                                                     |
+| `/bitwarden_get_attachment` | `python scripts/cli.py get-attachment FILENAME --itemid ID --output DIR/`                                                                                                                                                   |
+| `/bitwarden_generate`       | `python scripts/cli.py generate [--length 20 -ulns] [--passphrase --words 4 --separator -]`                                                                                                                                 |
 
 `get` accepts a search term instead of an id, but returns `"code": "ambiguous"` when
 several objects match — narrow the term, or use `list --search` first to pick an id from
@@ -135,8 +136,11 @@ visible to everyone with access to it. Say which one is meant before creating ei
 
 ### Getting a secret out
 
-Secrets come back as `{"masked": true, "length": …, "sha256_8": …}`. Three ways to
-obtain the real value, in order of preference:
+Masking works off an **allowlist**: whatever is not recognised structure or metadata
+(id, name, username, uri, dates, …) comes back as
+`{"masked": true, "length": …, "sha256_8": …}`. A field Bitwarden adds tomorrow is
+masked by default rather than leaked. Three ways to obtain the real value, in order of
+preference:
 
 - `--clipboard` — copies it, prints nothing sensitive (best default for a human).
 - `--output FILE` — writes it to a `chmod 600` file.
@@ -145,29 +149,29 @@ obtain the real value, in order of preference:
 
 ## Write
 
-| Slash | CLI |
-|-------|-----|
-| `/bitwarden_create_item` | `python scripts/cli.py create item --name X [--type login\|note\|card\|identity] [--username U] [--generate\|--password-stdin\|--password P] [--uri URL] [--totp SECRET] [--notes N] [--folderid ID] [--field k=v] [--hidden-field k=v]` |
-| `/bitwarden_create_folder` | `python scripts/cli.py create folder --name X` |
-| `/bitwarden_create_collection` | `python scripts/cli.py create org-collection --name X --organizationid ID [--external-id E] [--manage-user MEMBER_ID]` |
-| `/bitwarden_create_attachment` | `python scripts/cli.py create attachment --file PATH --itemid ID` |
-| `/bitwarden_edit_item` | `python scripts/cli.py edit item ID [--name X] [--username U] [--generate] [--totp S] [--uri URL] [--notes N]` |
-| `/bitwarden_edit_folder` | `python scripts/cli.py edit folder ID --name X` |
-| `/bitwarden_delete` | `python scripts/cli.py delete item\|attachment\|folder\|org-collection ID --yes [--itemid ID] [--permanent --i-understand-this-is-irreversible]` |
-| `/bitwarden_restore` | `python scripts/cli.py restore ID` |
+| Slash                          | CLI                                                                                                                                                                                                                                      |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/bitwarden_create_item`       | `python scripts/cli.py create item --name X [--type login\|note\|card\|identity] [--username U] [--generate\|--password-stdin\|--password P] [--uri URL] [--totp SECRET] [--notes N] [--folderid ID] [--field k=v] [--hidden-field k=v]` |
+| `/bitwarden_create_folder`     | `python scripts/cli.py create folder --name X`                                                                                                                                                                                           |
+| `/bitwarden_create_collection` | `python scripts/cli.py create org-collection --name X --organizationid ID [--external-id E] [--manage-user MEMBER_ID]`                                                                                                                   |
+| `/bitwarden_create_attachment` | `python scripts/cli.py create attachment --file PATH --itemid ID`                                                                                                                                                                        |
+| `/bitwarden_edit_item`         | `python scripts/cli.py edit item ID [--name X] [--username U] [--generate] [--totp S] [--uri URL] [--notes N]`                                                                                                                           |
+| `/bitwarden_edit_folder`       | `python scripts/cli.py edit folder ID --name X`                                                                                                                                                                                          |
+| `/bitwarden_delete`            | `python scripts/cli.py delete item\|attachment\|folder\|org-collection ID --yes [--itemid ID] [--permanent --i-understand-this-is-irreversible]`                                                                                         |
+| `/bitwarden_restore`           | `python scripts/cli.py restore ID`                                                                                                                                                                                                       |
 
 Prefer `--generate` over `--password`: it never puts the secret in the command line.
 Item payloads are piped through stdin for the same reason.
 
 ## Send ([docs](https://bitwarden.com/help/send-cli/))
 
-| Slash | CLI |
-|-------|-----|
+| Slash                    | CLI                                                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
 | `/bitwarden_send_create` | `python scripts/cli.py send create --name X (--text "…" [--hidden] \| --file PATH) [--days 7] [--max-access N] [--password P]` |
-| `/bitwarden_send_list` | `python scripts/cli.py send list` |
-| `/bitwarden_send_get` | `python scripts/cli.py send get ID` |
-| `/bitwarden_send_delete` | `python scripts/cli.py send delete ID --yes` |
-| `/bitwarden_receive` | `python scripts/cli.py receive URL [--password P]` |
+| `/bitwarden_send_list`   | `python scripts/cli.py send list`                                                                                              |
+| `/bitwarden_send_get`    | `python scripts/cli.py send get ID`                                                                                            |
+| `/bitwarden_send_delete` | `python scripts/cli.py send delete ID --yes`                                                                                   |
+| `/bitwarden_receive`     | `python scripts/cli.py receive URL [--password P]`                                                                             |
 
 `send create` returns the `accessUrl` — that URL **is** the secret, treat it as one.
 
@@ -180,7 +184,9 @@ Item payloads are piped through stdin for the same reason.
   user did not ask for.
 - Never commit `.env`, `.bw_session`, or `.bw-appdata/`.
 - A cached session key decrypts the whole vault: run `lock` when finished with a
-  sensitive batch.
+  sensitive batch. That is also the only way to revoke a keychain-cached session.
+- `keychain set` and `unlock` are **user-run**: they read the master password from a
+  terminal, and the agent must never ask for it in chat or pass it on a command line.
 
 ## How to run
 

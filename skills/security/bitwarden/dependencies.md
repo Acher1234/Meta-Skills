@@ -6,7 +6,7 @@
 | `npm` | `~10` | ships with node | Installs the pinned `bw` |
 | `@bitwarden/cli` | `2026.7.0` (locked) | `~/.meta-skills/install.sh npm init .` | The `bw` binary — vault, Send, generator |
 | `meta-skill-common` | repo | `~/.meta-skills/install.sh pip init .` | `SkillCred` — resolves `{SKILL_PATH}/.env` |
-| `security` | macOS built-in | — | Optional: silent unlock via `keychain set` |
+| `security` | macOS built-in | — | Optional: cache the session key via `keychain set` |
 
 No third-party Python package: `scripts/` uses the standard library only and shells out
 to `bw`, so `requirements.txt` is empty by design.

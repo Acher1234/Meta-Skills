@@ -71,10 +71,20 @@ class BitwardenSkillEnv(SkillEnv):
         return self.env.get("NODE_EXTRA_CA_CERTS", "").strip()
 
     def keychain_service(self) -> str:
-        return self.env.get("BW_PASSWORD_KEYCHAIN_SERVICE", "").strip()
+        # Legacy name kept readable: it used to hold the master password, not a session.
+        return (
+            self.env.get("BW_KEYCHAIN_SERVICE")
+            or self.env.get("BW_PASSWORD_KEYCHAIN_SERVICE", "")
+        ).strip()
 
     def keychain_account(self) -> str:
-        return self.env.get("BW_PASSWORD_KEYCHAIN_ACCOUNT", "").strip()
+        return (
+            self.env.get("BW_KEYCHAIN_ACCOUNT")
+            or self.env.get("BW_PASSWORD_KEYCHAIN_ACCOUNT", "")
+        ).strip()
+
+    def trust_path_binary(self) -> bool:
+        return self.env.get("BW_TRUST_PATH_BINARY", "").strip().lower() in {"1", "true", "yes"}
 
     def session_ttl_minutes(self) -> int:
         try:

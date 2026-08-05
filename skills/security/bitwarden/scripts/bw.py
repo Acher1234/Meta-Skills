@@ -25,23 +25,36 @@ SESSION_FILE = ".bw_session"
 APPDATA_DIR = ".bw-appdata"
 DEFAULT_TIMEOUT = 120
 
-# Values never printed unless the caller passes --reveal.
-SENSITIVE_KEYS = frozenset(
+# Allowlist, not denylist: any string whose key is absent here is masked. A denylist
+# has to predict every field Bitwarden will ever add — it already missed `keyValue`,
+# the FIDO2 passkey private key. Getting this wrong must fail closed.
+SAFE_KEYS = frozenset(
     {
-        "password",
-        "totp",
-        "code",
-        "number",
-        "ssn",
-        "passportNumber",
-        "licenseNumber",
-        "privateKey",
-        "notes",
-        "key",
+        # Identity and structure
+        "id", "object", "type", "name", "folderId", "organizationId", "collectionIds",
+        "externalId", "favorite", "reprompt", "edit", "viewPassword", "deletedDate",
+        "creationDate", "revisionDate", "passwordRevisionDate", "lastUsedDate",
+        # Login — the username and the site are what make an item recognisable
+        "username", "uri", "uris", "match",
+        # Attachment metadata
+        "fileName", "size", "sizeName", "url",
+        # Card: the number and the CVC stay masked, the rest identifies the card
+        "brand", "cardholderName", "expMonth", "expYear",
+        # FIDO2 metadata — `keyValue` is the private key and is deliberately absent
+        "keyType", "keyAlgorithm", "keyCurve", "rpId", "rpName", "userName",
+        "userDisplayName", "discoverable", "counter",
+        # SSH: the public half only
+        "publicKey", "keyFingerprint",
+        # Session and account state
+        "status", "serverUrl", "lastSync", "userEmail", "userId",
+        # Send: `accessUrl`, `key` and the payload stay masked
+        "accessId", "accessCount", "maxAccessCount", "expirationDate", "deletionDate",
+        "disabled", "hideEmail", "hidden",
+        # Organisation and collection membership
+        "readOnly", "hidePasswords", "manage", "permissions", "email",
     }
 )
 
-HIDDEN_FIELD_TYPE = 1
 AMBIGUOUS_MATCH = "More than one result was found"
 
 
@@ -56,10 +69,25 @@ def library_dir() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
-def binary() -> str:
+def pinned_binary() -> str | None:
     local = library_dir() / "node_modules" / ".bin" / "bw"
-    if local.is_file() and os.access(local, os.X_OK):
-        return str(local)
+    return str(local) if local.is_file() and os.access(local, os.X_OK) else None
+
+
+def binary(*, trusted: bool = False) -> str:
+    """Path to `bw`. With trusted=True, refuse a PATH lookup we cannot vouch for."""
+    local = pinned_binary()
+    if local:
+        return local
+    if trusted and not ENV.trust_path_binary():
+        raise BitwardenError(
+            "Refusing to hand the master password to a `bw` resolved from PATH — "
+            "anything earlier in PATH could impersonate it and capture the password. "
+            f"Install the pinned CLI (cd {library_dir()} && "
+            "~/.meta-skills/install.sh npm init .), or set BW_TRUST_PATH_BINARY=true "
+            "in the .env if you installed bw yourself and trust it.",
+            code="untrusted_binary",
+        )
     found = shutil.which("bw")
     if found:
         return found
@@ -104,9 +132,10 @@ def run(
     env_extra: Mapping[str, str] | None = None,
     stdin: str | None = None,
     timeout: int = DEFAULT_TIMEOUT,
+    trusted: bool = False,
 ) -> str:
     """Run `bw` and return stdout. Raises BitwardenError on a non-zero exit."""
-    command = [binary(), *args]
+    command = [binary(trusted=trusted), *args]
     if "--nointeraction" not in args:
         command.append("--nointeraction")
     try:
@@ -164,46 +193,88 @@ def encode(payload: Any) -> str:
 
 
 # --- Session -----------------------------------------------------------------
+#
+# The cached value is a session key, never the master password. A stolen session key
+# decrypts the vault until `lock` revokes it; a stolen master password is a permanent
+# account takeover. Two backends, and the storage decides the expiry policy: the
+# keychain is encrypted at rest and holds the key until `lock`, while the file cache
+# is plaintext and therefore expires after BW_SESSION_TTL.
 
 
 def session_path() -> Path:
     return ENV.workspace() / SESSION_FILE
 
 
+def _session_store() -> tuple[str, str] | None:
+    """Keychain (service, account) when configured, or None for the file cache."""
+    return keychain_target()
+
+
 def clear_session() -> None:
+    store = _session_store()
+    if store:
+        keychain_delete(*store)
     session_path().unlink(missing_ok=True)
 
 
-def write_session(key: str) -> Path:
-    path = session_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
+def session_location() -> str:
+    store = _session_store()
+    return f"macOS keychain ({store[0]})" if store else str(session_path())
+
+
+def write_session(key: str) -> str:
+    """Cache the session key; returns a human-readable description of where."""
+    store = _session_store()
     payload = json.dumps(
         {
             "session": key,
             "created_at": time.time(),
-            "ttl_minutes": ENV.session_ttl_minutes(),
+            # None = revoked by `lock`, not by the clock. Only the plaintext file expires.
+            "ttl_minutes": None if store else ENV.session_ttl_minutes(),
         }
     )
+    if store:
+        keychain_write(*store, payload)
+        return session_location()
+    path = session_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w", encoding="utf-8") as handle:
         handle.write(payload)
     os.chmod(path, 0o600)
-    return path
+    return str(path)
+
+
+def _read_session_payload() -> dict[str, Any] | None:
+    store = _session_store()
+    if store:
+        # The keychain is authoritative. Any plaintext cache is residue from a version
+        # that wrote one, or from a run before the keychain was enabled: shred it.
+        session_path().unlink(missing_ok=True)
+        raw = keychain_read(*store)
+    else:
+        raw = session_path().read_text(encoding="utf-8") if session_path().is_file() else None
+    if not raw:
+        return None
+    try:
+        payload = json.loads(raw)
+    except ValueError:
+        return None
+    return payload if isinstance(payload, dict) else None
 
 
 def session_age() -> dict[str, Any] | None:
-    path = session_path()
-    if not path.is_file():
+    payload = _read_session_payload()
+    if payload is None:
         return None
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except ValueError:
-        return None
-    created = float(payload.get("created_at", 0))
-    ttl_minutes = float(payload.get("ttl_minutes") or ENV.session_ttl_minutes())
-    remaining = created + ttl_minutes * 60 - time.time()
+    ttl_minutes = payload.get("ttl_minutes")
+    where = "keychain" if _session_store() else "file"
+    if ttl_minutes is None:
+        return {"cached": True, "storage": where, "expired": False, "expires": "on `lock`"}
+    remaining = float(payload.get("created_at", 0)) + float(ttl_minutes) * 60 - time.time()
     return {
         "cached": True,
+        "storage": where,
         "expires_in_seconds": max(0, int(remaining)),
         "expired": remaining <= 0,
     }
@@ -216,7 +287,7 @@ def read_cached_session() -> str | None:
     if info["expired"]:
         clear_session()
         return None
-    payload = json.loads(session_path().read_text(encoding="utf-8"))
+    payload = _read_session_payload() or {}
     return payload.get("session") or None
 
 
@@ -283,22 +354,24 @@ def keychain_available() -> bool:
     return sys.platform == "darwin" and shutil.which("security") is not None
 
 
-def keychain_target(user_email: str = "") -> tuple[str, str] | None:
+def keychain_target() -> tuple[str, str] | None:
     """(service, account) to use, or None when the keychain is not configured."""
     service = ENV.keychain_service()
     if not service or not keychain_available():
         return None
-    account = ENV.keychain_account() or user_email or ENV.email()
+    account = ENV.keychain_account() or ENV.email()
     if not account:
         return None
     return service, account
 
 
-def _run_security(args: list[str]) -> subprocess.CompletedProcess[str] | None:
+def _run_security(
+    args: list[str], stdin: str | None = None
+) -> subprocess.CompletedProcess[str] | None:
     """None when `security` is absent or the keychain dialog went unanswered."""
     try:
         return subprocess.run(
-            ["security", *args], capture_output=True, text=True, timeout=30
+            ["security", *args], input=stdin, capture_output=True, text=True, timeout=30
         )
     except (OSError, subprocess.SubprocessError):
         return None
@@ -316,22 +389,21 @@ def keychain_delete(service: str, account: str) -> bool:
     return proc is not None and proc.returncode == 0
 
 
-def keychain_store(service: str, account: str) -> None:
-    """Let `security` prompt for the password itself, so it never enters Python."""
-    try:
-        proc = subprocess.run(
-            [
-                "security", "add-generic-password",
-                "-s", service,
-                "-a", account,
-                "-l", f"{service} ({account})",
-                "-U", "-w",
-            ]
-        )
-    except OSError as exc:
-        raise BitwardenError("could not run `security`", code="keychain_error") from exc
-    if proc.returncode != 0:
-        raise BitwardenError("security add-generic-password failed", code="keychain_error")
+def keychain_write(service: str, account: str, secret: str) -> None:
+    """Store *secret*, fed through stdin: `security` wants it twice and argv is public."""
+    proc = _run_security(
+        [
+            "add-generic-password",
+            "-s", service,
+            "-a", account,
+            "-l", f"{service} ({account})",
+            "-U", "-w",
+        ],
+        stdin=f"{secret}\n{secret}\n",
+    )
+    if proc is None or proc.returncode != 0:
+        detail = (proc.stderr.strip() if proc else "security unavailable") or "unknown error"
+        raise BitwardenError(f"could not write to the keychain: {detail}", code="keychain_error")
 
 
 TWOFA_METHODS = {"authenticator": "0", "email": "1", "yubikey": "3"}
@@ -343,7 +415,9 @@ def _login_password(email: str, master_password: str, code: str, method: str) ->
     if code:
         args += ["--method", TWOFA_METHODS.get(method, method or "0"), "--code", code]
     try:
-        return run(args, env_extra={"BW_MASTER_PASSWORD": master_password}).strip()
+        return run(
+            args, env_extra={"BW_MASTER_PASSWORD": master_password}, trusted=True
+        ).strip()
     except BitwardenError as exc:
         if "two-step" in str(exc).lower() or "two-factor" in str(exc).lower():
             raise BitwardenError(
@@ -355,23 +429,17 @@ def _login_password(email: str, master_password: str, code: str, method: str) ->
         raise
 
 
-def unlock(
-    master_password: str,
-    *,
-    login_first: bool = True,
-    code: str = "",
-    method: str = "",
-) -> str:
+def unlock(master_password: str, *, code: str = "", method: str = "") -> str:
     """Exchange the master password for a session key and cache it."""
-    state = ensure_server() if login_first else {"status": "locked"}
+    state = ensure_server()
     if state.get("status") == "unauthenticated" and ENV.auth_method() == "password":
         key = _login_password(ENV.email(), master_password, code, method)
     else:
-        if login_first:
-            ensure_login()
+        ensure_login()
         key = run(
             ["unlock", "--passwordenv", "BW_MASTER_PASSWORD", "--raw"],
             env_extra={"BW_MASTER_PASSWORD": master_password},
+            trusted=True,
         ).strip()
     if not key:
         raise BitwardenError("unlock returned an empty session key", code="unlock_failed")
@@ -392,20 +460,6 @@ def ensure_session() -> str:
     key = read_cached_session()
     if key:
         return key
-    # Tried before ensure_login(): under email auth, logging in already consumes the
-    # very master password the keychain holds.
-    target = keychain_target(status().get("userEmail") or "")
-    if target:
-        password = keychain_read(*target)
-        if password:
-            try:
-                return unlock(password)
-            except BitwardenError as exc:
-                raise BitwardenError(
-                    "The master password stored in the macOS keychain was rejected. "
-                    f"Refresh it with `cli.py keychain set`, or unlock manually:\n  {unlock_hint()}",
-                    code="locked",
-                ) from exc
     ensure_login()
     raise BitwardenError(
         "Vault is locked (no valid cached session). The master password can only be "
@@ -445,25 +499,20 @@ def mask(value: Any) -> Any:
     return {"masked": True, "length": len(text), "sha256_8": fingerprint(text)}
 
 
-def _is_hidden_field(node: Mapping[str, Any]) -> bool:
-    return "value" in node and node.get("type") == HIDDEN_FIELD_TYPE
+def _carries_secret(key: str, value: Any) -> bool:
+    """Only a non-empty string can hold secret material; ints, bools and null cannot."""
+    return isinstance(value, str) and value != "" and key not in SAFE_KEYS
 
 
 def redact(data: Any, *, reveal: bool = False) -> Any:
-    """Replace secret values with a length + fingerprint stub."""
+    """Mask every string that is not explicitly allowlisted as structure or metadata."""
     if reveal:
         return data
     if isinstance(data, list):
         return [redact(item) for item in data]
     if not isinstance(data, dict):
         return data
-    hidden_field = _is_hidden_field(data)
-    out: dict[str, Any] = {}
-    for key, value in data.items():
-        if key in SENSITIVE_KEYS and not isinstance(value, (dict, list)):
-            out[key] = mask(value)
-        elif hidden_field and key == "value":
-            out[key] = mask(value)
-        else:
-            out[key] = redact(value)
-    return out
+    return {
+        key: mask(value) if _carries_secret(key, value) else redact(value)
+        for key, value in data.items()
+    }
