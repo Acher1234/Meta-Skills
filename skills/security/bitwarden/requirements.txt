@@ -1,0 +1,2 @@
+# No third-party dependency: the CLI shells out to `bw` and uses the stdlib only.
+# `install.sh pip init .` still installs meta-skill-common (imported as `common`).

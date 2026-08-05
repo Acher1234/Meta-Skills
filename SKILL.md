@@ -271,6 +271,16 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 
 
 
+#### Security
+
+
+| #   | Name        | Folder                        | What it does                                                                |
+| --- | ----------- | ----------------------------- | --------------------------------------------------------------------------- |
+| 1   | `bitwarden` | `skills/security/bitwarden/`  | Bitwarden / Vaultwarden vault via `bw` — items, folders, attachments, Send |
+
+
+
+
 #### Design
 
 
