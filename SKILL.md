@@ -266,6 +266,7 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 | #   | Name   | Folder                       | What it does                                                              |
 | --- | ------ | ---------------------------- | ------------------------------------------------------------------------- |
 | 1   | `eset` | `skills/mdm-antivirus/eset/` | ESET Connect OAuth + device / policy / incident / automation / patch APIs |
+| 2   | `hexnode` | `skills/mdm-antivirus/hexnode/` | Hexnode device / path management |
 
 
 
