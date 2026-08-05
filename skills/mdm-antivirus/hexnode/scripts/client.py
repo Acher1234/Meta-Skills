@@ -6,7 +6,7 @@ from typing import Any
 
 import requests
 
-from env_load import base_url, require_api_key
+from skill_env import ENV
 
 
 class HexnodeError(RuntimeError):
@@ -24,9 +24,8 @@ class HexnodeClient:
     """
 
     def __init__(self):
-        env = ENV.read_env()
-        self.api_key = env.get("HEXNODE_API_KEY")
-        self.api_base = env.get("HEXNODE_BASE_URL")
+        self.api_key = ENV.api_key()
+        self.api_base = ENV.base_url()
         self.session = requests.Session()
         self.session.headers.update(
             {

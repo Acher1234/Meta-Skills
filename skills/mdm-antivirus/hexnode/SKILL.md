@@ -23,11 +23,9 @@ SKILL_PATH => {SKILL_PATH}
 
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-export IS_GLOBAL="{IS_GLOBAL}"
-export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
-[ -f "$HOME/.meta-skills/.env" ] && set -a && . "$HOME/.meta-skills/.env" && set +a
-[ -f "{SKILL_PATH}/.env" ] && set -a && . "{SKILL_PATH}/.env" && set +a
+eval "$(~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/mdm-antivirus/hexnode/scripts/skill_env.py)"
 cd ~/.meta-skills/skills/mdm-antivirus/hexnode
+~/.meta-skills/.venv/bin/python scripts/cli.py devices list --per-page 50
 ```
 
 Prefer `~/.meta-skills/.venv/bin/python`. First deps:
@@ -45,8 +43,15 @@ Trigger phrases: "Hexnode devices", "Hexnode users", "Hexnode apps",
 "Hexnode policies", "device groups", "enrollment request", "Hexnode MDM API",
 `/hexnode_*`.
 
+`skill_env.py` (extends `SkillEnv`) loads `.env` via SkillCred — do not `source` it in the shell. `CURRENT_SKILL_DIRECTORY` is the only required export.
+
+Prefer `~/.meta-skills/.venv/bin/python`. First deps:
+`cd ~/.meta-skills/skills/mdm-antivirus/hexnode && ~/.meta-skills/install.sh pip init .`
 
 ## Credentials — SkillCred `.env`
+
+`.env` is next to the **registered** skill, resolved by `SkillCred("hexnode", [".env"])`
+under `$CURRENT_SKILL_DIRECTORY` (via `scripts/skill_env.py`).
 
 You can authenticate with the Hexnode MDM API by providing your secret API key with each request. The API uses HTTP Basic Authentication to receive your API key. It will look for your API key in the Authentication field.
 
@@ -55,7 +60,8 @@ Prior to authentication, enable API access in Hexnode MDM (**Admin → API → E
 | Variable | Notes |
 |----------|--------|
 | `HEXNODE_API_KEY` | Required — secret API key from Admin → API |
-| `HEXNODE_BASE_URL` | Optional full API base (overrides portal) |
+| `HEXNODE_BASE_URL` | Required — full API base (`https://<portal>.hexnodemdm.com/api/v1`) |
+| `HEXNODE_PORTAL` | Optional — portal name only; derives `HEXNODE_BASE_URL` when base URL is omitted |
 
 ```bash
 cp ~/.meta-skills/skills/mdm-antivirus/hexnode/.env.example "{SKILL_PATH}/.env"
@@ -115,8 +121,8 @@ Commands → `~/.meta-skills/skills/mdm-antivirus/hexnode/command.md/hexnode-dev
 
 ## How to run
 
-1. `export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"` then `cd ~/.meta-skills/skills/mdm-antivirus/hexnode`.
-2. Ensure `.env` exists next to the registered skill; `/hexnode_env`.
+1. `export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"` then `eval "$(~/.meta-skills/.venv/bin/python scripts/skill_env.py)"`.
+2. `cd ~/.meta-skills/skills/mdm-antivirus/hexnode`; ensure `.env` exists next to the registered skill; `/hexnode_env`.
 3. Map `/hexnode_<…>` → `~/.meta-skills/.venv/bin/python scripts/cli.py …`; return JSON.
 4. Never log or echo `HEXNODE_API_KEY`.
 

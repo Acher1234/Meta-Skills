@@ -17,9 +17,13 @@ from application import ApplicationClient  # noqa: E402
 from client import HexnodeError  # noqa: E402
 from device_groups import DeviceGroupsClient  # noqa: E402
 from devices import DevicesClient  # noqa: E402
-from env_load import ENV
 from policy import PolicyClient  # noqa: E402
+from skill_env import ENV  # noqa: E402
 from users import UsersClient  # noqa: E402
+
+
+class ConfigError(Exception):
+    pass
 
 
 def _print(data: Any) -> None:
@@ -37,7 +41,16 @@ def _add_paging(p: argparse.ArgumentParser) -> None:
 
 
 def cmd_env(_: argparse.Namespace) -> int:
-    print(ENV.verify())
+    key = ENV.api_key()
+    _print(
+        {
+            "env_path": str(ENV.env_path()),
+            "CURRENT_SKILL_DIRECTORY": str(ENV.env_cred().workspace),
+            "HEXNODE_BASE_URL": ENV.base_url(),
+            "HEXNODE_API_KEY": key[:4] + "…" if len(key) > 4 else "…",
+        }
+    )
+    return 0
 
 
 def cmd_devices(args: argparse.Namespace) -> int:
