@@ -17,14 +17,7 @@ from application import ApplicationClient  # noqa: E402
 from client import HexnodeError  # noqa: E402
 from device_groups import DeviceGroupsClient  # noqa: E402
 from devices import DevicesClient  # noqa: E402
-from env_load import (  # noqa: E402
-    ConfigError,
-    base_url,
-    display_skill_home,
-    env_cred,
-    load_env,
-    require_api_key,
-)
+from env_load import ENV
 from policy import PolicyClient  # noqa: E402
 from users import UsersClient  # noqa: E402
 
@@ -44,32 +37,7 @@ def _add_paging(p: argparse.ArgumentParser) -> None:
 
 
 def cmd_env(_: argparse.Namespace) -> int:
-    path = load_env()
-    has_key = False
-    api_base = None
-    errors: list[str] = []
-    try:
-        require_api_key()
-        has_key = True
-    except ConfigError as exc:
-        errors.append(str(exc))
-    try:
-        api_base = base_url()
-    except ConfigError as exc:
-        errors.append(str(exc))
-    payload: dict[str, Any] = {
-        "ok": bool(has_key and api_base),
-        "env_path": str(path),
-        "env_exists": path.is_file(),
-        "library": display_skill_home(),
-        "CURRENT_SKILL_DIRECTORY": str(env_cred().workspace),
-        "has_api_key": has_key,
-        "base_url": api_base,
-    }
-    if errors:
-        payload["error"] = errors[0] if len(errors) == 1 else errors
-    _print(payload)
-    return 0 if payload["ok"] else 1
+    print(ENV.verify())
 
 
 def cmd_devices(args: argparse.Namespace) -> int:

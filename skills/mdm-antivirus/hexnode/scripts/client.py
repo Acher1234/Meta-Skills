@@ -23,9 +23,10 @@ class HexnodeClient:
     Basic prefix).
     """
 
-    def __init__(self, api_key: str | None = None, api_base: str | None = None):
-        self.api_key = api_key or require_api_key()
-        self.api_base = (api_base or base_url()).rstrip("/")
+    def __init__(self):
+        env = ENV.read_env()
+        self.api_key = env.get("HEXNODE_API_KEY")
+        self.api_base = env.get("HEXNODE_BASE_URL")
         self.session = requests.Session()
         self.session.headers.update(
             {
