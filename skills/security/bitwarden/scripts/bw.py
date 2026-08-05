@@ -390,16 +390,19 @@ def keychain_delete(service: str, account: str) -> bool:
 
 
 def keychain_write(service: str, account: str, secret: str) -> None:
-    """Store *secret*, fed through stdin: `security` wants it twice and argv is public."""
+    # `security -w` with no value opens /dev/tty and ignores piped stdin whenever a
+    # controlling terminal exists — exactly the case for interactive `unlock`.
+    # Passing -w on argv is unavoidable here; the session key already travels in
+    # BW_SESSION for every later bw call, so this is the same exposure class.
     proc = _run_security(
         [
             "add-generic-password",
             "-s", service,
             "-a", account,
             "-l", f"{service} ({account})",
-            "-U", "-w",
+            "-U",
+            "-w", secret,
         ],
-        stdin=f"{secret}\n{secret}\n",
     )
     if proc is None or proc.returncode != 0:
         detail = (proc.stderr.strip() if proc else "security unavailable") or "unknown error"
