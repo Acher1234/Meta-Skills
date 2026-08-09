@@ -1,17 +1,16 @@
 ---
-
-## name: meta-skills
-
+name: meta-skills
 description: >-
   Install or update Meta-Skills into Cursor, Claude, Hermes, or OpenClaw. Clone/pull
   this repo into ~/.meta-skills (shared library), auto-detect the tool via TERMINAL_ENV
   / CLAUDECODE, ask target + scope, then register chosen skills — copy the `### TO COPY`
   slice from each SKILL.md (substitute placeholders), link the library canonical
   SKILL.md under ~/.meta-skills. External git skills clone ONCE into ~/.meta-skills/ext
-  ONCE into ~/.meta-skills/ext via `install.sh fetch`; each skill installs its OWN deps
-  on first run via `install.sh pip init` / `npm init` into ~/.meta-skills/.venv. Use when
+  via `install.sh fetch`; each skill installs its OWN deps on first run via
+  `install.sh pip init` / `npm init` into ~/.meta-skills/.venv. Use when
   installing/refreshing skills, adding a skill from a git URL, or running /meta-skills.
 disable-model-invocation: true
+---
 
 # Meta-Skills — the skill installer (Cursor / Claude / Hermes / OpenClaw)
 

@@ -6,8 +6,9 @@
 | `npm` | `~10` | ships with node | Installs pinned `bw` |
 | `@bitwarden/cli` | locked in `package-lock.json` | `~/.meta-skills/install.sh npm init .` | `bw` binary |
 | `jq` | any | `brew install jq` | JSON edits for `create` / `edit` |
+| `meta-skill-common` | repo | `~/.meta-skills/install.sh pip init .` | `SkillEnv` for `skill_env.py` |
 
-Agent runs `bw` directly. `scripts/session.py` (stdlib only) handles auth from `.env`.
+Agent runs `bw` directly. `scripts/skill_env.py` exports `.env`; login/unlock are documented in `SKILL.md`.
 
 ## Where things land
 

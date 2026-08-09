@@ -1,6 +1,6 @@
 ## Example Workflows
 
-Requires an unlocked session first (`bitwarden-session`).
+Requires an unlocked session first (see SKILL.md Connect / Working directory).
 
 ### Find an item and copy its password
 

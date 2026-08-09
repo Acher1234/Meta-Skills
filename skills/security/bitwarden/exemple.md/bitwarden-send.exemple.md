@@ -24,9 +24,9 @@ $BW send -n "Contract PDF" -d 14 -f /path/to/file.pdf
 
 ```bash
 $BW send list
-$BW get send <id>
-$BW delete send <id>
+$BW send get <id>
+$BW send delete <id>
 
 # Receiver (no vault unlock required):
-bw receive --password <access-password> 'https://…/#/send/…'
+$BW send receive --password <access-password> 'https://…/#/send/…'
 ```

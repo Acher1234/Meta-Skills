@@ -9,8 +9,8 @@ The `accessUrl` **is** the secret. All commands support `--help`.
 |---------|-------------|
 | `bw send` | Create text or file Send (`-n` name, `-d` days, `-f` file, `--hidden`, …) |
 | `bw send list` | List Sends |
-| `bw get send <id>` | Get one Send |
-| `bw delete send <id>` | Delete a Send |
-| `bw receive <url>` | Access a Send (`--password` if protected) |
+| `bw send get <id>` | Get one Send |
+| `bw send delete <id>` | Delete a Send |
+| `bw send receive <url>` | Access a Send (`--password` if protected) |
 
 ---

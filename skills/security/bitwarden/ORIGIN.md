@@ -1,7 +1,8 @@
 # Origin
 
 Bitwarden Password Manager **CLI** (`bw`) — vault read/write and Send. The skill
-documents `bw` commands; `scripts/session.py` only loads `.env` and unlocks.
+documents `bw` commands; `scripts/skill_env.py` exports `.env`, then SKILL.md
+runs `bw login --apikey` / `bw unlock`.
 
 - CLI: [bitwarden.com/help/cli](https://bitwarden.com/help/cli/)
 - Personal API key: [bitwarden.com/help/personal-api-key](https://bitwarden.com/help/personal-api-key/)

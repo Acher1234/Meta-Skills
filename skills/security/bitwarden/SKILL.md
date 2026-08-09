@@ -23,7 +23,15 @@ SKILL_PATH => {SKILL_PATH}
 
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-eval "$(~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/security/bitwarden/scripts/session.py)"
+eval "$(~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/security/bitwarden/scripts/skill_env.py)"
+export BW=~/.meta-skills/skills/security/bitwarden/node_modules/.bin/bw
+export BITWARDENCLI_APPDATA_DIR="$CURRENT_SKILL_DIRECTORY/.bw-appdata"
+mkdir -p "$BITWARDENCLI_APPDATA_DIR"
+$BW config server "$BW_SERVER" 2>/dev/null || true
+case "$($BW status | python3 -c 'import sys,json; print(json.load(sys.stdin).get("status",""))')" in
+  unauthenticated) $BW login --apikey ;;
+esac
+export BW_SESSION="$($BW unlock --passwordenv BW_PASSWORD --raw)"
 ```
 
 Never print a vault secret unless the user asked — prefer clipboard / file.
@@ -37,40 +45,29 @@ under the **shared library** (`~/.meta-skills/skills/security/bitwarden/`).
 
 ## Prerequisites
 
-This skill documents the official **`bw` CLI** ([docs](https://bitwarden.com/help/cli/)).
-Pin it once in the skill dir:
+Official **`bw` CLI** ([docs](https://bitwarden.com/help/cli/)):
 
 ```bash
 cd ~/.meta-skills/skills/security/bitwarden
 ~/.meta-skills/install.sh npm init .
 ```
 
-Credentials in `{SKILL_PATH}/.env` (`BW_SERVER`, `BW_CLIENTID`, `BW_CLIENTSECRET`,
-`BW_PASSWORD`). Then unlock and call `bw` / `$BW` directly:
+Credentials in `{SKILL_PATH}/.env`: `BW_SERVER`, `BW_CLIENTID`, `BW_CLIENTSECRET`, `BW_PASSWORD`.
 
-```bash
-export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-eval "$(~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/security/bitwarden/scripts/session.py)"
-$BW list items --search github
-```
+## Connect (every vault session)
 
-`session.py` loads `.env`, runs `bw login --apikey` only if `unauthenticated`, then
-`bw unlock --passwordenv BW_PASSWORD`, and prints shell exports (`BW_SESSION`, `BW`, …).
+1. `eval` `skill_env.py` (loads `.env`)
+2. Set `BW` + `BITWARDENCLI_APPDATA_DIR`
+3. `bw login --apikey` **only** if status is `unauthenticated`
+4. `bw unlock --passwordenv BW_PASSWORD --raw` → `BW_SESSION`
+
+Use the bash block in **Working directory** (TO COPY) above — do not re-login when
+already `locked` / `unlocked`.
 
 ## When to use
 
 Trigger phrases: "what's my password for X", "store this in Bitwarden", "create a login",
 "Bitwarden Send", `/bitwarden_*`.
-
-## bitwarden-session
-
-Connect once: status, API-key login, unlock, lock, logout, sync.
-Use before any vault or Send write/read that needs decryption.
-
-Commands → `~/.meta-skills/skills/security/bitwarden/command.md/bitwarden-session.command.md`
-Examples → `~/.meta-skills/skills/security/bitwarden/exemple.md/bitwarden-session.exemple.md`
-
----
 
 ## bitwarden-vault-read
 
