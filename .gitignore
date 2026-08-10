@@ -1,5 +1,12 @@
 google_token.json
 google_client_secret.json
 google_oauth_pending.json
+.env
+.bw_session
+.cursor/skills/
+.bw-appdata/
+node_modules/
+.venv/
 *.pyc
 __pycache__/
+.DS_Store

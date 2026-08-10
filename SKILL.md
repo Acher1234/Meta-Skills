@@ -1,17 +1,16 @@
 ---
-
-## name: meta-skills
-
+name: meta-skills
 description: >-
   Install or update Meta-Skills into Cursor, Claude, Hermes, or OpenClaw. Clone/pull
   this repo into ~/.meta-skills (shared library), auto-detect the tool via TERMINAL_ENV
   / CLAUDECODE, ask target + scope, then register chosen skills — copy the `### TO COPY`
   slice from each SKILL.md (substitute placeholders), link the library canonical
   SKILL.md under ~/.meta-skills. External git skills clone ONCE into ~/.meta-skills/ext
-  ONCE into ~/.meta-skills/ext via `install.sh fetch`; each skill installs its OWN deps
-  on first run via `install.sh pip init` / `npm init` into ~/.meta-skills/.venv. Use when
+  via `install.sh fetch`; each skill installs its OWN deps on first run via
+  `install.sh pip init` / `npm init` into ~/.meta-skills/.venv. Use when
   installing/refreshing skills, adding a skill from a git URL, or running /meta-skills.
 disable-model-invocation: true
+---
 
 # Meta-Skills — the skill installer (Cursor / Claude / Hermes / OpenClaw)
 
@@ -271,6 +270,16 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 
 
 
+#### Security
+
+
+| #   | Name        | Folder                        | What it does                                                                |
+| --- | ----------- | ----------------------------- | --------------------------------------------------------------------------- |
+| 1   | `bitwarden` | `skills/security/bitwarden/`  | Bitwarden / Vaultwarden vault via `bw` — items, folders, attachments, Send |
+
+
+
+
 #### Design
 
 
@@ -310,7 +319,7 @@ sed -n '/^### TO COPY$/,/^##### END TO COPY$/p' "$LIB_SKILL" | sed '1d;$d' > /tm
 
 # 5c) Assemble registered file: frontmatter + slice + library pointer
 {
-  awk 'BEGIN{p=0} /^---$/{p++; print; if(p==2){print ""; exit}} p' "$LIB_SKILL"
+  awk '/^---$/{n++} {print} n==2{print ""; exit}' "$LIB_SKILL"
   cat /tmp/skill-slice.md
   echo ""
   echo "---"
