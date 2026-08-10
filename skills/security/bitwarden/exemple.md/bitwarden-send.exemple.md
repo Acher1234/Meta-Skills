@@ -5,8 +5,7 @@ Create/list/get/delete need an unlocked session. The `accessUrl` **is** the secr
 ### Share text for 7 days
 
 ```bash
-$BW send -n "OTP backup" -d 7 --hidden "one-time payload"
-# Output includes accessUrl — treat like a password
+bw send -n "OTP backup" -d 7 --hidden "one-time payload"
 ```
 
 **When user says "share this securely via Bitwarden Send"**, this skill should:
@@ -17,16 +16,14 @@ $BW send -n "OTP backup" -d 7 --hidden "one-time payload"
 ### Share a file
 
 ```bash
-$BW send -n "Contract PDF" -d 14 -f /path/to/file.pdf
+bw send -n "Contract PDF" -d 14 -f /path/to/file.pdf
 ```
 
 ### List / delete / receive
 
 ```bash
-$BW send list
-$BW send get <id>
-$BW send delete <id>
-
-# Receiver (no vault unlock required):
-$BW send receive --password <access-password> 'https://…/#/send/…'
+bw send list
+bw send get <id>
+bw send delete <id>
+bw send receive --password <access-password> 'https://…/#/send/…'
 ```

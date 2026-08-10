@@ -24,14 +24,14 @@ SKILL_PATH => {SKILL_PATH}
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
 eval "$(~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/security/bitwarden/scripts/skill_env.py)"
-export BW=~/.meta-skills/skills/security/bitwarden/node_modules/.bin/bw
+export PATH="$HOME/.meta-skills/skills/security/bitwarden/node_modules/.bin:$PATH"
 export BITWARDENCLI_APPDATA_DIR="$CURRENT_SKILL_DIRECTORY/.bw-appdata"
 mkdir -p "$BITWARDENCLI_APPDATA_DIR"
-$BW config server "$BW_SERVER" 2>/dev/null || true
-case "$($BW status | python3 -c 'import sys,json; print(json.load(sys.stdin).get("status",""))')" in
-  unauthenticated) $BW login --apikey ;;
+bw config server "$BW_SERVER" 2>/dev/null || true
+case "$(bw status | python3 -c 'import sys,json; print(json.load(sys.stdin).get("status",""))')" in
+  unauthenticated) bw login --apikey ;;
 esac
-export BW_SESSION="$($BW unlock --passwordenv BW_PASSWORD --raw)"
+export BW_SESSION="$(bw unlock --passwordenv BW_PASSWORD --raw)"
 ```
 
 Never print a vault secret unless the user asked — prefer clipboard / file.
@@ -57,7 +57,7 @@ Credentials in `{SKILL_PATH}/.env`: `BW_SERVER`, `BW_CLIENTID`, `BW_CLIENTSECRET
 ## Connect (every vault session)
 
 1. `eval` `skill_env.py` (loads `.env`)
-2. Set `BW` + `BITWARDENCLI_APPDATA_DIR`
+2. Put pinned `bw` on `PATH` + set `BITWARDENCLI_APPDATA_DIR`
 3. `bw login --apikey` **only** if status is `unauthenticated`
 4. `bw unlock --passwordenv BW_PASSWORD --raw` → `BW_SESSION`
 
