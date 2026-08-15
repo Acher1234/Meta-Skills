@@ -2,6 +2,10 @@
 
 API docs: [Automation](https://help.eset.com/eset_connect/en-US/automation.html)
 
+### API gateway
+
+`ESET_AUTOMATION_URL` — `https://<region>.automation.eset.systems` (from `ESET_URL` unless overridden).
+
 Targets are device and/or device-group UUIDs (from Device Management). Omitted `--expire-time` runs the task ASAP.
 
 ### Task lifecycle (`tasks`)

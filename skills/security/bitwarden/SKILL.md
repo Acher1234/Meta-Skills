@@ -98,6 +98,13 @@ Examples → `~/.meta-skills/skills/security/bitwarden/exemple.md/bitwarden-send
 
 ---
 
+## Org collections (Vaultwarden)
+- Hierarchy: `Parent/Child` in **name** (no parentId).
+- Read ACL: `bw get org-collection <id> --organizationid <org>` (not `get collection`).
+- User ACL: **create then edit** — `users` on `create` is ignored by the CLI.
+- Public API (`/public/members`): do not use on self-hosted Vaultwarden.
+- See `command.md/bitwarden-org-collections.command.md`.
+
 ## Safety
 
 - Confirm before create / edit / delete / send.

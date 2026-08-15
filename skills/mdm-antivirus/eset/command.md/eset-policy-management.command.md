@@ -2,6 +2,10 @@
 
 API docs: [Policy Management](https://help.eset.com/eset_connect/en-US/policy_management.html)
 
+### API gateway
+
+`ESET_POLICY_URL` — `https://<region>.automation.eset.systems` (from `ESET_URL` unless overridden).
+
 ### Policies (`policies`)
 
 | Slash | CLI | Endpoint |
