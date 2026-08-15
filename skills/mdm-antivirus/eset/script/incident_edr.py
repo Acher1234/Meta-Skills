@@ -29,9 +29,10 @@ needs that base URL and a Bearer access token.
 
 from __future__ import annotations
 
+import argparse
 from typing import Iterator
 
-from _client import ApiError, BaseClient
+from _client import TOKEN_PARENT, ApiError, BaseClient
 
 
 class EdrError(ApiError):
@@ -44,6 +45,7 @@ class EdrClient(BaseClient):
     """Client over the ESET Connect EdrRules + EdrRuleExclusions endpoints."""
 
     error_class = EdrError
+    url_key = "incident_url"
 
 
     def list_edr_rules(
@@ -183,3 +185,156 @@ class EdrClient(BaseClient):
             token = page.get("nextPageToken")
             if not token:
                 break
+
+    def cmd_rules_list(self, args: argparse.Namespace) -> None:
+        self.dump(
+            self.list_edr_rules(page_size=args.page_size, page_token=args.page_token)
+        )
+        return None
+
+    def cmd_rules_create(self, args: argparse.Namespace) -> None:
+        self.dump(self.create_edr_rule(body=self.load_json_file(args.file)))
+        return None
+
+    def cmd_rules_get(self, args: argparse.Namespace) -> None:
+        self.dump(self.get_edr_rule(args.rule_uuid))
+        return None
+
+    def cmd_rules_delete(self, args: argparse.Namespace) -> None:
+        self.dump(self.delete_edr_rule(args.rule_uuid))
+        return None
+
+    def cmd_rules_enable(self, args: argparse.Namespace) -> None:
+        self.dump(self.enable_edr_rule(args.rule_uuid))
+        return None
+
+    def cmd_rules_disable(self, args: argparse.Namespace) -> None:
+        self.dump(self.disable_edr_rule(args.rule_uuid))
+        return None
+
+    def cmd_rules_update_definition(self, args: argparse.Namespace) -> None:
+        self.dump(
+            self.update_edr_rule_definition(args.rule_uuid, args.xml_definition)
+        )
+        return None
+
+    def cmd_exclusions_list(self, args: argparse.Namespace) -> None:
+        self.dump(
+            self.list_edr_rule_exclusions(
+                page_size=args.page_size, page_token=args.page_token
+            )
+        )
+        return None
+
+    def cmd_exclusions_create(self, args: argparse.Namespace) -> None:
+        self.dump(self.create_edr_rule_exclusion(body=self.load_json_file(args.file)))
+        return None
+
+    def cmd_exclusions_get(self, args: argparse.Namespace) -> None:
+        self.dump(self.get_edr_rule_exclusion(args.exclusion_uuid))
+        return None
+
+    def cmd_exclusions_delete(self, args: argparse.Namespace) -> None:
+        self.dump(self.delete_edr_rule_exclusion(args.exclusion_uuid))
+        return None
+
+    def cmd_exclusions_update_definition(self, args: argparse.Namespace) -> None:
+        self.dump(
+            self.update_edr_rule_exclusion_definition(
+                args.exclusion_uuid, args.xml_definition
+            )
+        )
+        return None
+
+    @staticmethod
+    def register(sub: argparse._SubParsersAction) -> None:
+        client = EdrClient()
+
+        p_edr = sub.add_parser(
+            "edr-rules",
+            parents=[TOKEN_PARENT],
+            help="Incident Management (EDR rules)",
+        )
+        edr = p_edr.add_subparsers(required=True)
+
+        er_list = edr.add_parser("list", help="GET /v2/edr-rules")
+        BaseClient.add_paging(er_list)
+        er_list.set_defaults(func=client.cmd_rules_list)
+
+        er_create = edr.add_parser("create", help="POST /v2/edr-rules")
+        er_create.add_argument(
+            "--file",
+            required=True,
+            help="JSON body (or '-' for stdin), e.g. {\"rule\": {...}}",
+        )
+        er_create.set_defaults(func=client.cmd_rules_create)
+
+        er_get = edr.add_parser("get", help="GET /v2/edr-rules/{ruleUuid}")
+        er_get.add_argument("rule_uuid", help="EDR rule UUID")
+        er_get.set_defaults(func=client.cmd_rules_get)
+
+        er_delete = edr.add_parser("delete", help="DELETE /v2/edr-rules/{ruleUuid}")
+        er_delete.add_argument("rule_uuid", help="EDR rule UUID")
+        er_delete.set_defaults(func=client.cmd_rules_delete)
+
+        er_enable = edr.add_parser(
+            "enable", help="POST /v2/edr-rules/{ruleUuid}:enable"
+        )
+        er_enable.add_argument("rule_uuid", help="EDR rule UUID")
+        er_enable.set_defaults(func=client.cmd_rules_enable)
+
+        er_disable = edr.add_parser(
+            "disable", help="POST /v2/edr-rules/{ruleUuid}:disable"
+        )
+        er_disable.add_argument("rule_uuid", help="EDR rule UUID")
+        er_disable.set_defaults(func=client.cmd_rules_disable)
+
+        er_upd = edr.add_parser(
+            "update-definition", help="POST /v2/edr-rules/{ruleUuid}:updateDefinition"
+        )
+        er_upd.add_argument("rule_uuid", help="EDR rule UUID")
+        er_upd.add_argument(
+            "--xml-definition", required=True, help="New XML rule definition"
+        )
+        er_upd.set_defaults(func=client.cmd_rules_update_definition)
+
+        p_exc = sub.add_parser(
+            "edr-exclusions",
+            parents=[TOKEN_PARENT],
+            help="Incident Management (EDR rule exclusions)",
+        )
+        exc = p_exc.add_subparsers(required=True)
+
+        ex_list = exc.add_parser("list", help="GET /v2/edr-rule-exclusions")
+        BaseClient.add_paging(ex_list)
+        ex_list.set_defaults(func=client.cmd_exclusions_list)
+
+        ex_create = exc.add_parser("create", help="POST /v2/edr-rule-exclusions")
+        ex_create.add_argument(
+            "--file",
+            required=True,
+            help="JSON body (or '-' for stdin), e.g. {\"exclusion\": {...}}",
+        )
+        ex_create.set_defaults(func=client.cmd_exclusions_create)
+
+        ex_get = exc.add_parser(
+            "get", help="GET /v2/edr-rule-exclusions/{exclusionUuid}"
+        )
+        ex_get.add_argument("exclusion_uuid", help="EDR rule exclusion UUID")
+        ex_get.set_defaults(func=client.cmd_exclusions_get)
+
+        ex_delete = exc.add_parser(
+            "delete", help="DELETE /v2/edr-rule-exclusions/{exclusionUuid}"
+        )
+        ex_delete.add_argument("exclusion_uuid", help="EDR rule exclusion UUID")
+        ex_delete.set_defaults(func=client.cmd_exclusions_delete)
+
+        ex_upd = exc.add_parser(
+            "update-definition",
+            help="POST /v2/edr-rule-exclusions/{exclusionUuid}:updateDefinition",
+        )
+        ex_upd.add_argument("exclusion_uuid", help="EDR rule exclusion UUID")
+        ex_upd.add_argument(
+            "--xml-definition", required=True, help="New XML exclusion definition"
+        )
+        ex_upd.set_defaults(func=client.cmd_exclusions_update_definition)

@@ -3,13 +3,16 @@
 
 from __future__ import annotations
 
+import argparse
+import json
+import os
 from pathlib import Path
 from typing import Any
 
 import requests
 
 import _http
-from skill_env import ENV
+from skill_env import ConfigError, ENV
 
 TOKEN_PATH = "/oauth/token"
 
@@ -174,3 +177,118 @@ def ensure_access_token(
     )
     result["source"] = "password"
     return result
+
+
+def _dump(data: object) -> None:
+    print(json.dumps(data, indent=2, default=str))
+
+
+class Authentication:
+    @staticmethod
+    def cmd_env_check(_: argparse.Namespace) -> int | None:
+        try:
+            cfg = ENV.resolve(require_credentials=True)
+        except ConfigError as exc:
+            _dump(
+                {
+                    "ok": False,
+                    "env": str(ENV.env_path()),
+                    "library": ENV.display_skill_home(),
+                    "error": str(exc),
+                }
+            )
+            return 1
+        _dump(
+            {
+                "ok": True,
+                "env": str(ENV.env_path()),
+                "library": ENV.display_skill_home(),
+                "base_url": cfg["base_url"],
+                "token_url": cfg["token_url"],
+                "api_url": cfg["api_url"],
+                "automation_url": cfg["automation_url"],
+                "app_url": cfg["app_url"],
+                "asset_url": cfg["asset_url"],
+                "policy_url": cfg["policy_url"],
+                "incident_url": cfg["incident_url"],
+                "patch_url": cfg["patch_url"],
+                "username": cfg["username"],
+                "has_access_token": bool(os.getenv("ESET_ACCESS_TOKEN", "").strip()),
+                "has_refresh_token": bool(os.getenv("ESET_REFRESH_TOKEN", "").strip()),
+            }
+        )
+        return None
+
+    @staticmethod
+    def cmd_token(args: argparse.Namespace) -> int | None:
+        cfg = ENV.resolve(require_credentials=True)
+        if args.print_request:
+            req = build_request(
+                cfg["token_url"],
+                username=cfg["username"],
+                password=cfg["password"],
+                refresh_token=args.refresh,
+            )
+            _dump(
+                {
+                    "method": req["method"],
+                    "url": req["url"],
+                    "headers": req["headers"],
+                    "body": redact(req["data"]),
+                }
+            )
+            return None
+
+        try:
+            result = ensure_access_token(
+                cfg["token_url"],
+                username=cfg["username"],
+                password=cfg["password"],
+                refresh_token=args.refresh
+                or cfg["env_values"].get("ESET_REFRESH_TOKEN", "").strip()
+                or None,
+                force=True,
+            )
+        except AuthError as exc:
+            _dump({"ok": False, "error": str(exc)})
+            return 1
+
+        if args.token_only and result.get("ok"):
+            print(result["access_token"])
+            return None
+
+        safe = {
+            k: v
+            for k, v in result.items()
+            if k not in ("access_token", "refresh_token")
+        }
+        safe["access_token"] = "***"
+        if result.get("refresh_token"):
+            safe["refresh_token"] = "***"
+        safe["saved_to"] = str(ENV.env_path())
+        _dump(safe)
+        return None if result.get("ok") else 1
+
+    @staticmethod
+    def register(sub: argparse._SubParsersAction) -> None:
+        sub.add_parser(
+            "env-check", help="Validate .env + resolved paths (no network)"
+        ).set_defaults(func=Authentication.cmd_env_check)
+
+        p_token = sub.add_parser("token", help="Get an OAuth Bearer token")
+        p_token.add_argument(
+            "--refresh",
+            metavar="REFRESH_TOKEN",
+            help="Use the refresh_token grant instead of password",
+        )
+        p_token.add_argument(
+            "--print-request",
+            action="store_true",
+            help="Dry run: print the request (secrets masked) without calling the API",
+        )
+        p_token.add_argument(
+            "--token-only",
+            action="store_true",
+            help="On success, print only the access_token",
+        )
+        p_token.set_defaults(func=Authentication.cmd_token)

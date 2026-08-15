@@ -3,12 +3,24 @@
 
 from __future__ import annotations
 
+import argparse
+import json
+import sys
+from pathlib import Path
 from typing import Any
 
 import requests
 
 import _http
 import authentication as auth
+from skill_env import ConfigError, ENV
+
+TOKEN_PARENT = argparse.ArgumentParser(add_help=False)
+TOKEN_PARENT.add_argument(
+    "--token",
+    metavar="ACCESS_TOKEN",
+    help="Bearer access token to use (skip the password grant)",
+)
 
 
 class ApiError(Exception):
@@ -23,40 +35,32 @@ class ApiError(Exception):
 
 class BaseClient:
     error_class: type[ApiError] = ApiError
+    url_key: str = ""
 
-    def __init__(
-        self,
-        base_url: str,
-        *,
-        token_url: str,
-        username: str | None = None,
-        password: str | None = None,
-        access_token: str | None = None,
-        timeout: int = 30,
-        session: requests.Session | None = None,
-    ):
-        if not base_url:
-            raise ValueError("base_url is required")
-        if not token_url:
-            raise ValueError("token_url is required")
-        self.base_url = base_url.rstrip("/")
-        self.token_url = token_url
-        self.username = username
-        self.password = password
-        self._token_override = (access_token or "").strip() or None
+    def __init__(self) -> None:
+        self.timeout = 30
+        self.session = requests.Session()
         self._token: str | None = None
-        self.timeout = timeout
-        self.session = session or requests.Session()
+        try:
+            self.base_url = ENV.gateway_url(self.url_key).rstrip("/")
+            self.token_url = ENV.token_url()
+            self.username = ENV.username()
+            self.password = ENV.password()
+        except ConfigError:
+            self.base_url = ""
+            self.token_url = ""
+            self.username = None
+            self.password = None
 
     def _ensure_token(self, *, force: bool = False) -> str:
         if force:
             self._token = None
-            self._token_override = None
+            ENV.access_token_override = None
         result = auth.ensure_access_token(
             self.token_url,
             username=self.username,
             password=self.password,
-            access_token=self._token_override or self._token,
+            access_token=ENV.access_token_override or self._token,
             force=force,
         )
         token = result.get("access_token")
@@ -80,6 +84,8 @@ class BaseClient:
         json_body: Any | None = None,
         _retried: bool = False,
     ) -> Any:
+        if not self.base_url:
+            raise ConfigError("ESET_URL is not set")
         resp = _http.send(
             method,
             f"{self.base_url}{path}",
@@ -105,6 +111,20 @@ class BaseClient:
         raise self.error_class(
             resp.status_code, _http.decode_body(resp), _http.request_id(resp)
         )
+
+    @staticmethod
+    def dump(data: Any) -> None:
+        print(json.dumps(data, indent=2, default=str))
+
+    @staticmethod
+    def add_paging(parser: argparse.ArgumentParser) -> None:
+        parser.add_argument("--page-size", type=int, default=None, help="Page size")
+        parser.add_argument("--page-token", default=None, help="Pagination token")
+
+    @staticmethod
+    def load_json_file(path: str) -> Any:
+        text = sys.stdin.read() if path == "-" else Path(path).read_text()
+        return json.loads(text)
 
     @staticmethod
     def _page_params(

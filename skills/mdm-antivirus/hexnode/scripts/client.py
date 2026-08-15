@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
+import argparse
+import json
+from pathlib import Path
 from typing import Any
 
 import requests
 
 from skill_env import ENV
+
+
+class ConfigError(Exception):
+    pass
 
 
 class HexnodeError(RuntimeError):
@@ -63,6 +70,23 @@ class HexnodeClient:
         if resp.status_code >= 400:
             raise HexnodeError(resp.status_code, body)
         return body
+
+    @staticmethod
+    def dump(data: Any) -> None:
+        print(json.dumps(data, indent=2, default=str))
+
+    @staticmethod
+    def add_paging(parser: argparse.ArgumentParser) -> None:
+        parser.add_argument("--page", type=int)
+        parser.add_argument("--per-page", type=int)
+
+    @staticmethod
+    def load_json_file(path: str) -> Any:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+
+    def dump_result(self, result: Any, *, empty_status: int = 204) -> int:
+        self.dump(result if result is not None else {"ok": True, "status": empty_status})
+        return 0
 
     @staticmethod
     def _page_params(

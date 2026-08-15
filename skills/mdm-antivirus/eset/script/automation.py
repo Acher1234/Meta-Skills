@@ -27,9 +27,11 @@ Management, resolved by ``cli.py`` as ``api_url``/``automation_url``, override
 
 from __future__ import annotations
 
+import argparse
 from typing import Any, Iterable, Iterator
 
-from _client import ApiError, BaseClient
+from _client import TOKEN_PARENT, ApiError, BaseClient
+from skill_env import ConfigError
 
 
 #: task.action.name -> human label (complete list from the Automation docs).
@@ -266,6 +268,7 @@ class AutomationClient(BaseClient):
     """Thin client over the ESET Connect Automation (Device tasks) REST API."""
 
     error_class = AutomationError
+    url_key = "automation_url"
 
 
     def list_tasks(
@@ -369,3 +372,402 @@ class AutomationClient(BaseClient):
             token = page.get("nextPageToken")
             if not token:
                 break
+
+    def _task_kwargs(self, args: argparse.Namespace) -> dict:
+        return {
+            "targets": build_targets(devices=args.device, groups=args.group),
+            "display_name": args.display_name,
+            "description": args.description,
+            "expire_time": args.expire_time,
+        }
+
+    def _create_named(
+        self, args: argparse.Namespace, action_name: str, params: dict | None = None
+    ) -> None:
+        self.dump(
+            self.create_task(
+                build_task(action_name, params=params, **self._task_kwargs(args))
+            )
+        )
+        return None
+
+    def cmd_list(self, args: argparse.Namespace) -> None:
+        self.dump(
+            self.list_tasks(page_size=args.page_size, page_token=args.page_token)
+        )
+        return None
+
+    def cmd_get(self, args: argparse.Namespace) -> None:
+        self.dump(self.get_task(args.task_uuid))
+        return None
+
+    def cmd_delete(self, args: argparse.Namespace) -> None:
+        self.dump(self.delete_task(args.task_uuid))
+        return None
+
+    def cmd_runs(self, args: argparse.Namespace) -> None:
+        self.dump(
+            self.list_task_runs(
+                args.task_uuid, page_size=args.page_size, page_token=args.page_token
+            )
+        )
+        return None
+
+    def cmd_update_targets(self, args: argparse.Namespace) -> None:
+        if args.file:
+            self.dump(
+                self.update_task_targets(
+                    args.task_uuid, body=self.load_json_file(args.file)
+                )
+            )
+        else:
+            self.dump(
+                self.update_task_targets(
+                    args.task_uuid,
+                    build_targets(devices=args.device, groups=args.group),
+                )
+            )
+        return None
+
+    def cmd_update_triggers(self, args: argparse.Namespace) -> None:
+        if args.file:
+            self.dump(
+                self.update_task_triggers(
+                    args.task_uuid, body=self.load_json_file(args.file)
+                )
+            )
+        else:
+            self.dump(
+                self.update_task_triggers(
+                    args.task_uuid, [build_manual_trigger(args.expire_time)]
+                )
+            )
+        return None
+
+    def cmd_create(self, args: argparse.Namespace) -> None:
+        if args.file:
+            self.dump(self.create_task(self.load_json_file(args.file)))
+            return None
+        if not args.action:
+            raise ConfigError("create requires --action NAME (or --file body.json)")
+        params = (
+            self.load_json_file(args.params_file) if args.params_file else None
+        )
+        self.dump(
+            self.create_task(
+                build_task(args.action, params=params, **self._task_kwargs(args))
+            )
+        )
+        return None
+
+    def cmd_isolate(self, args: argparse.Namespace) -> None:
+        return self._create_named(args, "StartNetworkIsolation")
+
+    def cmd_end_isolation(self, args: argparse.Namespace) -> None:
+        return self._create_named(args, "EndNetworkIsolation")
+
+    def cmd_stop_managing(self, args: argparse.Namespace) -> None:
+        return self._create_named(args, "StopManaging")
+
+    def cmd_av_remove(self, args: argparse.Namespace) -> None:
+        return self._create_named(args, "ThirdPartyAVRemove")
+
+    def cmd_logout(self, args: argparse.Namespace) -> None:
+        return self._create_named(args, "LogOffComputerUser")
+
+    def cmd_vulnerability_scan(self, args: argparse.Namespace) -> None:
+        return self._create_named(
+            args, "InitiateVulnerabilityScan", build_vulnerability_scan_params()
+        )
+
+    def cmd_scan(self, args: argparse.Namespace) -> None:
+        return self._create_named(
+            args,
+            "OnDemandScan",
+            build_scan_params(
+                scan_profile=args.scan_profile,
+                custom_profile_name=args.custom_profile or "",
+                scan_targets=args.scan_target or None,
+                cleaning_enabled=args.cleaning,
+                shutdown_enabled=args.shutdown,
+                postpone=args.postpone,
+            ),
+        )
+
+    def cmd_shutdown(self, args: argparse.Namespace) -> None:
+        return self._create_named(
+            args,
+            "ShutdownComputer",
+            build_shutdown_params(restart=args.restart, postpone=args.postpone),
+        )
+
+    def cmd_os_update(self, args: argparse.Namespace) -> None:
+        return self._create_named(
+            args,
+            "SystemUpdate",
+            build_system_update_params(
+                accept_eula=args.accept_eula,
+                install_optional_updates=args.optional_updates,
+                allow_reboot=args.allow_reboot,
+                postpone=args.postpone,
+            ),
+        )
+
+    def cmd_run_command(self, args: argparse.Namespace) -> None:
+        return self._create_named(
+            args,
+            "RunCommand",
+            build_run_command_params(
+                args.command_line, args.current_directory or ""
+            ),
+        )
+
+    def cmd_kill_process(self, args: argparse.Namespace) -> None:
+        return self._create_named(
+            args,
+            "KillProcessByPid",
+            build_kill_process_params(
+                pid=args.pid,
+                executable_hash_sha1=args.sha1 or "",
+                executable_hash_sha2_256=args.sha256 or "",
+            ),
+        )
+
+    def cmd_apply_patch(self, args: argparse.Namespace) -> None:
+        return self._create_named(
+            args,
+            "ApplyApplicationPatch",
+            build_apply_patch_params(args.application_uuid),
+        )
+
+    @staticmethod
+    def register(sub: argparse._SubParsersAction) -> None:
+        client = AutomationClient()
+        p = sub.add_parser(
+            "tasks", parents=[TOKEN_PARENT], help="Automation (Device tasks)"
+        )
+        tasks = p.add_subparsers(required=True)
+
+        t_list = tasks.add_parser("list", help="GET /v1/device_tasks")
+        BaseClient.add_paging(t_list)
+        t_list.set_defaults(func=client.cmd_list)
+
+        t_get = tasks.add_parser("get", help="GET /v1/device_tasks/{taskUuid}")
+        t_get.add_argument("task_uuid", help="Device task UUID")
+        t_get.set_defaults(func=client.cmd_get)
+
+        t_delete = tasks.add_parser("delete", help="DELETE /v1/device_tasks/{taskUuid}")
+        t_delete.add_argument("task_uuid", help="Device task UUID")
+        t_delete.set_defaults(func=client.cmd_delete)
+
+        t_runs = tasks.add_parser("runs", help="GET /v1/device_tasks/{taskUuid}/runs")
+        t_runs.add_argument("task_uuid", help="Device task UUID")
+        BaseClient.add_paging(t_runs)
+        t_runs.set_defaults(func=client.cmd_runs)
+
+        t_utargets = tasks.add_parser(
+            "update-targets",
+            help="POST /v1/device_tasks/{taskUuid}:updateTaskTargets",
+        )
+        t_utargets.add_argument("task_uuid", help="Device task UUID")
+        t_utargets.add_argument(
+            "--device",
+            action="append",
+            default=[],
+            metavar="UUID",
+            help="Target device UUID (repeatable)",
+        )
+        t_utargets.add_argument(
+            "--group",
+            action="append",
+            default=[],
+            metavar="UUID",
+            help="Target device-group UUID (repeatable)",
+        )
+        t_utargets.add_argument(
+            "--file",
+            help="JSON file with the full targets body (overrides --device/--group)",
+        )
+        t_utargets.set_defaults(func=client.cmd_update_targets)
+
+        t_utriggers = tasks.add_parser(
+            "update-triggers",
+            help="POST /v1/device_tasks/{taskUuid}:updateTaskTriggers",
+        )
+        t_utriggers.add_argument("task_uuid", help="Device task UUID")
+        t_utriggers.add_argument(
+            "--expire-time",
+            metavar="RFC3339",
+            help="Manual trigger expireTime (e.g. 2026-03-21T11:30:34Z)",
+        )
+        t_utriggers.add_argument(
+            "--file",
+            help="JSON file with the full triggers body (overrides --expire-time)",
+        )
+        t_utriggers.set_defaults(func=client.cmd_update_triggers)
+
+        task_common = argparse.ArgumentParser(add_help=False)
+        task_common.add_argument(
+            "--device",
+            action="append",
+            default=[],
+            metavar="UUID",
+            help="Target device UUID (repeatable)",
+        )
+        task_common.add_argument(
+            "--group",
+            action="append",
+            default=[],
+            metavar="UUID",
+            help="Target device-group UUID (repeatable)",
+        )
+        task_common.add_argument("--display-name", help="Task display name")
+        task_common.add_argument("--description", help="Task description")
+        task_common.add_argument(
+            "--expire-time",
+            metavar="RFC3339",
+            help="Manual trigger expireTime (e.g. 2026-03-21T11:30:34Z)",
+        )
+
+        t_create = tasks.add_parser(
+            "create",
+            parents=[task_common],
+            help="POST /v1/device_tasks (generic create)",
+        )
+        t_create.add_argument(
+            "--action", choices=sorted(TASK_ACTIONS), help="task.action.name"
+        )
+        t_create.add_argument(
+            "--params-file",
+            help="JSON file for action.params (must include @type)",
+        )
+        t_create.add_argument(
+            "--file",
+            help="JSON file with the full {'task': {...}} body (overrides all other flags)",
+        )
+        t_create.set_defaults(func=client.cmd_create)
+
+        tasks.add_parser(
+            "isolate", parents=[task_common], help="Create StartNetworkIsolation task"
+        ).set_defaults(func=client.cmd_isolate)
+        tasks.add_parser(
+            "end-isolation",
+            parents=[task_common],
+            help="Create EndNetworkIsolation task",
+        ).set_defaults(func=client.cmd_end_isolation)
+        tasks.add_parser(
+            "stop-managing", parents=[task_common], help="Create StopManaging task"
+        ).set_defaults(func=client.cmd_stop_managing)
+        tasks.add_parser(
+            "av-remove",
+            parents=[task_common],
+            help="Create ThirdPartyAVRemove task",
+        ).set_defaults(func=client.cmd_av_remove)
+        tasks.add_parser(
+            "logout", parents=[task_common], help="Create LogOffComputerUser task"
+        ).set_defaults(func=client.cmd_logout)
+        tasks.add_parser(
+            "vulnerability-scan",
+            parents=[task_common],
+            help="Create InitiateVulnerabilityScan task",
+        ).set_defaults(func=client.cmd_vulnerability_scan)
+
+        t_scan = tasks.add_parser(
+            "scan", parents=[task_common], help="Create OnDemandScan task"
+        )
+        t_scan.add_argument(
+            "--scan-profile",
+            choices=SCAN_PROFILES,
+            default="InDepth",
+            help="Scan profile",
+        )
+        t_scan.add_argument(
+            "--custom-profile",
+            help="Custom profile name (for scan-profile Custom)",
+        )
+        t_scan.add_argument(
+            "--scan-target",
+            action="append",
+            default=[],
+            metavar="TARGET",
+            help="Scan target (repeatable; empty = eset://AllTargets)",
+        )
+        t_scan.add_argument("--cleaning", action="store_true", help="Enable cleaning")
+        t_scan.add_argument(
+            "--shutdown", action="store_true", help="Shut down after scan"
+        )
+        t_scan.add_argument(
+            "--postpone",
+            choices=POSTPONE_VALUES,
+            help="Allowed user postpone duration",
+        )
+        t_scan.set_defaults(func=client.cmd_scan)
+
+        t_shutdown = tasks.add_parser(
+            "shutdown", parents=[task_common], help="Create ShutdownComputer task"
+        )
+        t_shutdown.add_argument(
+            "--restart", action="store_true", help="Restart instead of shutting down"
+        )
+        t_shutdown.add_argument(
+            "--postpone",
+            choices=POSTPONE_VALUES,
+            help="Allowed user postpone duration",
+        )
+        t_shutdown.set_defaults(func=client.cmd_shutdown)
+
+        t_osupd = tasks.add_parser(
+            "os-update", parents=[task_common], help="Create SystemUpdate task"
+        )
+        t_osupd.add_argument(
+            "--accept-eula",
+            action="store_true",
+            help="Accept EULA automatically (Windows)",
+        )
+        t_osupd.add_argument(
+            "--optional-updates",
+            action="store_true",
+            help="Install optional updates (Windows)",
+        )
+        t_osupd.add_argument(
+            "--allow-reboot",
+            action="store_true",
+            help="Allow reboot if an update requests it",
+        )
+        t_osupd.add_argument(
+            "--postpone",
+            choices=POSTPONE_VALUES,
+            help="Allowed user postpone duration",
+        )
+        t_osupd.set_defaults(func=client.cmd_os_update)
+
+        t_run = tasks.add_parser(
+            "run-command", parents=[task_common], help="Create RunCommand task"
+        )
+        t_run.add_argument("--command-line", required=True, help="Command line to execute")
+        t_run.add_argument(
+            "--current-directory", help="Working directory for the script"
+        )
+        t_run.set_defaults(func=client.cmd_run_command)
+
+        t_kill = tasks.add_parser(
+            "kill-process", parents=[task_common], help="Create KillProcessByPid task"
+        )
+        t_kill.add_argument("--pid", type=int, required=True, help="Local process ID")
+        t_kill.add_argument("--sha1", help="SHA1 hash of the process executable")
+        t_kill.add_argument(
+            "--sha256", help="SHA2-256 hash of the process executable"
+        )
+        t_kill.set_defaults(func=client.cmd_kill_process)
+
+        t_patch = tasks.add_parser(
+            "apply-patch",
+            parents=[task_common],
+            help="Create ApplyApplicationPatch task",
+        )
+        t_patch.add_argument(
+            "--application-uuid",
+            required=True,
+            help="UUID of the application to patch",
+        )
+        t_patch.set_defaults(func=client.cmd_apply_patch)
