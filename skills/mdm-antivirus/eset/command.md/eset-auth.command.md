@@ -1,6 +1,10 @@
 # eset-auth — Commands
 
-Validate credentials and obtain OAuth Bearer tokens. No API gateway required.
+Validate credentials and obtain OAuth Bearer tokens.
+
+### API gateway
+
+None — OAuth uses `ESET_URL` (`POST /oauth/token`).
 
 All commands: `~/.meta-skills/.venv/bin/python cli.py …` from `~/.meta-skills/skills/mdm-antivirus/eset/script`.
 

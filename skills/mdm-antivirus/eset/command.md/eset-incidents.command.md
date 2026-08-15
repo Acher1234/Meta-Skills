@@ -2,6 +2,12 @@
 
 API docs: [Incident Management](https://help.eset.com/eset_connect/en-US/incident_management.html)
 
+### API gateway
+
+`ESET_INCIDENT_URL` — `https://<region>.incident-management.eset.systems` (from `ESET_URL` unless overridden).
+
+Requires ESET Inspect.
+
 ### Incidents (`incidents`)
 
 | Slash | CLI | Endpoint |

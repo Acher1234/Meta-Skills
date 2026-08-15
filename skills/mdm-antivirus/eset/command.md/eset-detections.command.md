@@ -2,6 +2,12 @@
 
 API docs: [Incident Management](https://help.eset.com/eset_connect/en-US/incident_management.html)
 
+### API gateway
+
+`ESET_INCIDENT_URL` — `https://<region>.incident-management.eset.systems` (from `ESET_URL` unless overridden).
+
+v1 works for ESET PROTECT; v2 list needs ESET Inspect (Cloud Office for v2 detections list).
+
 ### Detections (`detections`)
 
 | Slash | CLI | Endpoint |

@@ -2,6 +2,10 @@
 
 API docs: [Application Management](https://help.eset.com/eset_connect/en-US/application_management.html)
 
+### API gateway
+
+`ESET_APP_URL` — `https://<region>.application-management.eset.systems` (from `ESET_URL` unless overridden).
+
 | Slash | CLI | Endpoint |
 |-------|-----|----------|
 | `/eset_executables_list` | `python cli.py executables list [--page-size N] [--page-token T]` | `GET /v1/executables` |

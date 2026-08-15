@@ -42,6 +42,9 @@ echo '{"name":"<FOLDER_NAME>"}' | bw encode | bw create folder
 ## Create org-collection
 
 Minimal ACL: empty `groups` / `users` arrays. Or keep slots and replace ids.
+`bw create org-collection` ignores `users[]` (only `groups[]` is sent to the server).
+To assign a user: always create, then edit, then verify with `get org-collection`.
+Do not use the Public API on self-hosted Vaultwarden for ACLs.
 
 ```bash
 echo '{"organizationId":"<ORG_ID>","name":"<COLLECTION_NAME>","externalId":null,"groups":[],"users":[]}' | bw encode | bw create org-collection --organizationid <ORG_ID>

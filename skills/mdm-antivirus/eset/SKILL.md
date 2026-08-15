@@ -82,23 +82,7 @@ Successful exchanges upsert `ESET_ACCESS_TOKEN` / `ESET_REFRESH_TOKEN` into the 
 
 API commands auto-acquire a token from `.env`. Map `/eset_<…>` → `python cli.py …`; return JSON.
 
-Pass `--token` on any API command to override the `.env` token. List commands support `--page-size`; most also support `--page-token`.
-
-### API gateways
-
-| Section | Env override | Default host |
-|---------|--------------|--------------|
-| eset-device-management | `ESET_API_URL` | `https://<region>.automation.eset.systems` |
-| eset-application-management | `ESET_APP_URL` | `https://<region>.application-management.eset.systems` |
-| eset-asset-management | `ESET_ASSET_URL` | `https://<region>.automation.eset.systems` |
-| eset-policy-management | `ESET_POLICY_URL` | `https://<region>.automation.eset.systems` |
-| eset-detections / eset-edr / eset-incidents | `ESET_INCIDENT_URL` | `https://<region>.incident-management.eset.systems` |
-| eset-automation | `ESET_AUTOMATION_URL` | `https://<region>.automation.eset.systems` |
-| eset-patch-management | `ESET_PATCH_URL` | `https://<region>.patch-management.eset.systems` |
-
-`patches apply` uses the Automation gateway (`ApplyApplicationPatch`), same as `/eset_tasks_apply-patch`.
-
-Detections v1 work for ESET PROTECT; v2 list and EDR/incidents need ESET Inspect (Cloud Office for v2 detections list).
+Pass `--token` on any API command to override the `.env` token. List commands support `--page-size`; most also support `--page-token`. Gateway host and env override are in each command file.
 
 ## eset-auth
 
@@ -212,7 +196,7 @@ python cli.py devices list          # reuses ESET_ACCESS_TOKEN from .env
 
 - `authentication.py` owns `TOKEN_PATH=/oauth/token`, token exchange, and `.env` persistence.
 - `skill_env.py` resolves the SkillCred `.env` (`CURRENT_SKILL_DIRECTORY`).
-- API clients keep only implemented endpoints; see **API gateways** above.
+- API clients keep only implemented endpoints; gateway hosts are in each command file.
 - Never commit `.env` or echo tokens.
 - `202` = request cached; retry with `response-id`.
 - Docs: [POST /oauth/token](https://help.eset.com/eset_connect/en-US/authentication_oauth_token_post.html).

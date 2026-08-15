@@ -2,6 +2,10 @@
 
 API docs: [Device Management](https://help.eset.com/eset_connect/en-US/device_management.html)
 
+### API gateway
+
+`ESET_API_URL` — `https://<region>.automation.eset.systems` (from `ESET_URL` unless overridden).
+
 ### Device groups (`groups`)
 
 | Slash | CLI | Endpoint |
