@@ -2,8 +2,9 @@
 name: elastic
 description: >-
   Elasticsearch cluster via a Python CLI (basic auth). Ping, cluster health,
-  and list indices. Use when the user mentions Elasticsearch, Elastic, an
-  ES cluster, or invokes /elastic_*.
+  list indices, and manage Kibana dashboards and visualizations. Use when the
+  user mentions Elasticsearch, Elastic, Kibana, an ES cluster, or invokes
+  /elastic_*.
 disable-model-invocation: true
 ---
 
@@ -34,7 +35,7 @@ Elasticsearch REST API via the official Python client ([docs](https://www.elasti
 
 ## When to use
 
-Trigger phrases: "Elasticsearch", "Elastic cluster", "list ES indices", "cluster health", `/elastic_*`.
+Trigger phrases: "Elasticsearch", "Elastic cluster", "Kibana dashboards", "list ES indices", "cluster health", `/elastic_*`.
 
 `skill_env.py` loads `.env` via SkillCred — do not `source` it in the shell. `CURRENT_SKILL_DIRECTORY` is the only required export.
 
@@ -60,17 +61,45 @@ First deps: `cd ~/.meta-skills/skills/db/elastic && ~/.meta-skills/install.sh pi
 
 Local self-signed certs (localhost / 127.0.0.1) skip TLS verify. Elastic Cloud keeps verify on.
 
-## Slash commands
+## Command sections
 
-Map `/elastic_<…>` → `python scripts/cli.py …`; return JSON.
+Map `/elastic_<…>` → `python scripts/cli.py …`; return JSON. Slash/CLI tables live in `command.md/` under the shared library.
 
-| Slash | CLI | Description |
-|-------|-----|-------------|
-| `/elastic_env` | `python scripts/cli.py env` | Validate `.env` (no network) |
-| `/elastic_ping` | `python scripts/cli.py ping` | `GET /` cluster info |
-| `/elastic_health` | `python scripts/cli.py health` | Cluster health |
-| `/elastic_indices_list` | `python scripts/cli.py indices list` | List indices |
-| `/elastic_indices_fields` | `python scripts/cli.py indices fields INDEX` | List field paths + types |
+## elastic-cluster
+
+`.env` validation, cluster ping, and cluster health.
+Open the command file for `/elastic_env`, `/elastic_ping`, or `/elastic_health`.
+
+Commands → `~/.meta-skills/skills/db/elastic/command.md/elastic-cluster.command.md`
+
+---
+
+## elastic-indices
+
+Index inventory, field mappings, and document search.
+Open the command file to list indices, inspect `{INDEX}` fields, or run `--esquery`.
+
+Commands → `~/.meta-skills/skills/db/elastic/command.md/elastic-indices.command.md`
+
+---
+
+## elastic-dashboard
+
+Kibana dashboards — list, get, create, replace.
+Open the command file for dashboard JSON (`{TITLE}`, `{VIS_ID}`, `{DASH_ID}`). `update` is a full replace.
+
+Commands → `~/.meta-skills/skills/db/elastic/command.md/elastic-dashboard.command.md`
+
+---
+
+## elastic-visualization
+
+Kibana visualizations library — list, get, create, replace, delete.
+Open the command file for visualization JSON (`{TITLE}`, `{INDEX_PATTERN}`, `{TIME_FIELD}`, `{VIS_ID}`). `update` is a full replace.
+
+Commands → `~/.meta-skills/skills/db/elastic/command.md/elastic-visualization.command.md`
+
+---
 
 ## How to run
 
@@ -80,6 +109,6 @@ Map `/elastic_<…>` → `python scripts/cli.py …`; return JSON.
 
 ## Notes
 
-- Confirm with the user before destructive index/document writes (none in this CLI yet).
+- Confirm with the user before destructive index/document writes, `kibana visualization delete`, and dashboard/visualization `update` (PUT is a full replace).
 - Never commit `.env` or echo `PASSWORD`.
 - Docs: [Elasticsearch Python client](https://www.elastic.co/guide/en/elasticsearch/client/python-api/current/index.html).

@@ -12,16 +12,18 @@ if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
 from indices import Indices  # noqa: E402
+from kibana import Kibana  # noqa: E402
 from skill_env import register as register_env  # noqa: E402
 from utils import Utils  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Elasticsearch CLI")
-    sub = parser.add_subparsers(dest="command", required=True)
+    parser = argparse.ArgumentParser(description="Elasticsearch / Kibana CLI")
+    sub = parser.add_subparsers(required=True)
     register_env(sub)
     Utils.register(sub)
     Indices.register(sub)
+    Kibana.register(sub)
     args = parser.parse_args(argv)
     return args.func(args)
 
