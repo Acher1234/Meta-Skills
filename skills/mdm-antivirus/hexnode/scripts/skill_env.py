@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import argparse
+import json
 import sys
 from collections.abc import Mapping
 from pathlib import Path
@@ -39,8 +41,32 @@ class HexnodeSkillEnv(SkillEnv):
     def base_url(self) -> str:
         return self.env["HEXNODE_BASE_URL"]
 
+    @staticmethod
+    def env(_: argparse.Namespace) -> int:
+        key = ENV.api_key()
+        print(
+            json.dumps(
+                {
+                    "env_path": str(ENV.env_path()),
+                    "CURRENT_SKILL_DIRECTORY": str(ENV.env_cred().workspace),
+                    "HEXNODE_BASE_URL": ENV.base_url(),
+                    "HEXNODE_API_KEY": key[:4] + "…" if len(key) > 4 else "…",
+                },
+                indent=2,
+                default=str,
+            )
+        )
+        return 0
+
+    @staticmethod
+    def register(sub: argparse._SubParsersAction) -> None:
+        sub.add_parser("env", help="Validate SkillCred .env (no network)").set_defaults(
+            func=HexnodeSkillEnv.env
+        )
+
 
 ENV = HexnodeSkillEnv()
+
 
 if __name__ == "__main__":
     raise SystemExit(env_load_main(ENV, sys.argv[1:]))
