@@ -1,0 +1,1 @@
+zscaler-sdk-python>=1.8.0,<2
