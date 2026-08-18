@@ -1,6 +1,6 @@
 # elastic-dashboard — Commands
 
-Kibana dashboards API. Implemented in `scripts/kibana.py` (`Kibana`) and `scripts/model/dashboard.py`.
+Kibana dashboards API. Implemented in `scripts/dashboard.py` (`KibanaDashboard`) and `scripts/model/dashboard.py`.
 
 `update` is a full replace (`PUT`). Confirm with the user before update.
 

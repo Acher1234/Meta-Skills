@@ -11,6 +11,7 @@ _SCRIPTS = Path(__file__).resolve().parent
 if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
+from alert import Alert  # noqa: E402
 from indices import Indices  # noqa: E402
 from kibana import Kibana  # noqa: E402
 from skill_env import register as register_env  # noqa: E402
@@ -24,6 +25,7 @@ def main(argv: list[str] | None = None) -> int:
     Utils.register(sub)
     Indices.register(sub)
     Kibana.register(sub)
+    Alert.register(sub)
     args = parser.parse_args(argv)
     return args.func(args)
 

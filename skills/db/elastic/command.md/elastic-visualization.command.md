@@ -1,6 +1,6 @@
 # elastic-visualization — Commands
 
-Kibana visualizations API. Implemented in `scripts/kibana.py` (`Kibana`) and `scripts/model/visualization.py`.
+Kibana visualizations API. Implemented in `scripts/visualization.py` (`KibanaVisualization`) and `scripts/model/visualization.py`.
 
 `update` is a full replace (`PUT`). Confirm with the user before update or delete.
 

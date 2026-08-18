@@ -2,9 +2,9 @@
 name: elastic
 description: >-
   Elasticsearch cluster via a Python CLI (basic auth). Ping, cluster health,
-  list indices, and manage Kibana dashboards and visualizations. Use when the
-  user mentions Elasticsearch, Elastic, Kibana, an ES cluster, or invokes
-  /elastic_*.
+  list indices, manage Kibana dashboards, visualizations, data views, and cases, and Elastic
+  Security detection rules. Use when the user mentions Elasticsearch, Elastic,
+  Kibana, an ES cluster, security rules, alerts, cases, or invokes /elastic_*.
 disable-model-invocation: true
 ---
 
@@ -35,7 +35,7 @@ Elasticsearch REST API via the official Python client ([docs](https://www.elasti
 
 ## When to use
 
-Trigger phrases: "Elasticsearch", "Elastic cluster", "Kibana dashboards", "list ES indices", "cluster health", `/elastic_*`.
+Trigger phrases: "Elasticsearch", "Elastic cluster", "Kibana dashboards", "data view", "list ES indices", "cluster health", "security rule", "detection rule", "Kibana case", `/elastic_*`.
 
 `skill_env.py` loads `.env` via SkillCred — do not `source` it in the shell. `CURRENT_SKILL_DIRECTORY` is the only required export.
 
@@ -101,6 +101,33 @@ Commands → `~/.meta-skills/skills/db/elastic/command.md/elastic-visualization.
 
 ---
 
+## elastic-data-view
+
+Kibana data views — get, create, patch, delete.
+Open the command file for `{DATA_VIEW_ID}`, `{INDEX}*`, `{NAME}`, `{TIME_FIELD}`. `update` is a partial POST.
+
+Commands → `~/.meta-skills/skills/db/elastic/command.md/elastic-data-view.command.md`
+
+---
+
+## elastic-alert
+
+Elastic Security detection alerts (get / delete) and rules (create, get, update, delete).
+Open the command file for `{ALERT_ID}`, `{RULE_ID}` / `{JSON}`. Confirm before writes. Rule `update` is a full replace.
+
+Commands → `~/.meta-skills/skills/db/elastic/command.md/elastic-alert.command.md`
+
+---
+
+## elastic-case
+
+Kibana cases — get, create from an alert, attach an alert, delete the case and its alerts.
+Open the command file for `{CASE_ID}`, `{ALERT_ID}` / `{JSON}`. Confirm before writes. `delete` also removes attached alerts.
+
+Commands → `~/.meta-skills/skills/db/elastic/command.md/elastic-case.command.md`
+
+---
+
 ## How to run
 
 1. `export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"` then `cd ~/.meta-skills/skills/db/elastic`.
@@ -109,6 +136,6 @@ Commands → `~/.meta-skills/skills/db/elastic/command.md/elastic-visualization.
 
 ## Notes
 
-- Confirm with the user before destructive index/document writes, `kibana visualization delete`, and dashboard/visualization `update` (PUT is a full replace).
+- Confirm with the user before destructive index/document writes, `kibana visualization delete`, `kibana data-view` create / update / delete, dashboard/visualization `update` (PUT is a full replace), `kibana case` create-from-alert / add-alert / delete, `alert delete`, and `alert security-rule` create / update / delete.
 - Never commit `.env` or echo `PASSWORD`.
 - Docs: [Elasticsearch Python client](https://www.elastic.co/guide/en/elasticsearch/client/python-api/current/index.html).
