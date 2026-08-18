@@ -1,4 +1,4 @@
-"""ZIA URL cloud applications and URL categories — get only."""
+"""ZIA URL cloud applications — get only."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import argparse
 from typing import Any
 
 from zia.client import ZiaClient
+from zia.url_categories import UrlCategoriesClient
 
 
 class UrlCloudAppsClient(ZiaClient):
@@ -88,58 +89,6 @@ class UrlCloudAppsClient(ZiaClient):
             )
         return matches[0]
 
-    def list_url_categories(
-        self,
-        search: str | None = None,
-        *,
-        cfg: dict[str, Any] | None = None,
-    ) -> list[dict[str, Any]]:
-        with self.get_client(cfg) as client:
-            categories, _, err = client.zia.url_categories.list_categories_lite()
-            if err:
-                raise RuntimeError(f"Failed to list URL categories: {err}")
-            result = [self._to_dict(cat) for cat in (categories or [])]
-        if search and search.strip():
-            needle = search.strip().casefold()
-            result = [cat for cat in result if self._matches(cat, needle)]
-        return result
-
-    def get_url_category(
-        self,
-        *,
-        category_id: str | None = None,
-        category_name: str | None = None,
-        cfg: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        if not category_id and not category_name:
-            raise ValueError("category_id or category_name is required")
-
-        categories = self.list_url_categories(cfg=cfg)
-        if category_id and str(category_id).strip():
-            key = str(category_id).strip().casefold()
-            for cat in categories:
-                if str(cat.get("id") or "").casefold() == key:
-                    return cat
-            raise RuntimeError(f"URL category not found: {category_id}")
-
-        needle = (category_name or "").strip().casefold()
-        matches = [
-            cat
-            for cat in categories
-            if str(cat.get("configured_name") or cat.get("configuredName") or "")
-            .casefold()
-            == needle
-            or str(cat.get("name") or "").casefold() == needle
-        ]
-        if not matches:
-            raise RuntimeError(f"URL category not found: {category_name!r}")
-        if len(matches) > 1:
-            ids = ", ".join(str(cat.get("id")) for cat in matches)
-            raise RuntimeError(
-                f"multiple URL categories named {category_name!r}: {ids}"
-            )
-        return matches[0]
-
     def cmd_list(self, args: argparse.Namespace) -> None:
         self.dump(
             self.list_cloud_apps(
@@ -161,7 +110,7 @@ class UrlCloudAppsClient(ZiaClient):
 
     def cmd_categories(self, args: argparse.Namespace) -> None:
         self.dump(
-            self.list_url_categories(
+            UrlCategoriesClient(self.cfg).list_url_categories(
                 search=args.search or None,
                 cfg=self.cfg_from_args(args),
             )
@@ -170,7 +119,7 @@ class UrlCloudAppsClient(ZiaClient):
 
     def cmd_category(self, args: argparse.Namespace) -> None:
         self.dump(
-            self.get_url_category(
+            UrlCategoriesClient(self.cfg).get_url_category(
                 category_id=args.id or None,
                 category_name=args.name or None,
                 cfg=self.cfg_from_args(args),
@@ -203,13 +152,17 @@ class UrlCloudAppsClient(ZiaClient):
         u_get.set_defaults(func=client.cmd_get)
 
         u_cats = cmds.add_parser(
-            "categories", parents=[overrides], help="List URL categories (lite)"
+            "categories",
+            parents=[overrides],
+            help="List URL categories (via url-categories)",
         )
         u_cats.add_argument("--search", default="", help="Filter by name or id")
         u_cats.set_defaults(func=client.cmd_categories)
 
         u_cat = cmds.add_parser(
-            "category", parents=[overrides], help="Get a URL category (lite)"
+            "category",
+            parents=[overrides],
+            help="Get a URL category (via url-categories)",
         )
         u_cat.add_argument("--id", help="Category id")
         u_cat.add_argument("--name", help="Exact category name")

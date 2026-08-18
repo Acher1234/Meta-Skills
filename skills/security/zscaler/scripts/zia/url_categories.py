@@ -22,13 +22,31 @@ class UrlCategoriesClient(ZiaClient):
         return cleaned
 
     def list_url_categories(
-        self, *, cfg: dict[str, Any] | None = None
+        self,
+        search: str | None = None,
+        *,
+        cfg: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         with self.get_client(cfg) as client:
             categories, _, err = client.zia.url_categories.list_categories()
             if err:
                 raise RuntimeError(f"Failed to list URL categories: {err}")
-            return self.records(categories)
+            result = self.records(categories)
+        if search and search.strip():
+            needle = search.strip().casefold()
+            result = [
+                cat
+                for cat in result
+                if needle in str(cat.get("id") or "").casefold()
+                or needle
+                in str(
+                    cat.get("configured_name")
+                    or cat.get("configuredName")
+                    or cat.get("name")
+                    or ""
+                ).casefold()
+            ]
+        return result
 
     def get_url_category(
         self,
@@ -52,12 +70,23 @@ class UrlCategoriesClient(ZiaClient):
                 return cat.as_dict() if hasattr(cat, "as_dict") else dict(cat)
 
         needle = (category_name or "").strip().casefold()
-        for cat in self.list_url_categories(cfg=cfg):
-            configured = str(cat.get("configured_name") or "").casefold()
-            cid = str(cat.get("id") or "").casefold()
-            if configured == needle or cid == needle:
-                return cat
-        raise RuntimeError(f"URL category not found: {category_name!r}")
+        matches = [
+            cat
+            for cat in self.list_url_categories(cfg=cfg)
+            if str(cat.get("configured_name") or cat.get("configuredName") or "")
+            .casefold()
+            == needle
+            or str(cat.get("name") or "").casefold() == needle
+            or str(cat.get("id") or "").casefold() == needle
+        ]
+        if not matches:
+            raise RuntimeError(f"URL category not found: {category_name!r}")
+        if len(matches) > 1:
+            ids = ", ".join(str(cat.get("id")) for cat in matches)
+            raise RuntimeError(
+                f"multiple URL categories named {category_name!r}: {ids}"
+            )
+        return matches[0]
 
     def resolve_url_category_ids(
         self,
