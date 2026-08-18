@@ -13,6 +13,8 @@ python scripts/cli.py zia users list --page 1 --page-size 20
 python scripts/cli.py zia users groups
 python scripts/cli.py zia users departments --search {SEARCH}
 python scripts/cli.py zia url-categories list
+python scripts/cli.py zia url-cloud-apps list
+python scripts/cli.py zia url-cloud-apps categories
 python scripts/cli.py zia url-categories create {NAME} --url {URL}
 python scripts/cli.py zia url-filtering-policy list
 python scripts/cli.py zia url-filtering-policy create {NAME} --action BLOCK --category-id {CATEGORY_ID}

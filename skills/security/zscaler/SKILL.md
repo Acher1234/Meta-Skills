@@ -108,6 +108,15 @@ Commands → `~/.meta-skills/skills/security/zscaler/command.md/zscaler-zia-url-
 
 ---
 
+## zscaler-zia-url-cloud-apps
+
+ZIA URL cloud applications and URL categories — get only.
+Open the command file for `{APP_ID}` / `{APP_NAME}` / `{CATEGORY_ID}` / `{CATEGORY_NAME}`.
+
+Commands → `~/.meta-skills/skills/security/zscaler/command.md/zscaler-zia-url-cloud-apps.command.md`
+
+---
+
 ## zscaler-zia-url-filtering-policy
 
 ZIA URL Filtering Policy — list, get, create, update, delete.
@@ -119,7 +128,7 @@ Commands → `~/.meta-skills/skills/security/zscaler/command.md/zscaler-zia-url-
 
 ## zscaler-zia-ip-fqdn-groups
 
-ZIA IP/FQDN destination groups — list, get, update.
+ZIA IP/FQDN destination groups — list, get, create, update.
 Open the command file for `{GROUP_ID}` / `{GROUP_NAME}` / `{TYPE}` / `{ADDRESS}`. Confirm before writes.
 
 Commands → `~/.meta-skills/skills/security/zscaler/command.md/zscaler-zia-ip-fqdn-groups.command.md`
@@ -152,6 +161,6 @@ Commands → `~/.meta-skills/skills/security/zscaler/command.md/zscaler-zia-forw
 
 ## Notes
 
-- Confirm with the user before destructive Zscaler writes (`url-categories delete`, `url-filtering-policy delete` / `update`, `ip-fqdn-groups update`, `forwarding-rule create` / `delete`, `remove-urls`, `activate run`, and other updates).
+- Confirm with the user before destructive Zscaler writes (`url-categories delete`, `url-filtering-policy delete` / `update`, `ip-fqdn-groups create` / `update`, `forwarding-rule create` / `delete`, `remove-urls`, `activate run`, and other updates).
 - Never commit `.env` or echo `ZPA__CLIENT_SECRET`, `ZIA__PASSWORD`, `ZIA__API_KEY`, or `ZIDENTITY__CLIENT_SECRET`.
 - Docs: [ZIA API](https://help.zscaler.com/zia/getting-started-zia-api), [ZPA API auth](https://help.zscaler.com/zpa/about-api-authentication).

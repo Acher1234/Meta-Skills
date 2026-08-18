@@ -18,6 +18,7 @@ from zia.dedicated_ip_gateways import DedicatedIpGatewaysClient  # noqa: E402
 from zia.forwarding_rule import ForwardingRuleClient  # noqa: E402
 from zia.ip_fqdn_groups import IpFqdnGroupsClient  # noqa: E402
 from zia.url_categories import UrlCategoriesClient  # noqa: E402
+from zia.url_cloud_apps import UrlCloudAppsClient  # noqa: E402
 from zia.url_filtering_policy import UrlFilteringPolicyClient  # noqa: E402
 from zia.users import UsersClient  # noqa: E402
 
@@ -31,6 +32,7 @@ def main(argv: list[str] | None = None) -> int:
     ZiaClient.register(zia_cmds)
     UsersClient.register(zia_cmds)
     UrlCategoriesClient.register(zia_cmds)
+    UrlCloudAppsClient.register(zia_cmds)
     UrlFilteringPolicyClient.register(zia_cmds)
     IpFqdnGroupsClient.register(zia_cmds)
     DedicatedIpGatewaysClient.register(zia_cmds)

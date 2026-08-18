@@ -1,4 +1,4 @@
-"""ZIA IP/FQDN destination groups — list, get, update, resolve ids."""
+"""ZIA IP/FQDN destination groups — list, get, create, update, resolve ids."""
 
 from __future__ import annotations
 
@@ -114,6 +114,53 @@ class IpFqdnGroupsClient(ZiaClient):
     def _clean_values(values: list[str] | None) -> list[str]:
         return [str(v).strip() for v in (values or []) if str(v).strip()]
 
+    def create_ip_destination_group(
+        self,
+        name: str,
+        *,
+        group_type: str = "DSTN_FQDN",
+        addresses: list[str] | None = None,
+        description: str | None = None,
+        ip_categories: list[str] | None = None,
+        countries: list[str] | None = None,
+        cfg: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        name = (name or "").strip()
+        if not name:
+            raise ValueError("name is required")
+        cleaned = self._clean_values(addresses)
+        if not cleaned:
+            raise ValueError("at least one --address is required")
+        type_norm = (group_type or "DSTN_FQDN").strip().upper()
+        if type_norm not in DESTINATION_GROUP_TYPES:
+            raise ValueError(
+                f"invalid type {group_type!r}; "
+                f"expected one of {sorted(DESTINATION_GROUP_TYPES)}"
+            )
+        kwargs: dict[str, Any] = {
+            "name": name,
+            "type": type_norm,
+            "addresses": cleaned,
+        }
+        if description:
+            kwargs["description"] = description
+        categories = self._clean_values(ip_categories)
+        if categories:
+            kwargs["ip_categories"] = categories
+        country_list = self._clean_values(countries)
+        if country_list:
+            kwargs["countries"] = country_list
+        with self.get_client(cfg) as client:
+            created, _, err = client.zia.cloud_firewall.add_ip_destination_group(
+                **kwargs
+            )
+            if err:
+                raise RuntimeError(
+                    f"Failed to create destination IP group {name!r}: {err}"
+                )
+            payload = self._to_dict(created)
+        return self.with_activation(payload)
+
     def update_ip_destination_group(
         self,
         *,
@@ -181,7 +228,7 @@ class IpFqdnGroupsClient(ZiaClient):
             if err:
                 raise RuntimeError(f"Failed to update destination IP group {gid}: {err}")
             payload = self._to_dict(updated)
-        return self.with_activation(payload, cfg=cfg)
+        return self.with_activation(payload)
 
     def resolve_dest_ip_group_ids(
         self,
@@ -231,6 +278,20 @@ class IpFqdnGroupsClient(ZiaClient):
         )
         return None
 
+    def cmd_create(self, args: argparse.Namespace) -> None:
+        self.dump(
+            self.create_ip_destination_group(
+                args.name,
+                group_type=args.type,
+                addresses=args.address,
+                description=args.description or None,
+                ip_categories=args.ip_category,
+                countries=args.country,
+                cfg=self.cfg_from_args(args),
+            )
+        )
+        return None
+
     def cmd_update(self, args: argparse.Namespace) -> None:
         self.dump(
             self.update_ip_destination_group(
@@ -275,6 +336,34 @@ class IpFqdnGroupsClient(ZiaClient):
         u_get = cmds.add_parser("get", parents=[overrides], help="Get a group")
         IpFqdnGroupsClient._add_group_ref(u_get)
         u_get.set_defaults(func=client.cmd_get)
+
+        u_create = cmds.add_parser(
+            "create", parents=[overrides], help="Create a group"
+        )
+        u_create.add_argument("--name", required=True, help="Group name")
+        u_create.add_argument(
+            "--address",
+            action="append",
+            required=True,
+            help="IP or FQDN (repeatable)",
+        )
+        u_create.add_argument(
+            "--type",
+            default="DSTN_FQDN",
+            help="DSTN_IP, DSTN_FQDN, DSTN_DOMAIN, DSTN_OTHER",
+        )
+        u_create.add_argument("--description")
+        u_create.add_argument(
+            "--ip-category",
+            action="append",
+            help="Custom URL category (DSTN_OTHER)",
+        )
+        u_create.add_argument(
+            "--country",
+            action="append",
+            help="Country code e.g. COUNTRY_US (DSTN_OTHER)",
+        )
+        u_create.set_defaults(func=client.cmd_create)
 
         u_update = cmds.add_parser(
             "update", parents=[overrides], help="Update a group"
