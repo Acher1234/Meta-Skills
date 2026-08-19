@@ -1,8 +1,6 @@
 #!/bin/bash
 # Daily PC Monitoring Report
 # Uses sysstat (sar) to summarize CPU, RAM, disk usage for the past 24h
-#
-# Output delivered verbatim to Acher on Telegram via cron job.
 
 set -e
 

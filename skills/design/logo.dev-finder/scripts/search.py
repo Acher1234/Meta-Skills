@@ -14,6 +14,7 @@ from urllib.request import Request, urlopen
 from skill_env import ENV
 
 SEARCH_URL = "https://api.logo.dev/search"
+USER_AGENT = "Mozilla/5.0 (compatible; logo-dev-finder/1.0; Meta-Skills)"
 _SAFE_NAME = re.compile(r"[^A-Za-z0-9._-]+")
 _CONTENT_EXT = {
     "image/png": ".png",
@@ -31,7 +32,7 @@ class Search:
         if not q:
             raise SystemExit("query is required (search term or domain)")
         url = f"{SEARCH_URL}?{urlencode({'q': q})}"
-        req = Request(url, method="GET")
+        req = self._request(url)
         req.add_header("Authorization", f"Bearer {ENV.api_key()}")
         req.add_header("Accept", "application/json")
         try:
@@ -99,7 +100,7 @@ class Search:
     def _download(
         self, logo_url: str, folder: Path, domain: str, *, force: bool
     ) -> tuple[Path, bool]:
-        req = Request(logo_url, method="GET")
+        req = self._request(logo_url)
         try:
             with urlopen(req, timeout=60) as resp:
                 payload = resp.read()
@@ -119,6 +120,12 @@ class Search:
     def _safe_stem(domain: str) -> str:
         stem = _SAFE_NAME.sub("_", domain.strip().lower()).strip("._")
         return stem or "logo"
+
+    @staticmethod
+    def _request(url: str) -> Request:
+        req = Request(url, method="GET")
+        req.add_header("User-Agent", USER_AGENT)
+        return req
 
     @staticmethod
     def dump(data: Any) -> None:
