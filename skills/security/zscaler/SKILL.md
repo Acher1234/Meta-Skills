@@ -50,8 +50,7 @@ Prefer `~/.meta-skills/.venv/bin/python` from `~/.meta-skills/skills/security/zs
 | `ZPA__CLIENT_ID` | `zpa.client_id` | ZPA OAuth client id |
 | `ZPA__CLIENT_SECRET` | `zpa.client_secret` | ZPA OAuth client secret |
 | `ZPA__CUSTOMER_ID` | `zpa.customer_id` | ZPA customer id |
-| `ZPA__CLOUD` | `zpa.cloud` | Default `PRODUCTION` |
-| `ZPA__MICROTENANT_ID` | `zpa.microtenant_id` | Optional microtenant |
+| `ZPA__CLOUD` | `zpa.cloud` | Default `ZPATWO` |
 | `ZIA__USERNAME` | `zia.username` | ZIA API user |
 | `ZIA__PASSWORD` | `zia.password` | ZIA API password |
 | `ZIA__API_KEY` | `zia.api_key` | ZIA API key |

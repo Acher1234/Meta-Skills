@@ -15,8 +15,8 @@ Nested JSON → env (`__` separator):
 | `zpa.client_id` | `ZPA__CLIENT_ID` |
 | `zpa.client_secret` | `ZPA__CLIENT_SECRET` |
 | `zpa.customer_id` | `ZPA__CUSTOMER_ID` |
-| `zpa.cloud` | `ZPA__CLOUD` |
-| `zpa.microtenant_id` | `ZPA__MICROTENANT_ID` |
+| `zpa.cloud` | `ZPA__CLOUD` (default `ZPATWO`) |
+| `zpa.microtenant_id` | `ZPA__MICROTENANT_ID` (default `0`, base tenant) |
 | `zia.username` | `ZIA__USERNAME` |
 | `zia.password` | `ZIA__PASSWORD` |
 | `zia.api_key` | `ZIA__API_KEY` |

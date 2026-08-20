@@ -43,7 +43,9 @@ class ZscalerSkillEnv(SkillEnv):
     def apply_defaults(self, values: Mapping[str, str]) -> dict[str, str]:
         out = dict(values)
         if not out.get("ZPA__CLOUD", "").strip():
-            out["ZPA__CLOUD"] = "PRODUCTION"
+            out["ZPA__CLOUD"] = "ZPATWO"
+        if not out.get("ZPA__MICROTENANT_ID", "").strip():
+            out["ZPA__MICROTENANT_ID"] = "0"
         if not out.get("ZIA__CLOUD", "").strip():
             out["ZIA__CLOUD"] = "zscaler"
         return out
