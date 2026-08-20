@@ -1,7 +1,7 @@
 # zscaler-zia-url-categories — Commands
 
 ZIA URL categories via `LegacyZIAClient`. Implemented in `scripts/zia/url_categories.py`.
-Credentials from SkillCred `.env`; CLI flags override them. Confirm before `create`, `add-urls`, `remove-urls`, and `delete`.
+Credentials from SkillCred `.env`. Confirm before `create`, `add-urls`, `remove-urls`, and `delete`.
 
 All commands: `~/.meta-skills/.venv/bin/python scripts/cli.py …` from `~/.meta-skills/skills/security/zscaler`.
 
@@ -14,7 +14,7 @@ All commands: `~/.meta-skills/.venv/bin/python scripts/cli.py …` from `~/.meta
 | `/zscaler_zia_url_categories_remove_urls` | `python scripts/cli.py zia url-categories remove-urls --url {URL} [--id {CATEGORY_ID}] [--name {CATEGORY_NAME}]` | Remove URLs |
 | `/zscaler_zia_url_categories_delete` | `python scripts/cli.py zia url-categories delete [--id {CATEGORY_ID}] [--name {CATEGORY_NAME}]` | Delete a custom category |
 
-Create requires at least one of `--url` / `--ip-range` / `--keyword`. Optional client overrides: `--username` `--password` `--api-key` `--cloud`.
+Create requires at least one of `--url` / `--ip-range` / `--keyword`.
 
 ### Examples
 

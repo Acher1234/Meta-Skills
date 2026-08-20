@@ -25,8 +25,7 @@ class IpFqdnGroupsClient(ZiaClient):
         self,
         *,
         exclude_type: str | None = None,
-        search: str | None = None,
-        cfg: dict[str, Any] | None = None,
+        search: str | None = None
     ) -> list[dict[str, Any]]:
         exclude: str | None = None
         if exclude_type:
@@ -36,7 +35,7 @@ class IpFqdnGroupsClient(ZiaClient):
                     f"invalid exclude_type {exclude_type!r}; "
                     f"expected one of {sorted(DESTINATION_GROUP_TYPES)}"
                 )
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             groups, _, err = client.zia.cloud_firewall.list_ip_destination_groups(
                 exclude_type=exclude
             )
@@ -57,11 +56,10 @@ class IpFqdnGroupsClient(ZiaClient):
         self,
         *,
         group_id: int | str | None = None,
-        group_name: str | None = None,
-        cfg: dict[str, Any] | None = None,
+        group_name: str | None = None
     ) -> dict[str, Any]:
         if group_id is not None and str(group_id).strip():
-            with self.get_client(cfg) as client:
+            with self.get_client() as client:
                 group, _, err = client.zia.cloud_firewall.get_ip_destination_group(
                     int(group_id)
                 )
@@ -79,7 +77,7 @@ class IpFqdnGroupsClient(ZiaClient):
         needle = group_name.strip().casefold()
         matches = [
             group
-            for group in self.list_ip_destination_groups(cfg=cfg)
+            for group in self.list_ip_destination_groups()
             if str(group.get("name") or "").casefold() == needle
         ]
         if not matches:
@@ -122,8 +120,7 @@ class IpFqdnGroupsClient(ZiaClient):
         addresses: list[str] | None = None,
         description: str | None = None,
         ip_categories: list[str] | None = None,
-        countries: list[str] | None = None,
-        cfg: dict[str, Any] | None = None,
+        countries: list[str] | None = None
     ) -> dict[str, Any]:
         name = (name or "").strip()
         if not name:
@@ -150,7 +147,7 @@ class IpFqdnGroupsClient(ZiaClient):
         country_list = self._clean_values(countries)
         if country_list:
             kwargs["countries"] = country_list
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             created, _, err = client.zia.cloud_firewall.add_ip_destination_group(
                 **kwargs
             )
@@ -172,11 +169,10 @@ class IpFqdnGroupsClient(ZiaClient):
         addresses: list[str] | None = None,
         ip_categories: list[str] | None = None,
         countries: list[str] | None = None,
-        append: bool = False,
-        cfg: dict[str, Any] | None = None,
+        append: bool = False
     ) -> dict[str, Any]:
         current = self.get_ip_destination_group(
-            group_id=group_id, group_name=group_name, cfg=cfg
+            group_id=group_id, group_name=group_name
         )
         gid = current["id"]
         kwargs = self._payload_from_current(current)
@@ -219,7 +215,7 @@ class IpFqdnGroupsClient(ZiaClient):
                 kwargs["countries"] = cleaned
             else:
                 kwargs.pop("countries", None)
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             updated, _, err = client.zia.cloud_firewall.update_ip_destination_group(
                 str(gid),
                 query_params=query_params,
@@ -234,8 +230,7 @@ class IpFqdnGroupsClient(ZiaClient):
         self,
         *,
         group_ids: list[int | str] | None = None,
-        group_names: list[str] | None = None,
-        cfg: dict[str, Any] | None = None,
+        group_names: list[str] | None = None
     ) -> list[int]:
         resolved: list[int] = []
         seen: set[int] = set()
@@ -246,7 +241,7 @@ class IpFqdnGroupsClient(ZiaClient):
                 resolved.append(gid_int)
         names = [str(n).strip() for n in (group_names or []) if str(n).strip()]
         if names:
-            groups = self.list_ip_destination_groups(cfg=cfg)
+            groups = self.list_ip_destination_groups()
             by_name = {str(g.get("name") or "").casefold(): g for g in groups}
             for name in names:
                 needle = name.casefold()
@@ -262,8 +257,7 @@ class IpFqdnGroupsClient(ZiaClient):
         self.dump(
             self.list_ip_destination_groups(
                 exclude_type=args.exclude_type or None,
-                search=args.search or None,
-                cfg=self.cfg_from_args(args),
+                search=args.search or None
             )
         )
         return None
@@ -272,8 +266,7 @@ class IpFqdnGroupsClient(ZiaClient):
         self.dump(
             self.get_ip_destination_group(
                 group_id=args.id or None,
-                group_name=args.name or None,
-                cfg=self.cfg_from_args(args),
+                group_name=args.name or None
             )
         )
         return None
@@ -286,8 +279,7 @@ class IpFqdnGroupsClient(ZiaClient):
                 addresses=args.address,
                 description=args.description or None,
                 ip_categories=args.ip_category,
-                countries=args.country,
-                cfg=self.cfg_from_args(args),
+                countries=args.country
             )
         )
         return None
@@ -303,8 +295,7 @@ class IpFqdnGroupsClient(ZiaClient):
                 addresses=args.address,
                 ip_categories=args.ip_category,
                 countries=args.country,
-                append=bool(args.append),
-                cfg=self.cfg_from_args(args),
+                append=bool(args.append)
             )
         )
         return None
@@ -317,15 +308,12 @@ class IpFqdnGroupsClient(ZiaClient):
     @staticmethod
     def register(sub: argparse._SubParsersAction) -> None:
         client = IpFqdnGroupsClient()
-        overrides = argparse.ArgumentParser(add_help=False)
-        ZiaClient.add_overrides(overrides)
-
         p = sub.add_parser(
             "ip-fqdn-groups", help="ZIA IP/FQDN destination groups"
         )
         cmds = p.add_subparsers(required=True)
 
-        u_list = cmds.add_parser("list", parents=[overrides], help="List groups")
+        u_list = cmds.add_parser("list", help="List groups")
         u_list.add_argument("--search", default="", help="Filter by name or id")
         u_list.add_argument(
             "--exclude-type",
@@ -333,12 +321,12 @@ class IpFqdnGroupsClient(ZiaClient):
         )
         u_list.set_defaults(func=client.cmd_list)
 
-        u_get = cmds.add_parser("get", parents=[overrides], help="Get a group")
+        u_get = cmds.add_parser("get", help="Get a group")
         IpFqdnGroupsClient._add_group_ref(u_get)
         u_get.set_defaults(func=client.cmd_get)
 
         u_create = cmds.add_parser(
-            "create", parents=[overrides], help="Create a group"
+            "create", help="Create a group"
         )
         u_create.add_argument("--name", required=True, help="Group name")
         u_create.add_argument(
@@ -366,7 +354,7 @@ class IpFqdnGroupsClient(ZiaClient):
         u_create.set_defaults(func=client.cmd_create)
 
         u_update = cmds.add_parser(
-            "update", parents=[overrides], help="Update a group"
+            "update", help="Update a group"
         )
         IpFqdnGroupsClient._add_group_ref(u_update)
         u_update.add_argument("--new-name", help="Rename the group")

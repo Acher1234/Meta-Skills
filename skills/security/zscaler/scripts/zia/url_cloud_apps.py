@@ -39,10 +39,8 @@ class UrlCloudAppsClient(ZiaClient):
     def list_cloud_apps(
         self,
         search: str | None = None,
-        *,
-        cfg: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             apps, _, err = self._cloud_apps_api(client).list_apps()
             if err:
                 raise RuntimeError(f"Failed to list URL cloud applications: {err}")
@@ -56,10 +54,9 @@ class UrlCloudAppsClient(ZiaClient):
         self,
         *,
         app_id: int | str | None = None,
-        app_name: str | None = None,
-        cfg: dict[str, Any] | None = None,
+        app_name: str | None = None
     ) -> dict[str, Any]:
-        apps = self.list_cloud_apps(cfg=cfg)
+        apps = self.list_cloud_apps()
         if app_id is not None and str(app_id).strip():
             key = str(app_id).strip().casefold()
             for app in apps:
@@ -92,8 +89,7 @@ class UrlCloudAppsClient(ZiaClient):
     def cmd_list(self, args: argparse.Namespace) -> None:
         self.dump(
             self.list_cloud_apps(
-                search=args.search or None,
-                cfg=self.cfg_from_args(args),
+                search=args.search or None
             )
         )
         return None
@@ -102,27 +98,24 @@ class UrlCloudAppsClient(ZiaClient):
         self.dump(
             self.get_cloud_app(
                 app_id=args.id or None,
-                app_name=args.name or None,
-                cfg=self.cfg_from_args(args),
+                app_name=args.name or None
             )
         )
         return None
 
     def cmd_categories(self, args: argparse.Namespace) -> None:
         self.dump(
-            UrlCategoriesClient(self.cfg).list_url_categories(
-                search=args.search or None,
-                cfg=self.cfg_from_args(args),
+            UrlCategoriesClient().list_url_categories(
+                search=args.search or None
             )
         )
         return None
 
     def cmd_category(self, args: argparse.Namespace) -> None:
         self.dump(
-            UrlCategoriesClient(self.cfg).get_url_category(
+            UrlCategoriesClient().get_url_category(
                 category_id=args.id or None,
-                category_name=args.name or None,
-                cfg=self.cfg_from_args(args),
+                category_name=args.name or None
             )
         )
         return None
@@ -130,22 +123,19 @@ class UrlCloudAppsClient(ZiaClient):
     @staticmethod
     def register(sub: argparse._SubParsersAction) -> None:
         client = UrlCloudAppsClient()
-        overrides = argparse.ArgumentParser(add_help=False)
-        ZiaClient.add_overrides(overrides)
-
         p = sub.add_parser(
             "url-cloud-apps", help="ZIA URL cloud apps and categories (get only)"
         )
         cmds = p.add_subparsers(required=True)
 
         u_list = cmds.add_parser(
-            "list", parents=[overrides], help="List URL cloud applications"
+            "list", help="List URL cloud applications"
         )
         u_list.add_argument("--search", default="", help="Filter by name or id")
         u_list.set_defaults(func=client.cmd_list)
 
         u_get = cmds.add_parser(
-            "get", parents=[overrides], help="Get a URL cloud application"
+            "get", help="Get a URL cloud application"
         )
         u_get.add_argument("--id", help="Application id")
         u_get.add_argument("--name", help="Exact application name")
@@ -153,7 +143,6 @@ class UrlCloudAppsClient(ZiaClient):
 
         u_cats = cmds.add_parser(
             "categories",
-            parents=[overrides],
             help="List URL categories (via url-categories)",
         )
         u_cats.add_argument("--search", default="", help="Filter by name or id")
@@ -161,7 +150,6 @@ class UrlCloudAppsClient(ZiaClient):
 
         u_cat = cmds.add_parser(
             "category",
-            parents=[overrides],
             help="Get a URL category (via url-categories)",
         )
         u_cat.add_argument("--id", help="Category id")

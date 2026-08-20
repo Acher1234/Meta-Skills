@@ -12,7 +12,7 @@ All commands: `~/.meta-skills/.venv/bin/python scripts/cli.py …` from `~/.meta
 | `/zscaler_zia_ip_fqdn_groups_create` | `python scripts/cli.py zia ip-fqdn-groups create --name {NAME} --type DSTN_FQDN --address {FQDN}` | Create a group |
 | `/zscaler_zia_ip_fqdn_groups_update` | `python scripts/cli.py zia ip-fqdn-groups update [--id {GROUP_ID}] [--name {GROUP_NAME}] [--address {ADDRESS}]` | Update a group |
 
-`--exclude-type` / `--type`: `DSTN_IP`, `DSTN_FQDN` (create default), `DSTN_DOMAIN`, `DSTN_OTHER`. Create requires `--name` and at least one `--address`. Repeatable: `--address`, `--ip-category`, `--country`. Rename: `--new-name`. Optional client overrides: `--username` `--password` `--api-key` `--cloud`.
+`--exclude-type` / `--type`: `DSTN_IP`, `DSTN_FQDN` (create default), `DSTN_DOMAIN`, `DSTN_OTHER`. Create requires `--name` and at least one `--address`. Repeatable: `--address`, `--ip-category`, `--country`. Rename: `--new-name`.
 
 ### Examples
 

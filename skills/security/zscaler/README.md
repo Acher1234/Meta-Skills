@@ -22,6 +22,18 @@ python scripts/cli.py zia ip-fqdn-groups list
 python scripts/cli.py zia dedicated-ip-gateways list
 python scripts/cli.py zia forwarding-rule list
 python scripts/cli.py zia forwarding-rule create {NAME} --forward-method ENATDEDIP --gateway-name {GATEWAY_NAME}
+python scripts/cli.py zpa application-segment list
+python scripts/cli.py zpa application-segment get --name {SEGMENT_NAME}
+python scripts/cli.py zpa application-segment update --name {SEGMENT_NAME} --domain {DOMAIN} --tcp-port 443
+python scripts/cli.py zpa access-policy list
+python scripts/cli.py zpa access-policy get --name {RULE_NAME}
+python scripts/cli.py zpa forwarding-policy list
+python scripts/cli.py zpa forwarding-policy get --name {RULE_NAME}
+python scripts/cli.py zpa app-connector-group list
+python scripts/cli.py zpa app-connector-group get --name {GROUP_NAME}
+python scripts/cli.py zpa app-connector list
+python scripts/cli.py zpa app-connector get --name {CONNECTOR_NAME}
+python scripts/cli.py zpa app-connector health
 ```
 
 Nested JSON keys use `__`: `{"zpa":{"client_id":"…"}}` → `ZPA__CLIENT_ID`.

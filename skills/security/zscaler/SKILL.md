@@ -93,7 +93,7 @@ Commands → `~/.meta-skills/skills/security/zscaler/command.md/zscaler-zia-acti
 
 ## zscaler-zia-users
 
-ZIA users, groups, and departments (`LegacyZIAClient`). CLI flags override `.env`.
+ZIA users, groups, and departments (`LegacyZIAClient`). Credentials from SkillCred `.env`.
 
 Commands → `~/.meta-skills/skills/security/zscaler/command.md/zscaler-zia-users.command.md`
 
@@ -153,6 +153,51 @@ Commands → `~/.meta-skills/skills/security/zscaler/command.md/zscaler-zia-forw
 
 ---
 
+## zscaler-zpa-application-segment
+
+ZPA application segments — list, get, update (ports and IP / FQDN / URL only), delete.
+Open the command file for `{SEGMENT_ID}` / `{SEGMENT_NAME}` / `{DOMAIN}` / `{PORT}`. Confirm before writes.
+
+Commands → `~/.meta-skills/skills/security/zscaler/command.md/zscaler-zpa-application-segment.command.md`
+
+---
+
+## zscaler-zpa-access-policy
+
+ZPA access policy — list, get.
+Open the command file for `{RULE_ID}` / `{RULE_NAME}`.
+
+Commands → `~/.meta-skills/skills/security/zscaler/command.md/zscaler-zpa-access-policy.command.md`
+
+---
+
+## zscaler-zpa-forwarding-policy
+
+ZPA client forwarding policy — list, get.
+Open the command file for `{RULE_ID}` / `{RULE_NAME}`.
+
+Commands → `~/.meta-skills/skills/security/zscaler/command.md/zscaler-zpa-forwarding-policy.command.md`
+
+---
+
+## zscaler-zpa-app-connector-group
+
+ZPA App Connector groups — list, get.
+Open the command file for `{GROUP_ID}` / `{GROUP_NAME}`.
+
+Commands → `~/.meta-skills/skills/security/zscaler/command.md/zscaler-zpa-app-connector-group.command.md`
+
+---
+
+## zscaler-zpa-app-connector
+
+ZPA App Connectors — list, get, health.
+Open the command file for `{CONNECTOR_ID}` / `{CONNECTOR_NAME}`. Health is true when every connector is `ZPN_STATUS_AUTHENTICATED`.
+
+Commands → `~/.meta-skills/skills/security/zscaler/command.md/zscaler-zpa-app-connector.command.md`
+
+---
+
 ## How to run
 
 1. `export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"` then `cd ~/.meta-skills/skills/security/zscaler`.
@@ -161,6 +206,6 @@ Commands → `~/.meta-skills/skills/security/zscaler/command.md/zscaler-zia-forw
 
 ## Notes
 
-- Confirm with the user before destructive Zscaler writes (`url-categories delete`, `url-filtering-policy delete` / `update`, `ip-fqdn-groups create` / `update`, `forwarding-rule create` / `delete`, `remove-urls`, `activate run`, and other updates).
+- Confirm with the user before destructive Zscaler writes (`url-categories delete`, `url-filtering-policy delete` / `update`, `ip-fqdn-groups create` / `update`, `forwarding-rule create` / `delete`, `application-segment update` / `delete`, `remove-urls`, `activate run`, and other updates).
 - Never commit `.env` or echo `ZPA__CLIENT_SECRET`, `ZIA__PASSWORD`, `ZIA__API_KEY`, or `ZIDENTITY__CLIENT_SECRET`.
 - Docs: [ZIA API](https://help.zscaler.com/zia/getting-started-zia-api), [ZPA API auth](https://help.zscaler.com/zpa/about-api-authentication).

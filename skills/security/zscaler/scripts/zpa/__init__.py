@@ -1,3 +1,3 @@
-from zpa.client import get_client
+from zpa.client import ZpaClient
 
-__all__ = ["get_client"]
+__all__ = ["ZpaClient"]

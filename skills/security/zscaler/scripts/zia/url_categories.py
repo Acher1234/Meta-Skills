@@ -24,10 +24,8 @@ class UrlCategoriesClient(ZiaClient):
     def list_url_categories(
         self,
         search: str | None = None,
-        *,
-        cfg: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             categories, _, err = client.zia.url_categories.list_categories()
             if err:
                 raise RuntimeError(f"Failed to list URL categories: {err}")
@@ -52,14 +50,13 @@ class UrlCategoriesClient(ZiaClient):
         self,
         *,
         category_id: str | None = None,
-        category_name: str | None = None,
-        cfg: dict[str, Any] | None = None,
+        category_name: str | None = None
     ) -> dict[str, Any]:
         if not category_id and not category_name:
             raise ValueError("category_id or category_name is required")
 
         if category_id:
-            with self.get_client(cfg) as client:
+            with self.get_client() as client:
                 cat, _, err = client.zia.url_categories.get_category(category_id)
                 if err:
                     raise RuntimeError(
@@ -72,7 +69,7 @@ class UrlCategoriesClient(ZiaClient):
         needle = (category_name or "").strip().casefold()
         matches = [
             cat
-            for cat in self.list_url_categories(cfg=cfg)
+            for cat in self.list_url_categories()
             if str(cat.get("configured_name") or cat.get("configuredName") or "")
             .casefold()
             == needle
@@ -92,8 +89,7 @@ class UrlCategoriesClient(ZiaClient):
         self,
         *,
         category_ids: list[str] | None = None,
-        category_names: list[str] | None = None,
-        cfg: dict[str, Any] | None = None,
+        category_names: list[str] | None = None
     ) -> list[str]:
         found: list[str] = []
         for cid in category_ids or []:
@@ -102,7 +98,7 @@ class UrlCategoriesClient(ZiaClient):
                 found.append(value)
         names = [str(n).strip() for n in (category_names or []) if str(n).strip()]
         for name in names:
-            cat = self.get_url_category(category_name=name, cfg=cfg)
+            cat = self.get_url_category(category_name=name)
             found.append(str(cat["id"]))
         seen: set[str] = set()
         out: list[str] = []
@@ -120,8 +116,7 @@ class UrlCategoriesClient(ZiaClient):
         ip_ranges: list[str] | None = None,
         keywords: list[str] | None = None,
         super_category: str = "USER_DEFINED",
-        description: str | None = None,
-        cfg: dict[str, Any] | None = None,
+        description: str | None = None
     ) -> dict[str, Any]:
         if not name or not name.strip():
             raise ValueError("name is required to create a URL category")
@@ -144,7 +139,7 @@ class UrlCategoriesClient(ZiaClient):
         if description:
             kwargs["description"] = description
 
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             created, _, err = client.zia.url_categories.add_url_category(
                 super_category=super_category,
                 **kwargs,
@@ -161,19 +156,18 @@ class UrlCategoriesClient(ZiaClient):
         urls: list[str],
         *,
         category_id: str | None = None,
-        category_name: str | None = None,
-        cfg: dict[str, Any] | None = None,
+        category_name: str | None = None
     ) -> dict[str, Any]:
         if not urls:
             raise ValueError("at least one URL is required")
         urls = self.validate_urls(urls)
         cat = self.get_url_category(
-            category_id=category_id, category_name=category_name, cfg=cfg
+            category_id=category_id, category_name=category_name
         )
         cid = str(cat["id"])
         configured_name = cat.get("configured_name") or cat.get("id")
 
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             updated, _, err = client.zia.url_categories.add_urls_to_category(
                 category_id=cid,
                 configured_name=configured_name,
@@ -191,18 +185,17 @@ class UrlCategoriesClient(ZiaClient):
         urls: list[str],
         *,
         category_id: str | None = None,
-        category_name: str | None = None,
-        cfg: dict[str, Any] | None = None,
+        category_name: str | None = None
     ) -> dict[str, Any]:
         if not urls:
             raise ValueError("at least one URL is required")
         cat = self.get_url_category(
-            category_id=category_id, category_name=category_name, cfg=cfg
+            category_id=category_id, category_name=category_name
         )
         cid = str(cat["id"])
         configured_name = cat.get("configured_name") or cat.get("id")
 
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             updated, _, err = client.zia.url_categories.delete_urls_from_category(
                 category_id=cid,
                 configured_name=configured_name,
@@ -221,16 +214,15 @@ class UrlCategoriesClient(ZiaClient):
         self,
         *,
         category_id: str | None = None,
-        category_name: str | None = None,
-        cfg: dict[str, Any] | None = None,
+        category_name: str | None = None
     ) -> dict[str, Any]:
         cat = self.get_url_category(
-            category_id=category_id, category_name=category_name, cfg=cfg
+            category_id=category_id, category_name=category_name
         )
         cid = str(cat["id"])
         name = cat.get("configured_name") or cid
 
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             _, _, err = client.zia.url_categories.delete_category(cid)
             if err:
                 raise RuntimeError(f"Failed to delete URL category {cid}: {err}")
@@ -239,15 +231,14 @@ class UrlCategoriesClient(ZiaClient):
         )
 
     def cmd_list(self, args: argparse.Namespace) -> None:
-        self.dump(self.list_url_categories(cfg=self.cfg_from_args(args)))
+        self.dump(self.list_url_categories())
         return None
 
     def cmd_get(self, args: argparse.Namespace) -> None:
         self.dump(
             self.get_url_category(
                 category_id=args.id or None,
-                category_name=args.name or None,
-                cfg=self.cfg_from_args(args),
+                category_name=args.name or None
             )
         )
         return None
@@ -260,8 +251,7 @@ class UrlCategoriesClient(ZiaClient):
                 ip_ranges=args.ip_range,
                 keywords=args.keyword,
                 super_category=args.super_category,
-                description=args.description or None,
-                cfg=self.cfg_from_args(args),
+                description=args.description or None
             )
         )
         return None
@@ -271,8 +261,7 @@ class UrlCategoriesClient(ZiaClient):
             self.add_urls_to_category(
                 args.url or [],
                 category_id=args.id or None,
-                category_name=args.name or None,
-                cfg=self.cfg_from_args(args),
+                category_name=args.name or None
             )
         )
         return None
@@ -282,8 +271,7 @@ class UrlCategoriesClient(ZiaClient):
             self.remove_urls_from_category(
                 args.url or [],
                 category_id=args.id or None,
-                category_name=args.name or None,
-                cfg=self.cfg_from_args(args),
+                category_name=args.name or None
             )
         )
         return None
@@ -292,8 +280,7 @@ class UrlCategoriesClient(ZiaClient):
         self.dump(
             self.delete_url_category(
                 category_id=args.id or None,
-                category_name=args.name or None,
-                cfg=self.cfg_from_args(args),
+                category_name=args.name or None
             )
         )
         return None
@@ -306,22 +293,19 @@ class UrlCategoriesClient(ZiaClient):
     @staticmethod
     def register(sub: argparse._SubParsersAction) -> None:
         client = UrlCategoriesClient()
-        overrides = argparse.ArgumentParser(add_help=False)
-        ZiaClient.add_overrides(overrides)
-
         p = sub.add_parser("url-categories", help="ZIA URL categories")
         cmds = p.add_subparsers(required=True)
 
         cmds.add_parser(
-            "list", parents=[overrides], help="List URL categories"
+            "list", help="List URL categories"
         ).set_defaults(func=client.cmd_list)
 
-        u_get = cmds.add_parser("get", parents=[overrides], help="Get a URL category")
+        u_get = cmds.add_parser("get", help="Get a URL category")
         UrlCategoriesClient._add_category_ref(u_get)
         u_get.set_defaults(func=client.cmd_get)
 
         u_create = cmds.add_parser(
-            "create", parents=[overrides], help="Create a custom URL category"
+            "create", help="Create a custom URL category"
         )
         u_create.add_argument("name", help="configured_name")
         u_create.add_argument("--url", action="append", help="URL (repeatable)")
@@ -336,21 +320,21 @@ class UrlCategoriesClient(ZiaClient):
         u_create.set_defaults(func=client.cmd_create)
 
         u_add = cmds.add_parser(
-            "add-urls", parents=[overrides], help="Add URLs to a category"
+            "add-urls", help="Add URLs to a category"
         )
         UrlCategoriesClient._add_category_ref(u_add)
         u_add.add_argument("--url", action="append", required=True)
         u_add.set_defaults(func=client.cmd_add_urls)
 
         u_rm = cmds.add_parser(
-            "remove-urls", parents=[overrides], help="Remove URLs from a category"
+            "remove-urls", help="Remove URLs from a category"
         )
         UrlCategoriesClient._add_category_ref(u_rm)
         u_rm.add_argument("--url", action="append", required=True)
         u_rm.set_defaults(func=client.cmd_remove_urls)
 
         u_del = cmds.add_parser(
-            "delete", parents=[overrides], help="Delete a custom URL category"
+            "delete", help="Delete a custom URL category"
         )
         UrlCategoriesClient._add_category_ref(u_del)
         u_del.set_defaults(func=client.cmd_delete)

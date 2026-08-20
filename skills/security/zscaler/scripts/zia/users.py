@@ -13,10 +13,8 @@ class UsersClient(ZiaClient):
         self,
         page: int = 1,
         page_size: int = 20,
-        *,
-        cfg: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             users, _, err = client.zia.user_management.list_users(
                 query_params={"page": page, "pageSize": page_size}
             )
@@ -28,10 +26,8 @@ class UsersClient(ZiaClient):
         self,
         page: int = 1,
         page_size: int = 100,
-        *,
-        cfg: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             groups, _, err = client.zia.user_management.list_groups(
                 query_params={"page": page, "page_size": page_size}
             )
@@ -44,14 +40,12 @@ class UsersClient(ZiaClient):
         page: int = 1,
         page_size: int = 100,
         search: str | None = None,
-        *,
-        cfg: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         query_params: dict[str, Any] = {"page": page, "page_size": page_size}
         if search:
             query_params["search"] = search
 
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             departments, _, err = client.zia.user_management.list_departments(
                 query_params=query_params
             )
@@ -59,11 +53,11 @@ class UsersClient(ZiaClient):
                 raise RuntimeError(f"Failed to list ZIA departments: {err}")
             return self.records(departments)
 
-    def list_all_users(self, *, cfg: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    def list_all_users(self) -> list[dict[str, Any]]:
         page = 1
         out: list[dict[str, Any]] = []
         while True:
-            chunk = self.list_users(page=page, page_size=100, cfg=cfg)
+            chunk = self.list_users(page=page, page_size=100)
             out.extend(chunk)
             if len(chunk) < 100:
                 break
@@ -74,10 +68,9 @@ class UsersClient(ZiaClient):
         self,
         *,
         user_ids: list[int | str] | None = None,
-        usernames: list[str] | None = None,
-        cfg: dict[str, Any] | None = None,
+        usernames: list[str] | None = None
     ) -> list:
-        users = self.list_all_users(cfg=cfg)
+        users = self.list_all_users()
         by_id = {str(u.get("id")): u for u in users}
         by_name: dict[str, dict[str, Any]] = {}
         for user in users:
@@ -98,11 +91,11 @@ class UsersClient(ZiaClient):
             out.append(by_name[needle]["id"])
         return out
 
-    def list_all_groups(self, *, cfg: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    def list_all_groups(self) -> list[dict[str, Any]]:
         page = 1
         out: list[dict[str, Any]] = []
         while True:
-            chunk = self.list_groups(page=page, page_size=100, cfg=cfg)
+            chunk = self.list_groups(page=page, page_size=100)
             out.extend(chunk)
             if len(chunk) < 100:
                 break
@@ -113,10 +106,9 @@ class UsersClient(ZiaClient):
         self,
         *,
         group_ids: list[int | str] | None = None,
-        group_names: list[str] | None = None,
-        cfg: dict[str, Any] | None = None,
+        group_names: list[str] | None = None
     ) -> list[dict[str, Any]]:
-        groups = self.list_all_groups(cfg=cfg)
+        groups = self.list_all_groups()
         by_id = {str(g.get("id")): g for g in groups}
         by_name = {str(g.get("name") or "").casefold(): g for g in groups}
         out: list[dict[str, Any]] = []
@@ -136,8 +128,7 @@ class UsersClient(ZiaClient):
         self.dump(
             self.list_users(
                 page=args.page,
-                page_size=args.page_size,
-                cfg=self.cfg_from_args(args),
+                page_size=args.page_size
             )
         )
         return None
@@ -146,8 +137,7 @@ class UsersClient(ZiaClient):
         self.dump(
             self.list_groups(
                 page=args.page,
-                page_size=args.page_size,
-                cfg=self.cfg_from_args(args),
+                page_size=args.page_size
             )
         )
         return None
@@ -157,8 +147,7 @@ class UsersClient(ZiaClient):
             self.list_departments(
                 page=args.page,
                 page_size=args.page_size,
-                search=args.search or None,
-                cfg=self.cfg_from_args(args),
+                search=args.search or None
             )
         )
         return None
@@ -166,26 +155,23 @@ class UsersClient(ZiaClient):
     @staticmethod
     def register(sub: argparse._SubParsersAction) -> None:
         client = UsersClient()
-        overrides = argparse.ArgumentParser(add_help=False)
-        ZiaClient.add_overrides(overrides)
-
         p = sub.add_parser("users", help="ZIA users, groups, departments")
         cmds = p.add_subparsers(required=True)
 
-        u_list = cmds.add_parser("list", parents=[overrides], help="List ZIA users")
+        u_list = cmds.add_parser("list", help="List ZIA users")
         u_list.add_argument("--page", type=int, default=1)
         u_list.add_argument("--page-size", type=int, default=20)
         u_list.set_defaults(func=client.cmd_list)
 
         u_groups = cmds.add_parser(
-            "groups", parents=[overrides], help="List ZIA user groups"
+            "groups", help="List ZIA user groups"
         )
         u_groups.add_argument("--page", type=int, default=1)
         u_groups.add_argument("--page-size", type=int, default=100)
         u_groups.set_defaults(func=client.cmd_groups)
 
         u_dept = cmds.add_parser(
-            "departments", parents=[overrides], help="List ZIA departments"
+            "departments", help="List ZIA departments"
         )
         u_dept.add_argument("--page", type=int, default=1)
         u_dept.add_argument("--page-size", type=int, default=100)

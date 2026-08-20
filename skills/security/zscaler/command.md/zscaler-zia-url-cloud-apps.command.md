@@ -12,8 +12,6 @@ All commands: `~/.meta-skills/.venv/bin/python scripts/cli.py …` from `~/.meta
 | `/zscaler_zia_url_cloud_apps_categories` | `python scripts/cli.py zia url-cloud-apps categories [--search {SEARCH}]` | List URL categories |
 | `/zscaler_zia_url_cloud_apps_category` | `python scripts/cli.py zia url-cloud-apps category [--id {CATEGORY_ID}] [--name {CATEGORY_NAME}]` | Get a URL category |
 
-Optional client overrides: `--username` `--password` `--api-key` `--cloud`.
-
 ### Examples
 
 ```bash

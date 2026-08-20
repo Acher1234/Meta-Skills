@@ -99,10 +99,8 @@ class UrlFilteringPolicyClient(ZiaClient):
     def list_url_filtering_rules(
         self,
         search: str | None = None,
-        *,
-        cfg: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             rules, _, err = self._url_filtering_api(client).list_rules()
             if err:
                 raise RuntimeError(f"Failed to list URL filtering rules: {err}")
@@ -121,11 +119,10 @@ class UrlFilteringPolicyClient(ZiaClient):
         self,
         *,
         rule_id: int | str | None = None,
-        rule_name: str | None = None,
-        cfg: dict[str, Any] | None = None,
+        rule_name: str | None = None
     ) -> dict[str, Any]:
         if rule_id is not None and str(rule_id).strip():
-            with self.get_client(cfg) as client:
+            with self.get_client() as client:
                 rule, _, err = self._url_filtering_api(client).get_rule(int(rule_id))
                 if err:
                     raise RuntimeError(
@@ -141,13 +138,13 @@ class UrlFilteringPolicyClient(ZiaClient):
         needle = rule_name.strip().casefold()
         matches = [
             rule
-            for rule in self.list_url_filtering_rules(rule_name, cfg=cfg)
+            for rule in self.list_url_filtering_rules(rule_name)
             if str(rule.get("name") or "").casefold() == needle
         ]
         if not matches:
             matches = [
                 rule
-                for rule in self.list_url_filtering_rules(cfg=cfg)
+                for rule in self.list_url_filtering_rules()
                 if str(rule.get("name") or "").casefold() == needle
             ]
         if not matches:
@@ -213,8 +210,7 @@ class UrlFilteringPolicyClient(ZiaClient):
         rank: int = 7,
         state: str = "ENABLED",
         description: str | None = None,
-        protocols: list[str] | None = None,
-        cfg: dict[str, Any] | None = None,
+        protocols: list[str] | None = None
     ) -> dict[str, Any]:
         name = (name or "").strip()
         if not name:
@@ -222,10 +218,9 @@ class UrlFilteringPolicyClient(ZiaClient):
         state_norm = (state or "ENABLED").strip().upper()
         if state_norm not in ("ENABLED", "DISABLED"):
             raise ValueError("state must be ENABLED or DISABLED")
-        categories = UrlCategoriesClient(self.cfg).resolve_url_category_ids(
+        categories = UrlCategoriesClient().resolve_url_category_ids(
             category_ids=url_category_ids,
             category_names=url_category_names,
-            cfg=cfg,
         )
         if not categories:
             raise ValueError(
@@ -252,24 +247,24 @@ class UrlFilteringPolicyClient(ZiaClient):
         if order is not None:
             kwargs["order"] = int(order)
         if group_ids or group_names:
-            groups = UsersClient(self.cfg).resolve_group_ids(
-                group_ids=group_ids, group_names=group_names, cfg=cfg
+            groups = UsersClient().resolve_group_ids(
+                group_ids=group_ids, group_names=group_names
             )
             kwargs["groups"] = [group["id"] for group in groups]
         if user_ids or usernames:
-            users = UsersClient(self.cfg).resolve_user_ids(
-                user_ids=user_ids, usernames=usernames, cfg=cfg
+            users = UsersClient().resolve_user_ids(
+                user_ids=user_ids, usernames=usernames
             )
             if users:
                 kwargs["users"] = users
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             created, _, err = self._url_filtering_api(client).add_rule(**kwargs)
             if err:
                 raise RuntimeError(
                     f"Failed to create URL filtering rule {name!r}: {err}"
                 )
             payload = self._to_dict(created)
-        return self.with_activation(payload, cfg=cfg)
+        return self.with_activation(payload)
 
     def update_url_filtering_rule(
         self,
@@ -288,11 +283,10 @@ class UrlFilteringPolicyClient(ZiaClient):
         order: int | None = None,
         rank: int | None = None,
         state: str | None = None,
-        description: str | None = None,
-        cfg: dict[str, Any] | None = None,
+        description: str | None = None
     ) -> dict[str, Any]:
         current = self.get_url_filtering_rule(
-            rule_id=rule_id, rule_name=rule_name, cfg=cfg
+            rule_id=rule_id, rule_name=rule_name
         )
         rid = current["id"]
         kwargs = self._url_filtering_payload_from_current(current)
@@ -316,10 +310,9 @@ class UrlFilteringPolicyClient(ZiaClient):
                 request_methods
             )
         if url_category_ids is not None or url_category_names is not None:
-            categories = UrlCategoriesClient(self.cfg).resolve_url_category_ids(
+            categories = UrlCategoriesClient().resolve_url_category_ids(
                 category_ids=url_category_ids,
                 category_names=url_category_names,
-                cfg=cfg,
             )
             if not categories:
                 raise ValueError(
@@ -330,54 +323,50 @@ class UrlFilteringPolicyClient(ZiaClient):
             if not group_ids and not group_names:
                 kwargs.pop("groups", None)
             else:
-                groups = UsersClient(self.cfg).resolve_group_ids(
+                groups = UsersClient().resolve_group_ids(
                     group_ids=group_ids or [],
                     group_names=group_names or [],
-                    cfg=cfg,
                 )
                 kwargs["groups"] = [group["id"] for group in groups]
         if user_ids is not None or usernames is not None:
-            users = UsersClient(self.cfg).resolve_user_ids(
-                user_ids=user_ids or [], usernames=usernames or [], cfg=cfg
+            users = UsersClient().resolve_user_ids(
+                user_ids=user_ids or [], usernames=usernames or []
             )
             if users:
                 kwargs["users"] = users
             else:
                 kwargs.pop("users", None)
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             updated, _, err = self._url_filtering_api(client).update_rule(
                 str(rid), **kwargs
             )
             if err:
                 raise RuntimeError(f"Failed to update URL filtering rule {rid}: {err}")
             payload = self._to_dict(updated)
-        return self.with_activation(payload, cfg=cfg)
+        return self.with_activation(payload)
 
     def delete_url_filtering_rule(
         self,
         *,
         rule_id: int | str | None = None,
-        rule_name: str | None = None,
-        cfg: dict[str, Any] | None = None,
+        rule_name: str | None = None
     ) -> dict[str, Any]:
         current = self.get_url_filtering_rule(
-            rule_id=rule_id, rule_name=rule_name, cfg=cfg
+            rule_id=rule_id, rule_name=rule_name
         )
         rid = current["id"]
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             _, _, err = self._url_filtering_api(client).delete_rule(str(rid))
             if err:
                 raise RuntimeError(f"Failed to delete URL filtering rule {rid}: {err}")
         return self.with_activation(
             {"deleted": True, "id": rid, "name": current.get("name")},
-            cfg=cfg,
         )
 
     def cmd_list(self, args: argparse.Namespace) -> None:
         self.dump(
             self.list_url_filtering_rules(
-                search=args.search or None,
-                cfg=self.cfg_from_args(args),
+                search=args.search or None
             )
         )
         return None
@@ -386,8 +375,7 @@ class UrlFilteringPolicyClient(ZiaClient):
         self.dump(
             self.get_url_filtering_rule(
                 rule_id=args.id or None,
-                rule_name=args.name or None,
-                cfg=self.cfg_from_args(args),
+                rule_name=args.name or None
             )
         )
         return None
@@ -408,8 +396,7 @@ class UrlFilteringPolicyClient(ZiaClient):
                 rank=args.rank,
                 state=args.state,
                 description=args.description or None,
-                protocols=args.protocol,
-                cfg=self.cfg_from_args(args),
+                protocols=args.protocol
             )
         )
         return None
@@ -431,8 +418,7 @@ class UrlFilteringPolicyClient(ZiaClient):
                 order=args.order,
                 rank=args.rank,
                 state=args.state,
-                description=args.description,
-                cfg=self.cfg_from_args(args),
+                description=args.description
             )
         )
         return None
@@ -441,8 +427,7 @@ class UrlFilteringPolicyClient(ZiaClient):
         self.dump(
             self.delete_url_filtering_rule(
                 rule_id=args.id or None,
-                rule_name=args.name or None,
-                cfg=self.cfg_from_args(args),
+                rule_name=args.name or None
             )
         )
         return None
@@ -482,30 +467,27 @@ class UrlFilteringPolicyClient(ZiaClient):
     @staticmethod
     def register(sub: argparse._SubParsersAction) -> None:
         client = UrlFilteringPolicyClient()
-        overrides = argparse.ArgumentParser(add_help=False)
-        ZiaClient.add_overrides(overrides)
-
         p = sub.add_parser("url-filtering-policy", help="ZIA URL Filtering Policy")
         cmds = p.add_subparsers(required=True)
 
-        u_list = cmds.add_parser("list", parents=[overrides], help="List rules")
+        u_list = cmds.add_parser("list", help="List rules")
         u_list.add_argument("--search", default="", help="Filter by name or id")
         u_list.set_defaults(func=client.cmd_list)
 
-        u_get = cmds.add_parser("get", parents=[overrides], help="Get a rule")
+        u_get = cmds.add_parser("get", help="Get a rule")
         UrlFilteringPolicyClient._add_rule_ref(u_get)
         u_get.set_defaults(func=client.cmd_get)
 
-        u_create = cmds.add_parser("create", parents=[overrides], help="Create a rule")
+        u_create = cmds.add_parser("create", help="Create a rule")
         u_create.add_argument("name", help="Rule name")
         UrlFilteringPolicyClient._add_rule_fields(u_create, create=True)
         u_create.set_defaults(func=client.cmd_create)
 
-        u_update = cmds.add_parser("update", parents=[overrides], help="Update a rule")
+        u_update = cmds.add_parser("update", help="Update a rule")
         UrlFilteringPolicyClient._add_rule_ref(u_update)
         UrlFilteringPolicyClient._add_rule_fields(u_update, create=False)
         u_update.set_defaults(func=client.cmd_update)
 
-        u_del = cmds.add_parser("delete", parents=[overrides], help="Delete a rule")
+        u_del = cmds.add_parser("delete", help="Delete a rule")
         UrlFilteringPolicyClient._add_rule_ref(u_del)
         u_del.set_defaults(func=client.cmd_delete)

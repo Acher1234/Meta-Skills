@@ -21,12 +21,24 @@ from zia.url_categories import UrlCategoriesClient  # noqa: E402
 from zia.url_cloud_apps import UrlCloudAppsClient  # noqa: E402
 from zia.url_filtering_policy import UrlFilteringPolicyClient  # noqa: E402
 from zia.users import UsersClient  # noqa: E402
+from zpa.access_policy import AccessPolicyClient  # noqa: E402
+from zpa.app_connector_groups import AppConnectorGroupsClient  # noqa: E402
+from zpa.app_connectors import AppConnectorsClient  # noqa: E402
+from zpa.application_segment import ApplicationSegmentClient  # noqa: E402
+from zpa.forwarding_policy import ForwardingPolicyClient  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Zscaler ZPA / ZIA / ZIdentity CLI")
     sub = parser.add_subparsers(required=True)
     ZscalerSkillEnv.register(sub)
+    zpa = sub.add_parser("zpa", help="ZPA legacy API")
+    zpa_cmds = zpa.add_subparsers(required=True)
+    ApplicationSegmentClient.register(zpa_cmds)
+    AccessPolicyClient.register(zpa_cmds)
+    ForwardingPolicyClient.register(zpa_cmds)
+    AppConnectorGroupsClient.register(zpa_cmds)
+    AppConnectorsClient.register(zpa_cmds)
     zia = sub.add_parser("zia", help="ZIA legacy API")
     zia_cmds = zia.add_subparsers(required=True)
     ZiaClient.register(zia_cmds)

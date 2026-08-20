@@ -6,6 +6,8 @@ import argparse
 from typing import Any
 
 from zia.client import ZiaClient
+from zscaler.zia.dedicated_ip_gateways import DedicatedIPGatewaysAPI
+
 
 
 class DedicatedIpGatewaysClient(ZiaClient):
@@ -23,14 +25,11 @@ class DedicatedIpGatewaysClient(ZiaClient):
         api = getattr(zia_svc, "dedicated_ip_gateways", None)
         if api is not None:
             return api
-        from zscaler.zia.dedicated_ip_gateways import DedicatedIPGatewaysAPI
 
         return DedicatedIPGatewaysAPI(zia_svc.request_executor)
 
-    def list_dedicated_ips(
-        self, *, cfg: dict[str, Any] | None = None
-    ) -> list[dict[str, Any]]:
-        with self.get_client(cfg) as client:
+    def list_dedicated_ips(self) -> list[dict[str, Any]]:
+        with self.get_client() as client:
             gateways, _, err = self._dedicated_ip_gateways_api(
                 client
             ).list_dedicated_ip_gw_lite()
@@ -43,9 +42,8 @@ class DedicatedIpGatewaysClient(ZiaClient):
         *,
         gateway_id: int | str | None = None,
         gateway_name: str | None = None,
-        cfg: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        gateways = self.list_dedicated_ips(cfg=cfg)
+        gateways = self.list_dedicated_ips()
         if gateway_id is not None and str(gateway_id).strip():
             gid = int(gateway_id)
             for gateway in gateways:
@@ -82,7 +80,7 @@ class DedicatedIpGatewaysClient(ZiaClient):
         return {"id": int(matches[0]["id"]), "name": matches[0].get("name")}
 
     def cmd_list(self, args: argparse.Namespace) -> None:
-        self.dump(self.list_dedicated_ips(cfg=self.cfg_from_args(args)))
+        self.dump(self.list_dedicated_ips())
         return None
 
     def cmd_get(self, args: argparse.Namespace) -> None:
@@ -90,7 +88,6 @@ class DedicatedIpGatewaysClient(ZiaClient):
             self.resolve_dedicated_ip_gateway(
                 gateway_id=args.id or None,
                 gateway_name=args.name or None,
-                cfg=self.cfg_from_args(args),
             )
         )
         return None
@@ -98,8 +95,6 @@ class DedicatedIpGatewaysClient(ZiaClient):
     @staticmethod
     def register(sub: argparse._SubParsersAction) -> None:
         client = DedicatedIpGatewaysClient()
-        overrides = argparse.ArgumentParser(add_help=False)
-        ZiaClient.add_overrides(overrides)
 
         p = sub.add_parser(
             "dedicated-ip-gateways", help="ZIA dedicated IP gateways"
@@ -107,10 +102,10 @@ class DedicatedIpGatewaysClient(ZiaClient):
         cmds = p.add_subparsers(required=True)
 
         cmds.add_parser(
-            "list", parents=[overrides], help="List dedicated IP gateways"
+            "list", help="List dedicated IP gateways"
         ).set_defaults(func=client.cmd_list)
 
-        u_get = cmds.add_parser("get", parents=[overrides], help="Get a gateway")
+        u_get = cmds.add_parser("get", help="Get a gateway")
         u_get.add_argument("--id", help="Gateway id")
         u_get.add_argument("--name", help="Exact gateway name")
         u_get.set_defaults(func=client.cmd_get)

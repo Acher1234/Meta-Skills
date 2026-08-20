@@ -47,13 +47,11 @@ class ForwardingRuleClient(ZiaClient):
     def list_forwarding_rules(
         self,
         search: str | None = None,
-        *,
-        cfg: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         query_params: dict[str, Any] = {}
         if search:
             query_params["search"] = search
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             rules, _, err = self._forwarding_control_api(client).list_rules(
                 query_params=query_params or None
             )
@@ -65,11 +63,10 @@ class ForwardingRuleClient(ZiaClient):
         self,
         *,
         rule_id: int | str | None = None,
-        rule_name: str | None = None,
-        cfg: dict[str, Any] | None = None,
+        rule_name: str | None = None
     ) -> dict[str, Any]:
         if rule_id is not None and str(rule_id).strip():
-            with self.get_client(cfg) as client:
+            with self.get_client() as client:
                 rule, _, err = self._forwarding_control_api(client).get_rule(
                     str(rule_id)
                 )
@@ -87,13 +84,13 @@ class ForwardingRuleClient(ZiaClient):
         needle = rule_name.strip().casefold()
         matches = [
             rule
-            for rule in self.list_forwarding_rules(rule_name, cfg=cfg)
+            for rule in self.list_forwarding_rules(rule_name)
             if str(rule.get("name") or "").casefold() == needle
         ]
         if not matches:
             matches = [
                 rule
-                for rule in self.list_forwarding_rules(cfg=cfg)
+                for rule in self.list_forwarding_rules()
                 if str(rule.get("name") or "").casefold() == needle
             ]
         if not matches:
@@ -122,8 +119,7 @@ class ForwardingRuleClient(ZiaClient):
         description: str | None = None,
         order: int | None = None,
         rank: int = 7,
-        state: str = "ENABLED",
-        cfg: dict[str, Any] | None = None,
+        state: str = "ENABLED"
     ) -> dict[str, Any]:
         name = (name or "").strip()
         if not name:
@@ -157,8 +153,8 @@ class ForwardingRuleClient(ZiaClient):
             kwargs["order"] = int(order)
 
         if method == "ENATDEDIP":
-            gateway = DedicatedIpGatewaysClient(self.cfg).resolve_dedicated_ip_gateway(
-                gateway_id=gateway_id, gateway_name=gateway_name, cfg=cfg
+            gateway = DedicatedIpGatewaysClient().resolve_dedicated_ip_gateway(
+                gateway_id=gateway_id, gateway_name=gateway_name
             )
             # API wire key is dedicatedIPGateway (IP uppercase), not dedicatedIpGateway
             # that snake_case → camelCase conversion would produce.
@@ -169,16 +165,15 @@ class ForwardingRuleClient(ZiaClient):
             )
 
         if group_ids or group_names:
-            groups = UsersClient(self.cfg).resolve_group_ids(
-                group_ids=group_ids, group_names=group_names, cfg=cfg
+            groups = UsersClient().resolve_group_ids(
+                group_ids=group_ids, group_names=group_names
             )
             kwargs["groups"] = [group["id"] for group in groups]
 
         if url_category_ids or url_category_names:
-            categories = UrlCategoriesClient(self.cfg).resolve_url_category_ids(
+            categories = UrlCategoriesClient().resolve_url_category_ids(
                 category_ids=url_category_ids,
                 category_names=url_category_names,
-                cfg=cfg,
             )
             if categories:
                 kwargs["dest_ip_categories"] = categories
@@ -188,48 +183,44 @@ class ForwardingRuleClient(ZiaClient):
             kwargs["dest_addresses"] = addresses
 
         if dest_ip_group_ids or dest_ip_group_names:
-            dest_groups = IpFqdnGroupsClient(self.cfg).resolve_dest_ip_group_ids(
+            dest_groups = IpFqdnGroupsClient().resolve_dest_ip_group_ids(
                 group_ids=dest_ip_group_ids,
                 group_names=dest_ip_group_names,
-                cfg=cfg,
             )
             if dest_groups:
                 kwargs["dest_ip_groups"] = dest_groups
 
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             created, _, err = self._forwarding_control_api(client).add_rule(**kwargs)
             if err:
                 raise RuntimeError(
                     f"Failed to create forwarding rule {name!r}: {err}"
                 )
             payload = self._to_dict(created)
-        return self.with_activation(payload, cfg=cfg)
+        return self.with_activation(payload)
 
     def delete_forwarding_rule(
         self,
         *,
         rule_id: int | str | None = None,
-        rule_name: str | None = None,
-        cfg: dict[str, Any] | None = None,
+        rule_name: str | None = None
     ) -> dict[str, Any]:
         current = self.get_forwarding_rule(
-            rule_id=rule_id, rule_name=rule_name, cfg=cfg
+            rule_id=rule_id, rule_name=rule_name
         )
         rid = current["id"]
-        with self.get_client(cfg) as client:
+        with self.get_client() as client:
             _, _, err = self._forwarding_control_api(client).delete_rule(str(rid))
             if err:
                 raise RuntimeError(f"Failed to delete forwarding rule {rid}: {err}")
         return self.with_activation(
             {"deleted": True, "id": rid, "name": current.get("name")},
-            cfg=cfg,
         )
 
     def cmd_list(self, args: argparse.Namespace) -> None:
         self.dump(
             self.list_forwarding_rules(
-                search=args.search or None,
-                cfg=self.cfg_from_args(args),
+                search=args.search or None
             )
         )
         return None
@@ -238,8 +229,7 @@ class ForwardingRuleClient(ZiaClient):
         self.dump(
             self.get_forwarding_rule(
                 rule_id=args.id or None,
-                rule_name=args.name or None,
-                cfg=self.cfg_from_args(args),
+                rule_name=args.name or None
             )
         )
         return None
@@ -261,8 +251,7 @@ class ForwardingRuleClient(ZiaClient):
                 description=args.description or None,
                 order=args.order,
                 rank=args.rank,
-                state=args.state,
-                cfg=self.cfg_from_args(args),
+                state=args.state
             )
         )
         return None
@@ -271,8 +260,7 @@ class ForwardingRuleClient(ZiaClient):
         self.dump(
             self.delete_forwarding_rule(
                 rule_id=args.id or None,
-                rule_name=args.name or None,
-                cfg=self.cfg_from_args(args),
+                rule_name=args.name or None
             )
         )
         return None
@@ -285,22 +273,19 @@ class ForwardingRuleClient(ZiaClient):
     @staticmethod
     def register(sub: argparse._SubParsersAction) -> None:
         client = ForwardingRuleClient()
-        overrides = argparse.ArgumentParser(add_help=False)
-        ZiaClient.add_overrides(overrides)
-
         p = sub.add_parser("forwarding-rule", help="ZIA forwarding control")
         cmds = p.add_subparsers(required=True)
 
-        u_list = cmds.add_parser("list", parents=[overrides], help="List rules")
+        u_list = cmds.add_parser("list", help="List rules")
         u_list.add_argument("--search", default="", help="Filter by name")
         u_list.set_defaults(func=client.cmd_list)
 
-        u_get = cmds.add_parser("get", parents=[overrides], help="Get a rule")
+        u_get = cmds.add_parser("get", help="Get a rule")
         ForwardingRuleClient._add_rule_ref(u_get)
         u_get.set_defaults(func=client.cmd_get)
 
         u_create = cmds.add_parser(
-            "create", parents=[overrides], help="Create a rule"
+            "create", help="Create a rule"
         )
         u_create.add_argument("name", help="Rule name (max 31 characters)")
         u_create.add_argument(
@@ -323,6 +308,6 @@ class ForwardingRuleClient(ZiaClient):
         u_create.add_argument("--description")
         u_create.set_defaults(func=client.cmd_create)
 
-        u_del = cmds.add_parser("delete", parents=[overrides], help="Delete a rule")
+        u_del = cmds.add_parser("delete", help="Delete a rule")
         ForwardingRuleClient._add_rule_ref(u_del)
         u_del.set_defaults(func=client.cmd_delete)

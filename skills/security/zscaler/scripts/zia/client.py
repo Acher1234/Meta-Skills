@@ -1,4 +1,4 @@
-"""ZIA legacy client — LegacyZIAClient from SkillCred .env, optional overrides."""
+"""ZIA legacy client — LegacyZIAClient from SkillCred .env."""
 
 from __future__ import annotations
 
@@ -13,35 +13,18 @@ from skill_env import ENV
 
 class ZiaClient:
     required = ("username", "password", "api_key", "cloud")
-
-    def __init__(self, cfg: dict[str, Any] | None = None):
-        self.cfg = cfg or {}
-
-    def get_client(self, cfg: dict[str, Any] | None = None) -> LegacyZIAClient:
-        merged = {**ENV.as_config()["zia"], **self.cfg, **(cfg or {})}
-        config = {key: (merged.get(key) or "").strip() for key in self.required}
-        missing = [key for key in self.required if not config[key]]
-        if missing:
-            raise SystemExit(f"Missing ZIA credentials: {', '.join(missing)}")
-        return LegacyZIAClient(
+    client: LegacyZIAClient | None = None
+    def get_client(self) -> LegacyZIAClient:
+        if self.client is None:   
+            merged = {**ENV.as_config()["zia"]}
+            config = {key: (merged.get(key) or "").strip() for key in self.required}
+            missing = [key for key in self.required if not config[key]]
+            if missing:
+                raise SystemExit(f"Missing ZIA credentials: {', '.join(missing)}")
+            self.client = LegacyZIAClient(
             {**config, "logging": {"enabled": False, "verbose": False}}
-        )
-
-    @staticmethod
-    def cfg_from_args(args: argparse.Namespace) -> dict[str, str]:
-        cfg: dict[str, str] = {}
-        for key in ZiaClient.required:
-            value = getattr(args, key, None)
-            if value:
-                cfg[key] = value
-        return cfg
-
-    @staticmethod
-    def add_overrides(parser: argparse.ArgumentParser) -> None:
-        parser.add_argument("--username", help="Override ZIA__USERNAME")
-        parser.add_argument("--password", help="Override ZIA__PASSWORD")
-        parser.add_argument("--api-key", help="Override ZIA__API_KEY")
-        parser.add_argument("--cloud", help="Override ZIA__CLOUD")
+            )
+        return self.client
 
     @staticmethod
     def dump(data: Any) -> None:
@@ -92,25 +75,21 @@ class ZiaClient:
         return result
 
     def cmd_activation_status(self, args: argparse.Namespace) -> None:
-        self.cfg.update(self.cfg_from_args(args))
         self.dump(self.activation_status())
         return None
 
     def cmd_activate(self, args: argparse.Namespace) -> None:
-        self.cfg.update(self.cfg_from_args(args))
         self.dump(self.activate_changes())
         return None
 
     @staticmethod
     def register(sub: argparse._SubParsersAction) -> None:
         client = ZiaClient()
-        overrides = argparse.ArgumentParser(add_help=False)
-        ZiaClient.add_overrides(overrides)
         p = sub.add_parser("activate", help="ZIA configuration activation")
         cmds = p.add_subparsers(required=True)
         cmds.add_parser(
-            "status", parents=[overrides], help="Get activation status"
+            "status", help="Get activation status"
         ).set_defaults(func=client.cmd_activation_status)
         cmds.add_parser(
-            "run", parents=[overrides], help="Activate pending changes"
+            "run", help="Activate pending changes"
         ).set_defaults(func=client.cmd_activate)

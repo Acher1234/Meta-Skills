@@ -9,8 +9,6 @@ All commands: `~/.meta-skills/.venv/bin/python scripts/cli.py …` from `~/.meta
 | `/zscaler_zia_dedicated_ip_gateways_list` | `python scripts/cli.py zia dedicated-ip-gateways list` | List dedicated IP gateways |
 | `/zscaler_zia_dedicated_ip_gateways_get` | `python scripts/cli.py zia dedicated-ip-gateways get [--id {GATEWAY_ID}] [--name {GATEWAY_NAME}]` | Get by id or name |
 
-Optional client overrides: `--username` `--password` `--api-key` `--cloud`.
-
 ### Examples
 
 ```bash
