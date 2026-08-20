@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Image converter CLI — Pillow convert + resize router."""
+"""Image converter CLI — Pillow convert + resize router; SVG input is rasterized."""
 
 from __future__ import annotations
 
@@ -13,21 +13,27 @@ if str(_SCRIPTS) not in sys.path:
 
 from convert import Convert
 from resize import Resize
+from svg import register_svg_check
 from thumbnail import Thumbnail
 from trim import Trim
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Convert, resize, trim, and thumbnail images with Pillow (WebP / PNG / JPG)"
+        description=(
+            "Convert, resize, trim, and thumbnail images "
+            "(WebP / PNG / JPG / SVG; SVG→SVG stays vector)"
+        )
     )
     sub = parser.add_subparsers(required=True)
     Convert.register(sub)
     Resize.register(sub)
     Trim.register(sub)
     Thumbnail.register(sub)
+    register_svg_check(sub)
     args = parser.parse_args(argv)
-    return args.func(args)
+    result = args.func(args)
+    return 0 if result is None else int(result)
 
 
 if __name__ == "__main__":

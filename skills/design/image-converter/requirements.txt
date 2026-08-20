@@ -1,1 +1,7 @@
 pillow>=12.3.0
+# Cairo (libcairo) is optional — cairosvg is preferred quality (CSS, viewBox, alpha).
+# svglib+reportlab is the pip-only fallback when Cairo is missing.
+# ReportLab 5 renderPM needs rlPyCairo/Cairo; the skill paints svglib drawings with Pillow.
+cairosvg>=2.7.1
+svglib>=1.5.1
+reportlab>=4.0.0

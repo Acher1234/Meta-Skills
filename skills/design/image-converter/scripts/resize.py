@@ -1,4 +1,4 @@
-"""Resize images with Pillow (`Image.resize` / `ImageOps.contain` / `ImageOps.fit`)."""
+"""Resize images. Raster uses Pillow; SVG → SVG stays vector (viewBox + width/height)."""
 
 from __future__ import annotations
 
@@ -7,7 +7,24 @@ from pathlib import Path
 
 from PIL import Image, ImageOps
 
-from base_image import dump, format_from_path, open_image, resolve_input, resolve_output, save_image
+from base_image import (
+    dump,
+    format_from_path,
+    open_image,
+    output_ext_for_input,
+    resolve_input,
+    resolve_output,
+    result_fields,
+    save_image,
+)
+from svg import (
+    add_svg_arguments,
+    is_svg_path,
+    planned_svg_size,
+    raster_image_to_svg,
+    resize_svg,
+    svg_kwargs,
+)
 
 FITS = ("contain", "cover", "stretch")
 
@@ -23,6 +40,9 @@ class Resize:
         output: Path | None = None,
         quality: int = 85,
         force: bool = False,
+        svg_dpi: float = 96,
+        svg_width: int | None = None,
+        svg_scale: float = 1.0,
     ) -> dict:
         if not width and not height:
             raise SystemExit("--width and/or --height is required")
@@ -35,8 +55,47 @@ class Resize:
             raise SystemExit(f"unsupported --fit: {fit} (use contain, cover, stretch)")
 
         src = resolve_input(source)
-        img = open_image(src)
+        if is_svg_path(src) and (output is None or is_svg_path(output.expanduser())):
+            w, h = planned_svg_size(
+                src,
+                width=width,
+                height=height,
+                fit=mode,
+                scale=svg_scale,
+                dpi=svg_dpi,
+            )
+            dest = resolve_output(
+                output.expanduser()
+                if output
+                else src.with_name(f"{src.stem}-{w}x{h}{src.suffix}"),
+                force=force,
+            )
+            resize_svg(
+                src,
+                dest,
+                width=width,
+                height=height,
+                fit=mode,
+                scale=svg_scale,
+                dpi=svg_dpi,
+            )
+            return {
+                "ok": True,
+                "input": str(src),
+                "output": str(dest),
+                "width": w,
+                "height": h,
+                "fit": mode,
+                "bytes": dest.stat().st_size,
+                "frames_read": 1,
+                "input_kind": "svg",
+                "svg_backend": "vector",
+                "svg_px": [w, h],
+            }
+
+        img = open_image(src, svg_dpi=svg_dpi, svg_width=svg_width, svg_scale=svg_scale)
         frames = img.info.get("_frames_read", 1)
+        meta = result_fields(img)
         if img.mode == "P":
             img = img.convert("RGBA" if "transparency" in img.info else "RGB")
         if img.mode == "CMYK":
@@ -45,10 +104,15 @@ class Resize:
         resized = self._apply(img, width, height, mode)
         w, h = resized.size
         dest = resolve_output(
-            output.expanduser() if output else src.with_name(f"{src.stem}-{w}x{h}{src.suffix}"),
+            output.expanduser()
+            if output
+            else src.with_name(f"{src.stem}-{w}x{h}{output_ext_for_input(src)}"),
             force=force,
         )
-        save_image(resized, dest, fmt=format_from_path(dest), quality=quality)
+        if is_svg_path(dest):
+            raster_image_to_svg(resized, dest)
+        else:
+            save_image(resized, dest, fmt=format_from_path(dest), quality=quality)
         img.close()
         return {
             "ok": True,
@@ -59,6 +123,7 @@ class Resize:
             "fit": mode,
             "bytes": dest.stat().st_size,
             "frames_read": frames,
+            **meta,
         }
 
     @staticmethod
@@ -96,6 +161,7 @@ class Resize:
                 output=Path(args.output) if args.output else None,
                 quality=args.quality,
                 force=args.force,
+                **svg_kwargs(args),
             )
         )
         return None
@@ -103,8 +169,11 @@ class Resize:
     @staticmethod
     def register(sub: argparse._SubParsersAction) -> None:
         client = Resize()
-        p = sub.add_parser("resize", help="Resize an image with Pillow")
-        p.add_argument("input", help="Source image path")
+        p = sub.add_parser(
+            "resize",
+            help="Resize an image (SVG → SVG stays vector)",
+        )
+        p.add_argument("input", help="Source image path (webp, png, jpg, svg, svgz)")
         p.add_argument("--width", type=int, help="Target width in pixels")
         p.add_argument("--height", type=int, help="Target height in pixels")
         p.add_argument(
@@ -113,7 +182,12 @@ class Resize:
             choices=list(FITS),
             help="When both width and height are set (default: contain)",
         )
-        p.add_argument("--output", help="Destination path (default: {stem}-{w}x{h}{ext})")
+        p.add_argument(
+            "-o",
+            "--output",
+            help="Destination path (default keeps input type; SVG stays .svg)",
+        )
         p.add_argument("--quality", type=int, default=85, help="JPG/WebP quality 1–100")
         p.add_argument("--force", action="store_true", help="Overwrite existing output")
+        add_svg_arguments(p)
         p.set_defaults(func=client.cmd_resize)

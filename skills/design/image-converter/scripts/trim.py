@@ -14,8 +14,10 @@ from base_image import (
     parse_color,
     resolve_input,
     resolve_output,
+    result_fields,
     save_image,
 )
+from svg import add_svg_arguments, svg_kwargs
 
 
 class Trim:
@@ -27,6 +29,9 @@ class Trim:
         padding: int = 0,
         tolerance: int = 24,
         force: bool = False,
+        svg_dpi: float = 96,
+        svg_width: int | None = None,
+        svg_scale: float = 1.0,
     ) -> dict:
         if padding < 0:
             raise SystemExit("--padding must be >= 0")
@@ -40,8 +45,9 @@ class Trim:
         )
         dest_fmt = format_from_path(dest)
 
-        img = open_image(src)
+        img = open_image(src, svg_dpi=svg_dpi, svg_width=svg_width, svg_scale=svg_scale)
         frames = img.info.get("_frames_read", 1)
+        meta = result_fields(img)
         if img.mode == "P":
             img = img.convert("RGBA" if "transparency" in img.info else "RGB")
         if img.mode == "CMYK":
@@ -75,6 +81,7 @@ class Trim:
             "bbox": list(bbox),
             "bytes": dest.stat().st_size,
             "frames_read": frames,
+            **meta,
         }
 
     @staticmethod
@@ -93,6 +100,7 @@ class Trim:
                 padding=args.padding,
                 tolerance=args.tolerance,
                 force=args.force,
+                **svg_kwargs(args),
             )
         )
         return None
@@ -100,8 +108,8 @@ class Trim:
     @staticmethod
     def register(sub: argparse._SubParsersAction) -> None:
         client = Trim()
-        p = sub.add_parser("trim", help="Trim background around a logo")
-        p.add_argument("input", help="Source image path")
+        p = sub.add_parser("trim", help="Trim background around a logo (SVG input rasterized)")
+        p.add_argument("input", help="Source image path (webp, png, jpg, svg, svgz)")
         p.add_argument(
             "-o",
             "--output",
@@ -120,4 +128,5 @@ class Trim:
             help="Background match threshold (JPEG artifacts)",
         )
         p.add_argument("--force", action="store_true", help="Overwrite existing output")
+        add_svg_arguments(p)
         p.set_defaults(func=client.cmd_trim)
