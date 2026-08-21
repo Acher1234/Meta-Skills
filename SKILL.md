@@ -288,6 +288,14 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 | 1   | `gif-creator` | `skills/design/gif-creator/` | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
 
 
+#### Buying
+
+
+| #   | Name      | Folder                    | What it does                                              |
+| --- | --------- | ------------------------- | --------------------------------------------------------- |
+| 1   | `dealabs` | `skills/buying/dealabs/` | Dealabs REST v2 — search deals, get a deal, list comments |
+
+
 **External** — any git URL (cloned into `~/.meta-skills/ext/<name>`).
 
 ## Flow (do this)
