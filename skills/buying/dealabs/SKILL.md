@@ -1,9 +1,9 @@
 ---
 name: dealabs
 description: >-
-  Dealabs REST v2 CLI — search deals, get a deal, list comments
+  Dealabs REST v2 CLI — search deals, merchants, comments
   (OAuth1). Use when the user asks about Dealabs, bons plans, deal search,
-  deal comments, or invokes /dealabs_*.
+  merchant filter, deal comments, or invokes /dealabs_*.
 disable-model-invocation: true
 ---
 
@@ -29,19 +29,25 @@ export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
 
 # dealabs
 
-Dealabs **REST v2** CLI (`thread/search`, `thread`, `thread/{id}`, `thread/{id}/comments`). OAuth1 consumer is hardcoded in `scripts/dealabs.py`. No `.env`.
+Dealabs **REST v2** CLI (`thread/search`, `thread`, `merchant`, `merchant/search`, comments). OAuth1 consumer is hardcoded in `scripts/dealabs.py`. No `.env`.
 
 Library: `~/.meta-skills/skills/buying/dealabs/`. Python: `~/.meta-skills/.venv/bin/python`.
 
 ## When to use
 
-Trigger phrases: "cherche un deal Dealabs", "bons plans", "commentaires Dealabs", `/dealabs_*`.
+Trigger phrases: "cherche un deal Dealabs", "bons plans", "deals Amazon", "commentaires Dealabs", `/dealabs_*`.
 
 ## dealabs-deals
 
-Search / hot / new / list / get deals.
+Search / hot / new / list / get deals. Filter with `--merchant-id`.
 
 Commands → `~/.meta-skills/skills/buying/dealabs/command.md/dealabs-deals.command.md`
+
+## dealabs-merchants
+
+Search / list / get merchants (`GET merchant`, `merchant/search`).
+
+Commands → `~/.meta-skills/skills/buying/dealabs/command.md/dealabs-merchants.command.md`
 
 ## dealabs-thread-comments
 

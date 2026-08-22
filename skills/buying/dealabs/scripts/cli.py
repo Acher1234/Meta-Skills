@@ -14,15 +14,17 @@ if str(_SCRIPTS) not in sys.path:
 
 from dealabs import DealabsError
 from deals import Deals
+from merchants import Merchants
 from thread_comments import ThreadComments
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Dealabs REST v2 CLI (deals + thread comments)"
+        description="Dealabs REST v2 CLI (deals + merchants + comments)"
     )
     sub = parser.add_subparsers(required=True)
     Deals.register(sub)
+    Merchants.register(sub)
     ThreadComments.register(sub)
     args = parser.parse_args(argv)
     try:

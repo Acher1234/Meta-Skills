@@ -30,12 +30,18 @@ class Deals:
         self,
         *,
         deal_ids: str | None = None,
+        merchant_id: str | None = None,
         page: int = 0,
         limit: int = 25,
     ) -> Any:
         return self.api.request(
             "thread",
-            params={"thread_ids": deal_ids, "page": page, "limit": limit},
+            params={
+                "thread_ids": deal_ids,
+                "merchant_id": merchant_id,
+                "page": page,
+                "limit": limit,
+            },
         )
 
     def get(self, deal_id: str) -> Any:
@@ -54,6 +60,7 @@ class Deals:
         dump(
             self.list_deals(
                 deal_ids=args.deal_ids,
+                merchant_id=args.merchant_id,
                 page=args.page,
                 limit=args.limit,
             )
@@ -63,10 +70,17 @@ class Deals:
         dump(self.get(args.deal_id))
 
     def cmd_hot(self, args: argparse.Namespace) -> None:
-        dump(self.hot(_page_params(args, extra={"days": args.days})))
+        dump(
+            self.hot(
+                _page_params(
+                    args,
+                    extra={"days": args.days, "merchant_id": args.merchant_id},
+                )
+            )
+        )
 
     def cmd_new(self, args: argparse.Namespace) -> None:
-        dump(self.new(_page_params(args)))
+        dump(self.new(_page_params(args, extra={"merchant_id": args.merchant_id})))
 
     @staticmethod
     def register(sub: argparse._SubParsersAction) -> None:
@@ -94,6 +108,7 @@ class Deals:
 
         listing = inner.add_parser("list", help="GET thread")
         listing.add_argument("--deal-ids", help="Comma-separated deal ids")
+        listing.add_argument("--merchant-id", dest="merchant_id", help="Filter by merchant id")
         listing.add_argument("--page", type=int, default=0)
         listing.add_argument("--limit", type=int, default=25)
         listing.set_defaults(func=client.cmd_list)
@@ -104,11 +119,13 @@ class Deals:
 
         hot = inner.add_parser("hot", help="GET thread?order_by=hot")
         hot.add_argument("--days", type=int, default=1, help="Window in days (e.g. 1, 7, 30)")
+        hot.add_argument("--merchant-id", dest="merchant_id", help="Filter by merchant id")
         hot.add_argument("--page", type=int, default=0)
         hot.add_argument("--limit", type=int, default=50)
         hot.set_defaults(func=client.cmd_hot)
 
         newest = inner.add_parser("new", help="GET thread?order_by=new")
+        newest.add_argument("--merchant-id", dest="merchant_id", help="Filter by merchant id")
         newest.add_argument("--page", type=int, default=0)
         newest.add_argument("--limit", type=int, default=50)
         newest.set_defaults(func=client.cmd_new)

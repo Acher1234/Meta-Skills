@@ -13,6 +13,9 @@ API_DEAL_SEARCH = urljoin(API_BASE_URL, "thread/search")
 API_DEAL_THREAD = urljoin(API_BASE_URL, "thread")
 API_THREAD_DETAIL = urljoin(API_BASE_URL, "thread/{thread_id}")
 API_THREAD_COMMENTS = urljoin(API_BASE_URL, "thread/{thread_id}/comments")
+API_MERCHANT = urljoin(API_BASE_URL, "merchant")
+API_MERCHANT_SEARCH = urljoin(API_BASE_URL, "merchant/search")
+API_MERCHANT_DETAIL = urljoin(API_BASE_URL, "merchant/{merchant_id}")
 
 
 class DealabsError(RuntimeError):
@@ -95,3 +98,12 @@ class Dealabs:
         req = self.request(url=API_DEAL_THREAD, params=merged)
         deals_data = req.get("data", []) if isinstance(req, dict) else []
         return [Deal(deal_data) for deal_data in deals_data]
+
+    def list_merchants(self, params: dict[str, Any] | None = None) -> Any:
+        return self.request(url=API_MERCHANT, params=params)
+
+    def search_merchants(self, params: dict[str, Any] | None = None) -> Any:
+        return self.request(url=API_MERCHANT_SEARCH, params=params)
+
+    def get_merchant(self, merchant_id: str) -> Any:
+        return self.request(url=API_MERCHANT_DETAIL.format(merchant_id=merchant_id))

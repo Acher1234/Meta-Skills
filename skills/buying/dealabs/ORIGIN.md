@@ -8,6 +8,9 @@ Dealabs unofficial mobile **REST v2** (Pepper). Same shape as the Android app.
 - `GET thread/search`
 - `GET thread`
 - `GET thread/{thread_id}`
+- `GET merchant`
+- `GET merchant/search`
+- `GET merchant/{merchant_id}`
 - `GET thread/{thread_id}/comments`
 
 Auth: OAuth1 consumer hardcoded in `scripts/dealabs.py`.
