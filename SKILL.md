@@ -284,9 +284,11 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 #### Design
 
 
-| #   | Name          | Folder                       | What it does                                            |
-| --- | ------------- | ---------------------------- | ------------------------------------------------------- |
-| 1   | `gif-creator` | `skills/design/gif-creator/` | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
+| #   | Name               | Folder                            | What it does                                            |
+| --- | ------------------ | --------------------------------- | ------------------------------------------------------- |
+| 1   | `gif-creator`       | `skills/design/gif-creator/`       | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
+| 2   | `image-converter`   | `skills/design/image-converter/`   | Convert, resize, trim, and thumbnail still images (WebP, PNG, JPG) |
+| 3   | `logo-dev-finder`   | `skills/design/logo.dev-finder/`   | Search logo.dev and download logos into a folder        |
 
 
 #### Buying
