@@ -276,6 +276,7 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 | #   | Name        | Folder                        | What it does                                                                |
 | --- | ----------- | ----------------------------- | --------------------------------------------------------------------------- |
 | 1   | `bitwarden` | `skills/security/bitwarden/`  | Bitwarden / Vaultwarden vault via `bw` — items, folders, attachments, Send |
+| 2   | `zscaler`   | `skills/security/zscaler/`    | Zscaler ZPA / ZIA / ZIdentity APIs — SkillCred `.env` with `SECTION__FIELD` keys |
 
 
 
@@ -288,6 +289,13 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 | 1   | `gif-creator`       | `skills/design/gif-creator/`       | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
 | 2   | `image-converter`   | `skills/design/image-converter/`   | Convert, resize, trim, and thumbnail still images (WebP, PNG, JPG) |
 | 3   | `logo-dev-finder`   | `skills/design/logo.dev-finder/`   | Search logo.dev and download logos into a folder        |
+
+#### Buying
+
+
+| #   | Name      | Folder                    | What it does                                              |
+| --- | --------- | ------------------------- | --------------------------------------------------------- |
+| 1   | `dealabs` | `skills/buying/dealabs/` | Dealabs REST v2 — search deals, get a deal, list comments |
 
 
 **External** — any git URL (cloned into `~/.meta-skills/ext/<name>`).
