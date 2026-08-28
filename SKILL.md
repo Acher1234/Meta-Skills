@@ -298,15 +298,6 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 | 2   | `image-converter`   | `skills/design/image-converter/`   | Convert, resize, trim, and thumbnail still images (WebP, PNG, JPG) |
 | 3   | `logo-dev-finder`   | `skills/design/logo.dev-finder/`   | Search logo.dev and download logos into a folder        |
 
-
-#### Buying
-
-
-| #   | Name      | Folder                    | What it does                                              |
-| --- | --------- | ------------------------- | --------------------------------------------------------- |
-| 1   | `dealabs` | `skills/buying/dealabs/` | Dealabs REST v2 — search deals, get a deal, list comments |
-
-
 #### Buying
 
 
