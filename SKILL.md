@@ -245,6 +245,7 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 | 3   | `fathom`           | `skills/productivity/video-conf/fathom/`       | Fathom meetings, transcripts, AI summaries, action items                            |
 | 4   | `jira`             | `skills/productivity/jira/`                    | Jira Cloud via `jira-as` CLI — router + `command.md/` domains + SkillCred `.env` |
 | 5   | `confluence`       | `skills/productivity/confluence/`              | Confluence via confluence-cli + SkillCred `.env` (read/search/write)                |
+| 6   | `youtrack`         | `skills/productivity/youtrack/`                | YouTrack via `yt` (youtrack-cli) — SkillCred `.env` (`URL`, `API_TOKEN`) + `yt auth login` |
 
 
 
