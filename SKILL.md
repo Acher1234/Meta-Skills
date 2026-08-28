@@ -257,6 +257,14 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 | 1   | `godaddy` | `skills/devops/dns/godaddy/` | GoDaddy v3 discovery, owned domains, DNS CLI |
 
 
+#### Database
+
+
+| #   | Name      | Folder                 | What it does                                              |
+| --- | --------- | ---------------------- | --------------------------------------------------------- |
+| 1   | `elastic` | `skills/db/elastic/`   | Elasticsearch CLI — env, ping, cluster health, indices    |
+
+
 
 
 #### MDM & Antivirus
