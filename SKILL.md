@@ -258,6 +258,14 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 | 1   | `godaddy` | `skills/devops/dns/godaddy/` | GoDaddy v3 discovery, owned domains, DNS CLI |
 
 
+#### Database
+
+
+| #   | Name      | Folder                 | What it does                                              |
+| --- | --------- | ---------------------- | --------------------------------------------------------- |
+| 1   | `elastic` | `skills/db/elastic/`   | Elasticsearch CLI — env, ping, cluster health, indices    |
+
+
 
 
 #### MDM & Antivirus
@@ -285,9 +293,27 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 #### Design
 
 
-| #   | Name          | Folder                       | What it does                                            |
-| --- | ------------- | ---------------------------- | ------------------------------------------------------- |
-| 1   | `gif-creator` | `skills/design/gif-creator/` | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
+| #   | Name               | Folder                            | What it does                                            |
+| --- | ------------------ | --------------------------------- | ------------------------------------------------------- |
+| 1   | `gif-creator`       | `skills/design/gif-creator/`       | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
+| 2   | `image-converter`   | `skills/design/image-converter/`   | Convert, resize, trim, and thumbnail still images (WebP, PNG, JPG) |
+| 3   | `logo-dev-finder`   | `skills/design/logo.dev-finder/`   | Search logo.dev and download logos into a folder        |
+
+
+#### Buying
+
+
+| #   | Name      | Folder                    | What it does                                              |
+| --- | --------- | ------------------------- | --------------------------------------------------------- |
+| 1   | `dealabs` | `skills/buying/dealabs/` | Dealabs REST v2 — search deals, get a deal, list comments |
+
+
+#### Buying
+
+
+| #   | Name      | Folder                    | What it does                                              |
+| --- | --------- | ------------------------- | --------------------------------------------------------- |
+| 1   | `dealabs` | `skills/buying/dealabs/` | Dealabs REST v2 — search deals, get a deal, list comments |
 
 
 **External** — any git URL (cloned into `~/.meta-skills/ext/<name>`).
