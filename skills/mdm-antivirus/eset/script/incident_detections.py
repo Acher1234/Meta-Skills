@@ -27,10 +27,9 @@ URL and a Bearer access token.
 
 from __future__ import annotations
 
-import argparse
 from typing import Iterable, Iterator
 
-from _client import TOKEN_PARENT, ApiError, BaseClient
+from _client import ApiError, BaseClient
 
 
 class DetectionsError(ApiError):
@@ -43,7 +42,6 @@ class DetectionsClient(BaseClient):
     """Client over the ESET Connect Detections + DetectionGroups endpoints."""
 
     error_class = DetectionsError
-    url_key = "incident_url"
 
 
     def list_detections(
@@ -181,133 +179,3 @@ class DetectionsClient(BaseClient):
             token = page.get("nextPageToken")
             if not token:
                 break
-
-    def cmd_list(self, args: argparse.Namespace) -> None:
-        self.dump(
-            self.list_detections(
-                args.version,
-                device_uuid=args.device,
-                start_time=args.start_time,
-                end_time=args.end_time,
-                page_size=args.page_size,
-                page_token=args.page_token,
-            )
-        )
-        return None
-
-    def cmd_get(self, args: argparse.Namespace) -> None:
-        self.dump(self.get_detection(args.detection_uuid, args.version))
-        return None
-
-    def cmd_resolve(self, args: argparse.Namespace) -> None:
-        self.dump(self.resolve_detection(args.detection_uuid, args.note))
-        return None
-
-    def cmd_batch_get(self, args: argparse.Namespace) -> None:
-        self.dump(self.batch_get_detections(args.detection_uuids))
-        return None
-
-    def cmd_groups_list(self, args: argparse.Namespace) -> None:
-        self.dump(
-            self.list_detection_groups(
-                page_size=args.page_size, page_token=args.page_token
-            )
-        )
-        return None
-
-    def cmd_groups_get(self, args: argparse.Namespace) -> None:
-        self.dump(self.get_detection_group(args.group_uuid))
-        return None
-
-    def cmd_groups_resolve(self, args: argparse.Namespace) -> None:
-        self.dump(self.resolve_detection_group(args.group_uuid, args.note))
-        return None
-
-    def cmd_groups_search(self, args: argparse.Namespace) -> None:
-        self.dump(
-            self.search_detection_groups(
-                args.filter, return_total_size=args.total_size
-            )
-        )
-        return None
-
-    @staticmethod
-    def _add_version(parser: argparse.ArgumentParser) -> None:
-        parser.add_argument(
-            "--version",
-            choices=["v1", "v2"],
-            default="v1",
-            help="API version (v1 = PROTECT/Inspect, v2 = Cloud Office Security/Inspect)",
-        )
-
-    @staticmethod
-    def register(sub: argparse._SubParsersAction) -> None:
-        client = DetectionsClient()
-
-        p_det = sub.add_parser(
-            "detections",
-            parents=[TOKEN_PARENT],
-            help="Incident Management (detections)",
-        )
-        det = p_det.add_subparsers(required=True)
-
-        dt_list = det.add_parser("list", help="GET /{version}/detections")
-        DetectionsClient._add_version(dt_list)
-        dt_list.add_argument(
-            "--device", metavar="DEVICE_UUID", help="Filter by device UUID"
-        )
-        dt_list.add_argument("--start-time", help="Filter: occurred after (ISO 8601)")
-        dt_list.add_argument("--end-time", help="Filter: occurred before (ISO 8601)")
-        BaseClient.add_paging(dt_list)
-        dt_list.set_defaults(func=client.cmd_list)
-
-        dt_get = det.add_parser(
-            "get", help="GET /{version}/detections/{detectionUuid}"
-        )
-        dt_get.add_argument("detection_uuid", help="Detection UUID")
-        DetectionsClient._add_version(dt_get)
-        dt_get.set_defaults(func=client.cmd_get)
-
-        dt_resolve = det.add_parser(
-            "resolve", help="POST /v2/detections/{detectionUuid}:resolve"
-        )
-        dt_resolve.add_argument("detection_uuid", help="Detection UUID")
-        dt_resolve.add_argument("--note", help="Text explaining the resolution")
-        dt_resolve.set_defaults(func=client.cmd_resolve)
-
-        dt_bget = det.add_parser("batch-get", help="POST /v2/detections:batchGet")
-        dt_bget.add_argument(
-            "detection_uuids", nargs="+", help="One or more detection UUIDs"
-        )
-        dt_bget.set_defaults(func=client.cmd_batch_get)
-
-        p_dg = sub.add_parser(
-            "detection-groups",
-            parents=[TOKEN_PARENT],
-            help="Incident Management (detection groups)",
-        )
-        dg = p_dg.add_subparsers(required=True)
-
-        dg_list = dg.add_parser("list", help="GET /v2/detection-groups")
-        BaseClient.add_paging(dg_list)
-        dg_list.set_defaults(func=client.cmd_groups_list)
-
-        dg_get = dg.add_parser("get", help="GET /v2/detection-groups/{groupUuid}")
-        dg_get.add_argument("group_uuid", help="Detection group UUID")
-        dg_get.set_defaults(func=client.cmd_groups_get)
-
-        dg_resolve = dg.add_parser(
-            "resolve", help="POST /v2/detection-groups/{groupUuid}:resolve"
-        )
-        dg_resolve.add_argument("group_uuid", help="Detection group UUID")
-        dg_resolve.add_argument("--note", help="Text explaining the resolution")
-        dg_resolve.set_defaults(func=client.cmd_groups_resolve)
-
-        dg_search = dg.add_parser("search", help="POST /v2/detection-groups:search")
-        dg_search.add_argument("--filter", help="Filter, e.g. \"resolved eq 0\"")
-        dg_search.add_argument(
-            "--total-size",
-            action="store_true",
-            help="Compute total_size in the response",
-        )
-        dg_search.set_defaults(func=client.cmd_groups_search)

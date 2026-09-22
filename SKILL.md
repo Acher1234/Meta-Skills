@@ -285,7 +285,6 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 | #   | Name        | Folder                        | What it does                                                                |
 | --- | ----------- | ----------------------------- | --------------------------------------------------------------------------- |
 | 1   | `bitwarden` | `skills/security/bitwarden/`  | Bitwarden / Vaultwarden vault via `bw` — items, folders, attachments, Send |
-| 2   | `zscaler`   | `skills/security/zscaler/`    | Zscaler ZPA / ZIA / ZIdentity APIs — SkillCred `.env` with `SECTION__FIELD` keys |
 
 
 
