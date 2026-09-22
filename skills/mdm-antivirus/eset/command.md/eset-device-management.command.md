@@ -23,3 +23,12 @@ API docs: [Device Management](https://help.eset.com/eset_connect/en-US/device_ma
 | `/eset_devices_rename` | `python cli.py devices rename DEVICE_UUID --name NAME` | `POST /v1/devices/{deviceUuid}:rename` |
 | `/eset_devices_batch-get` | `python cli.py devices batch-get UUID [UUID …]` | `GET /v1/devices:batchGet` |
 | `/eset_devices_batch-import` | `python cli.py devices batch-import --file devices.json` | `POST /v1/devices:batchImport` |
+
+### CLI flag → JSON body
+
+JSON fields follow the ESET Connect schema. CLI flags are aliases only.
+
+| CLI | JSON | Example |
+|-----|------|---------|
+| `--name` | `displayName` | `python cli.py devices rename UUID --name VO2I-MACPRO-AKLEIN` → `{"displayName": "VO2I-MACPRO-AKLEIN"}` |
+| `--group` | `newParentUuid` | `python cli.py devices move UUID --group GROUP_UUID` → `{"newParentUuid": "GROUP_UUID"}` |

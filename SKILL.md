@@ -245,6 +245,7 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 | 3   | `fathom`           | `skills/productivity/video-conf/fathom/`       | Fathom meetings, transcripts, AI summaries, action items                            |
 | 4   | `jira`             | `skills/productivity/jira/`                    | Jira Cloud via `jira-as` CLI — router + `command.md/` domains + SkillCred `.env` |
 | 5   | `confluence`       | `skills/productivity/confluence/`              | Confluence via confluence-cli + SkillCred `.env` (read/search/write)                |
+| 6   | `youtrack`         | `skills/productivity/youtrack/`                | YouTrack via `yt` (youtrack-cli) — SkillCred `.env` (`URL`, `API_TOKEN`) + `yt auth login` |
 
 
 
@@ -255,6 +256,14 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 | #   | Name      | Folder                       | What it does                                 |
 | --- | --------- | ---------------------------- | -------------------------------------------- |
 | 1   | `godaddy` | `skills/devops/dns/godaddy/` | GoDaddy v3 discovery, owned domains, DNS CLI |
+
+
+#### Database
+
+
+| #   | Name      | Folder                 | What it does                                              |
+| --- | --------- | ---------------------- | --------------------------------------------------------- |
+| 1   | `elastic` | `skills/db/elastic/`   | Elasticsearch CLI — env, ping, cluster health, indices    |
 
 
 
@@ -283,9 +292,18 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 #### Design
 
 
-| #   | Name          | Folder                       | What it does                                            |
-| --- | ------------- | ---------------------------- | ------------------------------------------------------- |
-| 1   | `gif-creator` | `skills/design/gif-creator/` | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
+| #   | Name               | Folder                            | What it does                                            |
+| --- | ------------------ | --------------------------------- | ------------------------------------------------------- |
+| 1   | `gif-creator`       | `skills/design/gif-creator/`       | Animated GIFs with Pillow (toss, frames → GIF, inspect) |
+| 2   | `image-converter`   | `skills/design/image-converter/`   | Convert, resize, trim, and thumbnail still images (WebP, PNG, JPG) |
+| 3   | `logo-dev-finder`   | `skills/design/logo.dev-finder/`   | Search logo.dev and download logos into a folder        |
+
+#### Buying
+
+
+| #   | Name      | Folder                    | What it does                                              |
+| --- | --------- | ------------------------- | --------------------------------------------------------- |
+| 1   | `dealabs` | `skills/buying/dealabs/` | Dealabs REST v2 — search deals, get a deal, list comments |
 
 
 **External** — any git URL (cloned into `~/.meta-skills/ext/<name>`).

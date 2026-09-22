@@ -62,7 +62,9 @@ class DeviceManagementClient(BaseClient):
         *,
         body: dict | None = None,
     ) -> dict:
-        payload = body if body is not None else {"deviceGroupUuid": device_group_uuid}
+        payload = (
+            body if body is not None else {"newParentUuid": device_group_uuid}
+        )
         return self._request(
             "POST", f"/v1/devices/{device_uuid}:move", json_body=payload
         )
@@ -74,7 +76,7 @@ class DeviceManagementClient(BaseClient):
         *,
         body: dict | None = None,
     ) -> dict:
-        payload = body if body is not None else {"name": name}
+        payload = body if body is not None else {"displayName": name}
         return self._request(
             "POST", f"/v1/devices/{device_uuid}:rename", json_body=payload
         )

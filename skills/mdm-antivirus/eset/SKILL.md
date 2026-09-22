@@ -98,6 +98,9 @@ Commands → `~/.meta-skills/skills/mdm-antivirus/eset/command.md/eset-auth.comm
 Device groups and enrolled endpoints — list, move, rename, batch import.
 Use to find device UUIDs, inspect inventory, or reorganize groups.
 
+JSON fields follow the ESET Connect schema (`displayName`, `newParentUuid`, …).
+CLI flags (`--name`, `--group`) are aliases; never copy the flag name into the body.
+
 Commands → `~/.meta-skills/skills/mdm-antivirus/eset/command.md/eset-device-management.command.md`
 
 ---
@@ -115,6 +118,10 @@ Commands → `~/.meta-skills/skills/mdm-antivirus/eset/command.md/eset-applicati
 
 Static and dynamic group lifecycle — create, delete, move, rename.
 Use to structure the device tree (organizational groups).
+
+JSON fields follow the ESET Connect schema (`displayName`, `parentGroupUuid`,
+`newParentUuid`, …). CLI flags (`--name`, `--parent`) are aliases; never copy
+the flag name into the body.
 
 Commands → `~/.meta-skills/skills/mdm-antivirus/eset/command.md/eset-asset-management.command.md`
 

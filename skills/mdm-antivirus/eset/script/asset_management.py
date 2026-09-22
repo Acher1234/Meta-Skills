@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
-"""Asset Management — https://help.eset.com/eset_connect/en-US/asset_management.html
-
-POST   /v1/groups
-DELETE /v1/groups/{groupUuid}
-POST   /v1/groups/{groupUuid}:move
-POST   /v1/groups/{groupUuid}:rename
-"""
+"""Asset Management — https://help.eset.com/eset_connect/en-US/asset_management.html"""
 
 from __future__ import annotations
 
-from _client import ApiError, BaseClient
+import argparse
+from typing import Any
+
+from _client import TOKEN_PARENT, ApiError, BaseClient
 
 
 class AssetManagementError(ApiError):
@@ -29,9 +26,10 @@ class AssetManagementClient(BaseClient):
         if body is not None:
             payload = body
         else:
-            payload = {"name": name}
+            group: dict[str, Any] = {"displayName": name}
             if parent_group_uuid:
-                payload["parentGroupUuid"] = parent_group_uuid
+                group["parentGroupUuid"] = parent_group_uuid
+            payload = {"group": group}
         return self._request("POST", "/v1/groups", json_body=payload)
 
     def delete_group(self, group_uuid: str) -> dict:
@@ -44,7 +42,9 @@ class AssetManagementClient(BaseClient):
         *,
         body: dict | None = None,
     ) -> dict:
-        payload = body if body is not None else {"parentGroupUuid": parent_group_uuid}
+        payload = (
+            body if body is not None else {"newParentUuid": parent_group_uuid}
+        )
         return self._request(
             "POST", f"/v1/groups/{group_uuid}:move", json_body=payload
         )
@@ -56,7 +56,7 @@ class AssetManagementClient(BaseClient):
         *,
         body: dict | None = None,
     ) -> dict:
-        payload = body if body is not None else {"name": name}
+        payload = body if body is not None else {"displayName": name}
         return self._request(
             "POST", f"/v1/groups/{group_uuid}:rename", json_body=payload
         )
