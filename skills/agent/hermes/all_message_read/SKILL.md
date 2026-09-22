@@ -16,7 +16,7 @@ metadata:
 ## Overview
 
 Reads the WhatsApp / Telegram messages that the Hermes gateway received, directly from the
-gateway logs under `~/.hermes/logs/gateway.log*`. This is the authoritative
+gateway logs under `$HERMES_HOME/logs/gateway.log*` (default `~/.hermes`). This is the authoritative
 record of everything that arrived on WhatsApp — **including messages the bot had
 no permission to reply to**. Useful for auditing, debugging, or answering
 "what did the group send me?"
@@ -30,38 +30,38 @@ no permission to reply to**. Useful for auditing, debugging, or answering
 
 ## Script
 
-Path: `~/.hermes/scripts/read_all.py`
+Path: `$HERMES_HOME/scripts/read_all.py` (default `~/.hermes`)
 
 The script reads **WhatsApp, Telegram, or both**, depending on `--platform`
 (highest priority) / the `MSG_PLATFORM` env var / default `whatsapp`.
 
 ```bash
 # WhatsApp only (default)
-python3 ~/.hermes/scripts/read_all.py
+python3 "${HERMES_HOME:-$HOME/.hermes}/scripts/read_all.py"
 
 # Telegram only
-python3 ~/.hermes/scripts/read_all.py --platform telegram
+python3 "${HERMES_HOME:-$HOME/.hermes}/scripts/read_all.py" --platform telegram
 
 # Both platforms
-python3 ~/.hermes/scripts/read_all.py --platform all
+python3 "${HERMES_HOME:-$HOME/.hermes}/scripts/read_all.py" --platform all
 
 # Via env var (overrides the default only)
-MSG_PLATFORM=all python3 ~/.hermes/scripts/read_all.py
+MSG_PLATFORM=all python3 "${HERMES_HOME:-$HOME/.hermes}/scripts/read_all.py"
 
 # Last 7 days, readable format grouped by date
-python3 ~/.hermes/scripts/read_all.py --days 7
+python3 "${HERMES_HOME:-$HOME/.hermes}/scripts/read_all.py" --days 7
 
 # Filter by user
-python3 ~/.hermes/scripts/read_all.py --user "Yoel"
+python3 "${HERMES_HOME:-$HOME/.hermes}/scripts/read_all.py" --user "Yoel"
 
 # Filter by chat (group ID)
-python3 ~/.hermes/scripts/read_all.py --chat "120363411854253534@g.us"
+python3 "${HERMES_HOME:-$HOME/.hermes}/scripts/read_all.py" --chat "120363411854253534@g.us"
 
 # Raw one-line format
-python3 ~/.hermes/scripts/read_all.py --raw
+python3 "${HERMES_HOME:-$HOME/.hermes}/scripts/read_all.py" --raw
 
 # Cap how many messages are shown
-python3 ~/.hermes/scripts/read_all.py --days 30 --limit 50
+python3 "${HERMES_HOME:-$HOME/.hermes}/scripts/read_all.py" --days 30 --limit 50
 ```
 
 On display, a flag indicates the platform: 🟢 = WhatsApp, 🔵 = Telegram.
@@ -78,13 +78,13 @@ Media messages (photos, videos, stickers…) appear in the log as
 `[image received]` (or `msg=''`). The script:
 
 1. Detects the media marker (`[image received]`, `[video received]`, `[sticker received]`, … or an empty message)
-2. Looks up the real file under `~/.hermes/cache/images/` by **matching the message timestamp to the file's modification time** (~180s tolerance window)
+2. Looks up the real file under `$HERMES_HOME/cache/images/` by **matching the message timestamp to the file's modification time** (~180s tolerance window)
 3. Prints the file's **absolute path** under the message
 
 ```
 ### 2026-08-21
 **10:38** — Acher Klein : [image received]
-   📁 `/root/.hermes/cache/images/img_038d532291bd.jpg`
+   📁 `$HERMES_HOME/cache/images/img_038d532291bd.jpg`
 ```
 
 ⚠️ The script shows the media file *path*, not its contents — to inspect the
@@ -120,7 +120,7 @@ logger.info(
 
 Log result:
 ```
-inbound message: platform=whatsapp user=Acher user=... msg='[image received]' | media=/root/.hermes/cache/images/img_xxx.jpg reply_to_id=...
+inbound message: platform=whatsapp user=Acher user=... msg='[image received]' | media=$HERMES_HOME/cache/images/img_xxx.jpg reply_to_id=...
 ```
 
 Covers **all** platforms (WhatsApp, Telegram, Signal…) because the handler

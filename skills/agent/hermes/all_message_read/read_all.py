@@ -12,12 +12,12 @@ Platform selection (in priority order):
 
 Media handling: when a message is a received image (`[image received]` or an
 empty msg with a nearby image file), the script locates the actual file in
-`~/.hermes/cache/images/` by matching the message timestamp to the file's
+`$HERMES_HOME/cache/images/` by matching the message timestamp to the file's
 modification time, and prints the absolute path.
 
 Usage:
-  python3 read_whatsapp.py [--platform whatsapp|telegram|all] [--days N]
-                           [--user "Name"] [--chat ID] [--raw] [--limit N]
+  python3 read_all.py [--platform whatsapp|telegram|all] [--days N]
+                      [--user "Name"] [--chat ID] [--raw] [--limit N]
 """
 import argparse
 import glob
@@ -25,8 +25,9 @@ import os
 import re
 from datetime import datetime, timedelta
 
-LOG_DIR = "/root/.hermes/logs"
-IMG_DIR = os.path.expanduser("~/.hermes/cache/images")
+HERMES_HOME = os.environ.get("HERMES_HOME") or os.path.expanduser("~/.hermes")
+LOG_DIR = os.path.join(HERMES_HOME, "logs")
+IMG_DIR = os.path.join(HERMES_HOME, "cache", "images")
 PLATFORMS = ("whatsapp", "telegram")
 DEFAULT_PLATFORM = os.environ.get("MSG_PLATFORM", "whatsapp")
 
