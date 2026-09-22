@@ -282,9 +282,10 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 #### Security
 
 
-| #   | Name        | Folder                        | What it does                                                                |
-| --- | ----------- | ----------------------------- | --------------------------------------------------------------------------- |
-| 1   | `bitwarden` | `skills/security/bitwarden/`  | Bitwarden / Vaultwarden vault via `bw` — items, folders, attachments, Send |
+| #   | Name           | Folder                           | What it does                                                                |
+| --- | -------------- | -------------------------------- | --------------------------------------------------------------------------- |
+| 1   | `bitwarden`    | `skills/security/bitwarden/`     | Bitwarden / Vaultwarden vault via `bw` — items, folders, attachments, Send |
+| 2   | `folder-crypt` | `skills/security/folder-crypt/`  | Encrypt / decrypt a folder with a password (prompt, args, or SkillCred `.env`) |
 
 
 
