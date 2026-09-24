@@ -3,6 +3,7 @@ pyproject.toml
 skill_cred.py
 ./__init__.py
 ./skill_cred.py
+./skill_env_export.py
 meta_skill_common.egg-info/PKG-INFO
 meta_skill_common.egg-info/SOURCES.txt
 meta_skill_common.egg-info/dependency_links.txt
