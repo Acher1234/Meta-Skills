@@ -9,6 +9,13 @@ from common.skill_env_export import SkillEnv
 OPTIONAL_KEYS = ("FOLDER", "PASSWORD")
 
 
+def split_folders(raw: str | None) -> list[str]:
+    """Split a comma-separated FOLDER value. Drop empty segments."""
+    if not raw:
+        return []
+    return [part.strip() for part in raw.split(",") if part.strip()]
+
+
 class FolderCryptSkillEnv(SkillEnv):
     required_keys = ()
 
@@ -23,9 +30,12 @@ class FolderCryptSkillEnv(SkillEnv):
             if values.get(key, "").strip()
         }
 
+    def folders(self) -> list[str]:
+        return split_folders(self.env.get("FOLDER", ""))
+
     def folder(self) -> str | None:
-        raw = self.env.get("FOLDER", "").strip()
-        return raw or None
+        items = self.folders()
+        return items[0] if items else None
 
     def password(self) -> str | None:
         raw = self.env.get("PASSWORD", "").strip()
