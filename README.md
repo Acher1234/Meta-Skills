@@ -4,7 +4,7 @@
 
 # Meta-Skills
 
-**A shared library of CLI _skills_ for AI agents — installable on Cursor, Claude, Hermes & OpenClaw.**
+**A shared library of CLI _skills_ for AI agents — installable on Cursor, Claude, Hermes, OpenCode & OpenClaw.**
 
 *by the community* · [github.com/Acher1234/Meta-Skills](https://github.com/Acher1234/Meta-Skills.git)
 
@@ -23,7 +23,7 @@ parts live once; each tool only gets the `SKILL.md`.
 
 | | |
 |---|---|
-| 🎯 **Multi-target** | Cursor · Claude · Hermes · OpenClaw *(OpenClaw in progress)* |
+| 🎯 **Multi-target** | Cursor · Claude · Hermes · OpenCode · OpenClaw *(OpenClaw in progress)* |
 | 🌐 **External skills** | Can install **any** git skill repo, not only the ones here |
 | ♻️ **Shared env** | One Python venv (`~/.meta-skills/.venv`) + global npm; **each skill installs its own deps there** (once, not per project) |
 | 📦 **Shared cache** | External repos cloned **once** under `~/.meta-skills/ext/` |
@@ -43,7 +43,8 @@ npm i -g <pkg>                      shared global Node CLIs (agent-browser, …)
 
         │ we ONLY copy SKILL.md into each tool (flat by skill basename) ↓
 ~/.cursor/skills/<name>/SKILL.md     ~/.claude/skills/<name>/SKILL.md
-~/.hermes/skills/<name>/SKILL.md     ~/.openclaw/skills/<name>/SKILL.md
+~/.hermes/skills/<name>/SKILL.md     ~/.config/opencode/skills/<name>/SKILL.md
+~/.openclaw/skills/<name>/SKILL.md   ./.opencode/skills/<name>/SKILL.md
 ```
 
 Each `SKILL.md` points to its working directory under `~/.meta-skills/…`: the agent `cd`s there and
@@ -68,14 +69,14 @@ cd ~/.meta-skills
 ### 3. Install skills
 
 Paste the install prompt into an **Agent** chat, then run `/meta-skills`.
-Flow: **1)** pick the tool (Cursor / Claude / Hermes / OpenClaw) → **2)** the scope
+Flow: **1)** pick the tool (Cursor / Claude / Hermes / OpenCode / OpenClaw) → **2)** the scope
 (global / project / profile) → **3)** what to install (external git URL, built-in skill, or local path).
 
 ## 🪄 Meta-skills (installers)
 
 | Meta-skill | Slash | Role |
 |-----------|-------|------|
-| `meta-skills` | `/meta-skills` | **The installer**: installs any skill (external git / built-in / local) on **Cursor / Claude / Hermes / OpenClaw**, with a **shared** Python/npm env. See [`SKILL.md`](SKILL.md) + [`install.sh`](install.sh). |
+| `meta-skills` | `/meta-skills` | **The installer**: installs any skill (external git / built-in / local) on **Cursor / Claude / Hermes / OpenCode / OpenClaw**, with a **shared** Python/npm env. See [`SKILL.md`](SKILL.md) + [`install.sh`](install.sh). |
 
 ### `/meta-skills` — the installer
 
@@ -108,10 +109,12 @@ mkdir -p ./.cursor/skills/cool-skill && cp "$SRC/SKILL.md" ./.cursor/skills/cool
 | `claude` / `project` | `./.claude/skills/<name>/` |
 | `hermes` / `all` | `~/.hermes/skills/<name>/` |
 | `hermes` / `profile` | `${HERMES_HOME}/skills/<name>/` |
+| `opencode` / `global` | `${OPENCODE_CONFIG_DIR:-~/.config/opencode}/skills/<name>/` |
+| `opencode` / `project` | `./.opencode/skills/<name>/` |
 | `openclaw` / `global` | `~/.openclaw/skills/<name>/` *(WIP)* |
 | `openclaw` / `project` | `./.openclaw/skills/<name>/` *(WIP)* |
 
-> **Claude Code** is fully supported (detected via `$CLAUDECODE`). **OpenClaw** is still
+> **Claude Code** is fully supported (detected via `$CLAUDECODE`). **OpenCode** is detected when any `$OPENCODE_*` variable is set (the CLI sets `OPENCODE_PID`). **OpenClaw** is still
 > **in progress**: the paths above are defaults and may change once its conventions settle.
 
 ## 📦 Built-in skills

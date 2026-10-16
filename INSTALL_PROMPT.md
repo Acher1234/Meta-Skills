@@ -1,6 +1,6 @@
 # Meta-Skills — install prompt
 
-Copy-paste the block below into a fresh Cursor / Claude Code / Hermes agent chat. It installs
+Copy-paste the block below into a fresh Cursor / Claude Code / Hermes / OpenCode agent chat. It installs
 the **`meta-skills`** meta-skill (the installer itself) into your **global** skills folder,
 so that `/meta-skills` becomes available everywhere.
 
@@ -17,9 +17,10 @@ Install the "meta-skills" meta-skill into my GLOBAL skills folder.
 
 0. Detect the tool from the RUNNING agent's env vars (not ~/.cursor / ~/.claude presence):
    - $CLAUDECODE / $CLAUDE_CODE_ENTRYPOINT set -> Claude Code -> ~/.claude/skills/meta-skills/SKILL.md
+   - any $OPENCODE_* (CLI sets OPENCODE_PID)   -> OpenCode    -> ${OPENCODE_CONFIG_DIR:-~/.config/opencode}/skills/meta-skills/SKILL.md
    - $TERMINAL_ENV non-empty                   -> Hermes      -> ~/.hermes/skills/meta-skills/SKILL.md
-   - $CURSOR_AGENT / $CURSOR_TRACE_ID set       -> Cursor      -> ~/.cursor/skills/meta-skills/SKILL.md
-   - none / ambiguous                          -> ask "Cursor / Claude Code / Hermes global?".
+   - $CURSOR_AGENT / $CURSOR_TRACE_ID set      -> Cursor      -> ~/.cursor/skills/meta-skills/SKILL.md
+   - none / ambiguous                          -> ask "Cursor / Claude Code / Hermes / OpenCode global?".
 
 1. Clone or update the shared library:
      REPO=https://github.com/Acher1234/Meta-Skills.git
@@ -33,8 +34,11 @@ Install the "meta-skills" meta-skill into my GLOBAL skills folder.
      mkdir -p ~/.claude/skills/meta-skills && cp "$LIB/SKILL.md" ~/.claude/skills/meta-skills/SKILL.md
      # OR Hermes global:
      mkdir -p ~/.hermes/skills/meta-skills && cp "$LIB/SKILL.md" ~/.hermes/skills/meta-skills/SKILL.md
+     # OR OpenCode global (OPENCODE_CONFIG_DIR overrides ~/.config/opencode):
+     DEST="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}/skills/meta-skills"
+     mkdir -p "$DEST" && cp "$LIB/SKILL.md" "$DEST/SKILL.md"
 
-3. Confirm the file exists, then tell me to reload Cursor / Claude Code (or restart the Hermes
+3. Confirm the file exists, then tell me to reload Cursor / Claude Code / OpenCode (or restart the Hermes
    agent) and run /meta-skills to install any other skill.
 
 Do NOT copy other skills yet — just the installer. /meta-skills handles the rest
@@ -69,5 +73,14 @@ REPO=https://github.com/Acher1234/Meta-Skills.git; LIB=~/.meta-skills
 mkdir -p ~/.hermes/skills/meta-skills && cp "$LIB/SKILL.md" ~/.hermes/skills/meta-skills/SKILL.md
 ```
 
-Then reload Cursor / Claude Code (or restart the Hermes agent) and run `/meta-skills` to
+**OpenCode — global** (`${OPENCODE_CONFIG_DIR:-~/.config/opencode}/skills/`):
+
+```bash
+REPO=https://github.com/Acher1234/Meta-Skills.git; LIB=~/.meta-skills
+[ -d "$LIB/.git" ] && git -C "$LIB" pull --ff-only || git clone "$REPO" "$LIB"
+DEST="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}/skills/meta-skills"
+mkdir -p "$DEST" && cp "$LIB/SKILL.md" "$DEST/SKILL.md"
+```
+
+Then reload Cursor / Claude Code / OpenCode (or restart the Hermes agent) and run `/meta-skills` to
 install/refresh the rest of the catalog.

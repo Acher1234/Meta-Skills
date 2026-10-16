@@ -2,7 +2,7 @@
 
 Use this instead of [`SKILL_TEMPLATE.md`](SKILL_TEMPLATE.md) when the skill is an
 **installer / hub**: it registers several **sub-skills** into Cursor / Claude /
-Hermes / OpenClaw, and usually shares one credential `.env` via SkillCred.
+Hermes / OpenCode / OpenClaw, and usually shares one credential `.env` via SkillCred.
 
 Reference layout: `skills/<category>/…/meta-{domain}/` (see below). No reference implementation in-tree yet
 
@@ -118,7 +118,7 @@ Replace `{…}` placeholders. This file lives only under `~/.meta-skills/…` �
 name: meta-{domain}
 description: >-
   Meta-skill that installs {Domain} sub-skills ({examples…}) into Cursor /
-  Claude / Hermes / OpenClaw. Ask scope (project vs global) and which
+  Claude / Hermes / OpenCode / OpenClaw. Ask scope (project vs global) and which
   sub-skills to register. Use when the user mentions {Domain}
   skills, /meta-{domain}, or wants to install {sub-example}.
 disable-model-invocation: true
@@ -142,7 +142,7 @@ Upstream / provenance: see [ORIGIN.md](ORIGIN.md).
 
 Before registering anything, ask the user (same pattern as `/meta-skills`):
 
-1. **Target tool** (if not obvious): `cursor` | `claude` | `hermes` | `openclaw`
+1. **Target tool** (if not obvious): `cursor` | `claude` | `hermes` | `opencode` | `openclaw`
 2. **Scope** — where skills are installed:
 
 | Tool | Scope | Skills directory (`$DEST`) |
@@ -153,6 +153,8 @@ Before registering anything, ask the user (same pattern as `/meta-skills`):
 | claude | **global** | `~/.claude/skills/<name>/` |
 | hermes | **all** | `~/.hermes/skills/<name>/` |
 | hermes | **profile** | `${HERMES_HOME}/skills/<name>/` |
+| opencode | **project** | `./.opencode/skills/<name>/` |
+| opencode | **global** | `${OPENCODE_CONFIG_DIR:-~/.config/opencode}/skills/<name>/` |
 | openclaw | **project** / **global** | `./.openclaw/skills/<name>/` or `~/.openclaw/skills/<name>/` |
 
 3. **Which sub-skills** to install — do **not** install all by default. Show the

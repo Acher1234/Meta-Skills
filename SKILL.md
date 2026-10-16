@@ -1,9 +1,10 @@
 ---
 name: meta-skills
 description: >-
-  Install or update Meta-Skills into Cursor, Claude, Hermes, or OpenClaw. Clone/pull
-  this repo into ~/.meta-skills (shared library), auto-detect the tool via TERMINAL_ENV
-  / CLAUDECODE, ask target + scope, then register chosen skills — copy the `### TO COPY`
+  Install or update Meta-Skills into Cursor, Claude, Hermes, OpenCode, or OpenClaw.
+  Clone/pull this repo into ~/.meta-skills (shared library), auto-detect the tool via
+  TERMINAL_ENV / CLAUDECODE / OPENCODE_, ask target + scope, then register chosen
+  skills — copy the `### TO COPY`
   slice from each SKILL.md (substitute placeholders), link the library canonical
   SKILL.md under ~/.meta-skills. External git skills clone ONCE into ~/.meta-skills/ext
   via `install.sh fetch`; each skill installs its OWN deps on first run via
@@ -12,13 +13,13 @@ description: >-
 disable-model-invocation: true
 ---
 
-# Meta-Skills — the skill installer (Cursor / Claude / Hermes / OpenClaw)
+# Meta-Skills — the skill installer (Cursor / Claude / Hermes / OpenCode / OpenClaw)
 
 This skill **is** the installer. It manages a **single shared library and a single
 shared Python/npm environment** on the machine, then registers chosen skills into
 any tool. Nothing is re-cloned or re-installed per project.
 
-> **Targets:** `cursor`, `claude`, `hermes`, `openclaw`.
+> **Targets:** `cursor`, `claude`, `hermes`, `opencode`, `openclaw`.
 
 
 
@@ -94,7 +95,7 @@ Substitute in the copied slice:
 
 ```
 IS_GLOBAL => {IS_GLOBAL}                 # TRUE if tool-global, else FALSE
-TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}   # CURSOR / HERMES / OPENCLAW / CLAUDE
+TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}   # CURSOR / HERMES / OPENCODE / OPENCLAW / CLAUDE
 SKILL_PATH => {SKILL_PATH}               # absolute path of $DEST/<name> (dir of SKILL.md)
 ```
 
@@ -180,6 +181,8 @@ the shared venv (`~/.meta-skills/.venv`), reused across projects.
 | **claude**   | `project` | `./.claude/skills/<name>/`           |
 | **hermes**   | `all`     | `~/.hermes/skills/<name>/`           |
 | **hermes**   | `profile` | `${HERMES_HOME}/skills/<name>/`      |
+| **opencode** | `global`  | `${OPENCODE_CONFIG_DIR:-~/.config/opencode}/skills/<name>/` |
+| **opencode** | `project` | `./.opencode/skills/<name>/`         |
 | **openclaw** | `global`  | `~/.openclaw/skills/<name>/` *(WIP)* |
 | **openclaw** | `project` | `./.openclaw/skills/<name>/` *(WIP)* |
 
@@ -198,6 +201,7 @@ Detect from the **env vars the running agent sets** — not from the mere presen
 Check in order:
 
 - `$CLAUDECODE` **or** `$CLAUDE_CODE_ENTRYPOINT` **set** → **Claude Code**.
+- Any env var whose name starts with `OPENCODE_` → **OpenCode**. The CLI sets `OPENCODE_PID` (and `OPENCODE=1`) for the process. `OPENCODE_CONFIG_DIR`, when set, is the global config root.
 - `$TERMINAL_ENV` **set (non-empty)** → **Hermes**. Skip to the Hermes profile scope (step 2).
 - `$CURSOR_AGENT` **or** `$CURSOR_TRACE_ID` **set** (fallback: `$TERM_PROGRAM` = `vscode`/`cursor`) → **Cursor**.
 - **None matched / several** → ask the tool question (step 1).
@@ -207,13 +211,14 @@ Check in order:
 
 ### 1) Target tool (only if not auto-detected)
 
-> Install skills for **Cursor**, **Claude**, **Hermes**, and/or **OpenClaw**? (one or several)
+> Install skills for **Cursor**, **Claude**, **Hermes**, **OpenCode**, and/or **OpenClaw**? (one or several)
 
 
 
 ### 2) Scope
 
 - **Cursor / Claude / OpenClaw** → **global** (`~/.<tool>/skills`) or **this project** (`./.<tool>/skills`).
+- **OpenCode** → **global** (`${OPENCODE_CONFIG_DIR:-~/.config/opencode}/skills`) or **this project** (`./.opencode/skills`). Docs: [opencode.ai/docs/skills](https://opencode.ai/docs/skills/).
 - **Hermes** → **all profiles** (`~/.hermes/skills`) or **this profile** (`$HERMES_HOME/skills`; resolve `HERMES_HOME`, ask if unset).
 
 
@@ -317,8 +322,9 @@ Register into `$DEST/<name>/` using the skill **basename** (destinations stay fl
 If ~/.meta-skills exists:  cd ~/.meta-skills && git pull
 Else:                      git clone https://github.com/Acher1234/Meta-Skills.git ~/.meta-skills
 
-# 1) Detect tool from the running agent's env: $CLAUDECODE → Claude; $TERMINAL_ENV → Hermes;
-#    $CURSOR_AGENT/$CURSOR_TRACE_ID → Cursor. OpenClaw only when explicitly asked.
+# 1) Detect tool from the running agent's env: $CLAUDECODE → Claude; $OPENCODE_* → OpenCode;
+#    $TERMINAL_ENV → Hermes; $CURSOR_AGENT/$CURSOR_TRACE_ID → Cursor.
+#    OpenClaw only when explicitly asked.
 # 2) Ask scope (see table). For Hermes-profile, resolve HERMES_HOME.
 # 3) Ask what to install: built-in name(s), external git URL, or local path.
 
@@ -353,7 +359,7 @@ sed -n '/^### TO COPY$/,/^##### END TO COPY$/p' "$LIB_SKILL" | sed '1d;$d' > /tm
 
 # 5d) Substitute placeholders in the registered file:
 #   {IS_GLOBAL}        → TRUE|FALSE
-#   {TYPE_OF_AI_TOOLS} → CURSOR|HERMES|OPENCLAW|CLAUDE
+#   {TYPE_OF_AI_TOOLS} → CURSOR|HERMES|OPENCODE|OPENCLAW|CLAUDE
 #   {SKILL_PATH}       → absolute path of $DEST/<name>
 # Do NOT also copy meta-skills — that installer is global-only (INSTALL_PROMPT.md).
 # Legacy: no TO COPY markers → cp "$LIB_SKILL" "$REG" and substitute only.
@@ -367,7 +373,7 @@ cp "$LIB/.env.example" "$META_DEST/.env"
 # for each chosen sub-skill <id>: write $DEST/<id>/SKILL.md stub → $LIB/sub_skills/<id>/SKILL.md
 # see META_SKILL_TEMPLATE.md
 
-# 6) Reload Cursor / Claude / OpenClaw, or reload the Hermes agent.
+# 6) Reload Cursor / Claude / OpenCode / OpenClaw, or reload the Hermes agent.
 # NOTE: installer does NOT install skill deps. Each skill runs
 #       ./install.sh pip init . (or npm init .) on first run → ~/.meta-skills/.venv
 #       (pip init also installs meta-skill-common as importable ``common``).
@@ -400,6 +406,12 @@ REG=./.cursor/skills/cool-skill/SKILL.md
 mkdir -p ./.cursor/skills/cool-skill
 # substitute → IS_GLOBAL=FALSE, TYPE_OF_AI_TOOLS=CURSOR, SKILL_PATH=$PWD/.cursor/skills/cool-skill
 
+# Same skill into OpenCode (this project)
+REG=./.opencode/skills/cool-skill/SKILL.md
+mkdir -p ./.opencode/skills/cool-skill
+# substitute → IS_GLOBAL=FALSE, TYPE_OF_AI_TOOLS=OPENCODE, SKILL_PATH=$PWD/.opencode/skills/cool-skill
+# Global OpenCode: ${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}/skills/cool-skill
+
 # Skill installs ITS OWN deps on first run (shared venv + common):
 ./install.sh pip init "$SRC"
 ```
@@ -409,7 +421,7 @@ mkdir -p ./.cursor/skills/cool-skill
 ## Agent checklist
 
 1. Clone/pull `~/.meta-skills`.
-2. Detect tool from the running agent's env (`$CLAUDECODE` → Claude; `$TERMINAL_ENV` → Hermes; `$CURSOR_AGENT`/`$CURSOR_TRACE_ID` → Cursor). Ask if ambiguous / several.
+2. Detect tool from the running agent's env (`$CLAUDECODE` → Claude; any `$OPENCODE_*` → OpenCode; `$TERMINAL_ENV` → Hermes; `$CURSOR_AGENT`/`$CURSOR_TRACE_ID` → Cursor). Ask if ambiguous / several.
 3. Ask scope; resolve `HERMES_HOME` for Hermes-profile.
 4. Ask what to install (built-in / external git URL / local path). Don't copy all by default.
 5. External repo → `./install.sh fetch <url> [name]` (clone once into `ext/`).
@@ -452,6 +464,7 @@ and append a **library reference** to `$SRC/SKILL.md`.
 - Register with `cp` (copy, not move). Prefer **per-skill** credentials next to the
 registered `SKILL.md`. Use `[meta-skill-common/skill_cred.py](meta-skill-common/skill_cred.py)`
 (`from common.skill_cred import SkillCred`) from Python CLIs.
+- OpenCode skills: project `./.opencode/skills/<name>/`, global `${OPENCODE_CONFIG_DIR:-~/.config/opencode}/skills/<name>/` ([docs](https://opencode.ai/docs/skills/)).
 - OpenClaw support is **in progress** — adjust its paths in the Targets table if needed.
 - Repo: [Acher1234/Meta-Skills](https://github.com/Acher1234/Meta-Skills.git)
 
