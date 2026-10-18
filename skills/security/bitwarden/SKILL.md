@@ -21,6 +21,8 @@ IS_GLOBAL => {IS_GLOBAL}
 TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
 SKILL_PATH => {SKILL_PATH}
 
+Bash / zsh:
+
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
 eval "$(~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/security/bitwarden/scripts/skill_env.py)"
@@ -32,6 +34,19 @@ case "$(bw status | python3 -c 'import sys,json; print(json.load(sys.stdin).get(
   unauthenticated) bw login --apikey ;;
 esac
 export BW_SESSION="$(bw unlock --passwordenv BW_PASSWORD --raw)"
+```
+
+PowerShell (Windows):
+
+```powershell
+$env:CURRENT_SKILL_DIRECTORY = "{SKILL_PATH}"
+& "$HOME/.meta-skills/.venv/Scripts/python.exe" "$HOME/.meta-skills/skills/security/bitwarden/scripts/skill_env.py" --shell powershell | Out-String | Invoke-Expression
+$env:PATH = "$HOME/.meta-skills/skills/security/bitwarden/node_modules/.bin;$env:PATH"
+$env:BITWARDENCLI_APPDATA_DIR = "$env:CURRENT_SKILL_DIRECTORY/.bw-appdata"
+New-Item -ItemType Directory -Force -Path $env:BITWARDENCLI_APPDATA_DIR | Out-Null
+bw config server $env:BW_SERVER 2>$null
+if ((bw status | ConvertFrom-Json).status -eq "unauthenticated") { bw login --apikey }
+$env:BW_SESSION = bw unlock --passwordenv BW_PASSWORD --raw
 ```
 
 Never print a vault secret unless the user asked — prefer clipboard / file.

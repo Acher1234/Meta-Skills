@@ -21,6 +21,8 @@ IS_GLOBAL => {IS_GLOBAL}
 TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
 SKILL_PATH => {SKILL_PATH}
 
+Bash / zsh:
+
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
 eval "$(~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/mdm-antivirus/hexnode/scripts/skill_env.py)"
@@ -28,8 +30,18 @@ cd ~/.meta-skills/skills/mdm-antivirus/hexnode
 ~/.meta-skills/.venv/bin/python scripts/cli.py devices list --per-page 50
 ```
 
-Prefer `~/.meta-skills/.venv/bin/python`. First deps:
+PowerShell (Windows):
+
+```powershell
+$env:CURRENT_SKILL_DIRECTORY = "{SKILL_PATH}"
+& "$HOME/.meta-skills/.venv/Scripts/python.exe" "$HOME/.meta-skills/skills/mdm-antivirus/hexnode/scripts/skill_env.py" --shell powershell | Out-String | Invoke-Expression
+Set-Location "$HOME/.meta-skills/skills/mdm-antivirus/hexnode"
+& "$HOME/.meta-skills/.venv/Scripts/python.exe" scripts/cli.py devices list --per-page 50
+```
+
+Prefer `~/.meta-skills/.venv/bin/python` (Windows: `~/.meta-skills/.venv/Scripts/python.exe`). First deps:
 `cd ~/.meta-skills/skills/mdm-antivirus/hexnode && ~/.meta-skills/install.sh pip init .`
+(Windows: `~/.meta-skills/install.ps1 pip init .`)
 
 ##### END TO COPY
 

@@ -64,6 +64,7 @@ cd ~/.meta-skills && ./setup.sh          # enable the pre-commit hook (gitleaks)
 ```bash
 cd ~/.meta-skills
 ./install.sh --help     # lists the 3 commands: fetch, pip init, npm init
+# Windows (PowerShell): .\install.ps1 --help  — same commands, venv python = .venv\Scripts\python.exe
 ```
 
 ### 3. Install skills
@@ -96,6 +97,11 @@ mkdir -p ./.cursor/skills/cool-skill && cp "$SRC/SKILL.md" ./.cursor/skills/cool
 # the skill installs ITS OWN deps (first run) into the shared venv
 ./install.sh pip init "$SRC"                    # or, from the skill folder: ./install.sh pip init .
 ```
+
+**Project installs are portable:** inside a git repo, `{SKILL_PATH}` is written as
+`$(git rev-parse --show-toplevel)/.<tool>/skills/<name>` and resolved at run time, so the committed
+`SKILL.md` works for every teammate (bash/zsh and PowerShell). Global installs or folders without git
+keep an absolute path.
 
 > The installer **does not** run `pip install` for you: `fetch` (clone) + `cp` (register).
 > Each skill installs **its own** dependencies via `pip init` / `npm init` on first run,

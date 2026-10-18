@@ -41,11 +41,15 @@ class SkillCred:
 
     def _workspace_from_env(self) -> Path:
         raw = os.environ.get(WORKSPACE_ENV, "").strip()
-        if raw:
-            candidate = Path(raw).expanduser()
-            if candidate.is_dir():
-                return candidate.resolve()
-        return Path.cwd().resolve()
+        if not raw:
+            return Path.cwd().resolve()
+        candidate = Path(raw).expanduser()
+        if not candidate.is_dir():
+            raise SystemExit(
+                f"{WORKSPACE_ENV}={raw!r} is not a directory — run the skill's "
+                "Working directory block from inside the project (git root is resolved there)."
+            )
+        return candidate.resolve()
 
     def find_file(self) -> Path | None:
         """First existing ``workspace / <name>`` for names in ``file_search``."""
