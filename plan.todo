@@ -1,0 +1,48 @@
+# Plan : skills portables (chemin relatif au git root + Windows)
+
+## Problèmes
+- {SKILL_PATH} est remplacé par un chemin absolu (/Users/<user>/...) → un skill installé en scope projet casse chez les autres utilisateurs
+- SkillCred retombe silencieusement sur le cwd si le chemin n'existe pas → .env lu/écrit au mauvais endroit
+- Tout est bash : export, eval "$(...)", .venv/bin/python (Windows = Scripts\python.exe), install.sh
+- .gitignore couvre .cursor/skills/ mais pas .claude/.opencode/.openclaw skills/*/.env
+
+## Idée
+C'est le script qui charge l'env (bloc Working directory du TO COPY) qui résout la racine du repo, pas le Python.
+En scope projet, l'installeur écrit :
+  bash       : export CURRENT_SKILL_DIRECTORY="$(git rev-parse --show-toplevel)/.opencode/skills/godaddy"
+  PowerShell : $env:CURRENT_SKILL_DIRECTORY = "$(git rev-parse --show-toplevel)/.opencode/skills/godaddy"
+Le SKILL.md commité est identique pour tout le monde ; le git root est calculé à chaque exécution
+(marche depuis n'importe quel sous-dossier). Python ne fait que lire CURRENT_SKILL_DIRECTORY, comme aujourd'hui.
+Scope global (root) ou pas de git : inchangé, chemin absolu en dur.
+
+## Phase 1 — enregistrement (/meta-skills)
+[x] SKILL.md (installeur) étape 5d : substitution de {SKILL_PATH} selon le scope
+    projet → $(git rev-parse --show-toplevel)/.<tool>/skills/<name>
+    global → chemin absolu en dur (inchangé)
+[x] lien "Library reference" écrit ~/.meta-skills/... (pas développé)
+[x] ajouter .<tool>/skills/*/.env (+ tokens) au .gitignore du projet à l'install
+[x] pas de repo git OU skill global (root) → chemin absolu en dur (comportement actuel)
+
+## Phase 2 — script qui charge l'env (bloc TO COPY)
+[x] SKILL_TEMPLATE.md : export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}" reste tel quel, mais {SKILL_PATH} contient maintenant $(git rev-parse --show-toplevel)/...
+[x] ajouter la variante PowerShell du même bloc
+[x] skill_cred.py : seul changement = si CURRENT_SKILL_DIRECTORY est posé mais n'existe pas → erreur explicite
+    (supprimer le repli silencieux sur le cwd) ; aucune logique git côté Python
+
+## Phase 3 — Windows
+[x] TO COPY : ne plus coder .venv/bin/python en dur
+    → documenter les deux variantes (bash / PowerShell) dans SKILL_TEMPLATE.md
+      bash       : ~/.meta-skills/.venv/bin/python
+      PowerShell : ~/.meta-skills/.venv/Scripts/python.exe
+[x] remplacer eval "$(python skill_env.py)" par une variante PowerShell (skill_env_export gère déjà powershell/cmd)
+[x] install.ps1 équivalent de install.sh (fetch / pip init / npm init)
+
+## Phase 4 — migrer les skills
+[x] SKILL_TEMPLATE.md + META_SKILL_TEMPLATE.md : documenter le nouveau {SKILL_PATH}
+[x] SKILL.md, README.md, README-FR.md : exemples scope projet avec $(git rev-parse --show-toplevel)
+[x] les 15 skills/**/SKILL.md : vérifier le bloc TO COPY (SKILL_PATH déjà entre guillemets doubles → OK, seulement la partie Windows)
+[ ] installs déjà existantes : remplacer le chemin absolu par $(git rev-parse --show-toplevel)/... (à la main ou via /meta-skills)
+
+## Décisions
+- Windows : chaque bloc TO COPY documente bash + PowerShell
+- Pas de git ou skill global (root) : chemin absolu en dur

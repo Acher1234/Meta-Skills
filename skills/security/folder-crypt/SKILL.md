@@ -23,10 +23,20 @@ IS_GLOBAL => {IS_GLOBAL}
 TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
 SKILL_PATH => {SKILL_PATH}
 
+Bash / zsh:
+
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
 export PROJECT_PATH="<main project folder>"
 ~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/security/folder-crypt/scripts/cli.py env
+```
+
+PowerShell (Windows):
+
+```powershell
+$env:CURRENT_SKILL_DIRECTORY = "{SKILL_PATH}"
+$env:PROJECT_PATH = "<main project folder>"
+& "$HOME/.meta-skills/.venv/Scripts/python.exe" "$HOME/.meta-skills/skills/security/folder-crypt/scripts/cli.py" env
 ```
 
 `PROJECT_PATH` is the main project folder. Relative `FOLDER` paths start there.

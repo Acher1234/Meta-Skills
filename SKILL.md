@@ -96,10 +96,37 @@ Substitute in the copied slice:
 ```
 IS_GLOBAL => {IS_GLOBAL}                 # TRUE if tool-global, else FALSE
 TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}   # CURSOR / HERMES / OPENCODE / OPENCLAW / CLAUDE
-SKILL_PATH => {SKILL_PATH}               # absolute path of $DEST/<name> (dir of SKILL.md)
+SKILL_PATH => {SKILL_PATH}               # dir of the registered SKILL.md — see "SKILL_PATH value" below
 ```
 
-These show up in the TO COPY Working directory block, e.g.:
+### `{SKILL_PATH}` value (portable across users)
+
+| Install | `{SKILL_PATH}` becomes | Example |
+|---------|------------------------|---------|
+| **Project** scope **and** `$PWD` is inside a git repo | `$(git rev-parse --show-toplevel)/<DEST relative to git root>/<name>` (kept **literal**) | `$(git rev-parse --show-toplevel)/.claude/skills/godaddy` |
+| **Global** scope (root skill dirs, Hermes) **or** no git repo | absolute path of `$DEST/<name>` (hardcoded) | `/Users/you/.claude/skills/godaddy` |
+
+The `$(git rev-parse --show-toplevel)` text is **not** expanded at install time: the
+Working directory block (the script that loads the env) evaluates it at run time, so
+the committed `SKILL.md` works for every teammate, from any sub-folder. The same
+`$(…)` syntax works in **bash/zsh** and **PowerShell**.
+
+```bash
+# project scope — compute the relative part once at install time
+if GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) && [ "$SCOPE" = project ]; then
+  REL=$(cd "$DEST/<name>" && pwd -P); REL=${REL#"$(cd "$GIT_ROOT" && pwd -P)/"}
+  SKILL_PATH_VALUE='$(git rev-parse --show-toplevel)/'"$REL"
+else
+  SKILL_PATH_VALUE=$(cd "$DEST/<name>" && pwd -P)
+fi
+```
+
+Project scope inside git: also make sure secrets are ignored — append to the project
+`.gitignore` (if missing) `.<tool>/skills/*/.env` plus any token files the skill uses
+(e.g. `google_token.json`, `.bw-appdata/`).
+
+These show up in the TO COPY Working directory block, in a **bash/zsh** and a
+**PowerShell (Windows)** variant — keep both when registering:
 
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
@@ -107,12 +134,23 @@ export IS_GLOBAL="{IS_GLOBAL}"
 export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
 ```
 
+```powershell
+$env:CURRENT_SKILL_DIRECTORY = "{SKILL_PATH}"
+$env:IS_GLOBAL = "{IS_GLOBAL}"
+$env:TYPE_OF_AI_TOOLS = "{TYPE_OF_AI_TOOLS}"
+```
+
 Substitute so the registered slice has concrete values, for example:
 
 ```bash
+# project scope (git) — portable
+export CURRENT_SKILL_DIRECTORY="$(git rev-parse --show-toplevel)/.cursor/skills/google-workspace"
+export IS_GLOBAL="FALSE"
+export TYPE_OF_AI_TOOLS="CURSOR"
+
+# global scope — hardcoded
 export CURRENT_SKILL_DIRECTORY="/Users/you/.cursor/skills/google-workspace"
 export IS_GLOBAL="TRUE"
-export TYPE_OF_AI_TOOLS="CURSOR"
 ```
 
 Always set `{SKILL_PATH}` to the **destination** directory that contains the registered
@@ -159,6 +197,9 @@ copy `.env.example` → `$DEST/meta-{domain}/.env` (credentials stay local).
 ./install.sh pip init [dir]           # shared venv + install meta-skill-common + <dir> deps
 ./install.sh npm init [dir]           # install <dir> node deps (shared skill dir)
 ```
+
+Windows (PowerShell): same commands via `~/.meta-skills/install.ps1`; the shared
+interpreter is `~/.meta-skills/.venv/Scripts/python.exe` (not `.venv/bin/python`).
 
 - **Registering** a **standard** skill = extract `### TO COPY` slice, substitute
 placeholders, prepend frontmatter, append library link to `$SRC/SKILL.md`.
@@ -360,7 +401,9 @@ sed -n '/^### TO COPY$/,/^##### END TO COPY$/p' "$LIB_SKILL" | sed '1d;$d' > /tm
 # 5d) Substitute placeholders in the registered file:
 #   {IS_GLOBAL}        → TRUE|FALSE
 #   {TYPE_OF_AI_TOOLS} → CURSOR|HERMES|OPENCODE|OPENCLAW|CLAUDE
-#   {SKILL_PATH}       → absolute path of $DEST/<name>
+#   {SKILL_PATH}       → project+git: '$(git rev-parse --show-toplevel)/<rel>/<name>' (literal)
+#                        global or no git: absolute path of $DEST/<name>
+#   project+git: add .<tool>/skills/*/.env (+ token files) to the project .gitignore
 # Do NOT also copy meta-skills — that installer is global-only (INSTALL_PROMPT.md).
 # Legacy: no TO COPY markers → cp "$LIB_SKILL" "$REG" and substitute only.
 
@@ -404,12 +447,12 @@ mkdir -p ~/.claude/skills/cool-skill
 # Same skill into Cursor (this project) — no re-clone
 REG=./.cursor/skills/cool-skill/SKILL.md
 mkdir -p ./.cursor/skills/cool-skill
-# substitute → IS_GLOBAL=FALSE, TYPE_OF_AI_TOOLS=CURSOR, SKILL_PATH=$PWD/.cursor/skills/cool-skill
+# substitute → IS_GLOBAL=FALSE, TYPE_OF_AI_TOOLS=CURSOR, SKILL_PATH='$(git rev-parse --show-toplevel)/.cursor/skills/cool-skill'
 
 # Same skill into OpenCode (this project)
 REG=./.opencode/skills/cool-skill/SKILL.md
 mkdir -p ./.opencode/skills/cool-skill
-# substitute → IS_GLOBAL=FALSE, TYPE_OF_AI_TOOLS=OPENCODE, SKILL_PATH=$PWD/.opencode/skills/cool-skill
+# substitute → IS_GLOBAL=FALSE, TYPE_OF_AI_TOOLS=OPENCODE, SKILL_PATH='$(git rev-parse --show-toplevel)/.opencode/skills/cool-skill'
 # Global OpenCode: ${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}/skills/cool-skill
 
 # Skill installs ITS OWN deps on first run (shared venv + common):

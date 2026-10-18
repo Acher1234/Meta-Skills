@@ -64,6 +64,7 @@ cd ~/.meta-skills && ./setup.sh          # active le hook pre-commit (gitleaks)
 ```bash
 cd ~/.meta-skills
 ./install.sh --help     # rappelle les 3 commandes : fetch, pip init, npm init
+# Windows (PowerShell) : .\install.ps1 --help  — mêmes commandes, python du venv = .venv\Scripts\python.exe
 ```
 
 ### 3. Installer des skills
@@ -96,6 +97,11 @@ mkdir -p ./.cursor/skills/cool-skill && cp "$SRC/SKILL.md" ./.cursor/skills/cool
 # le skill installe SES deps tout seul (1re exécution) dans le venv partagé
 ./install.sh pip init "$SRC"                    # ou, depuis le dossier du skill : ./install.sh pip init .
 ```
+
+**Les installs projet sont portables :** dans un repo git, `{SKILL_PATH}` est écrit
+`$(git rev-parse --show-toplevel)/.<outil>/skills/<nom>` et résolu à l'exécution : le `SKILL.md`
+commité marche pour toute l'équipe (bash/zsh et PowerShell). Les installs globales ou hors git
+gardent un chemin absolu.
 
 > L'installeur **ne fait pas** de `pip install` pour toi : `fetch` (clone) + `cp` (register).
 > Chaque skill installe **ses propres** dépendances via `pip init` / `npm init`, à son premier run,

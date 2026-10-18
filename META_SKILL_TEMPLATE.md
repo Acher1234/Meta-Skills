@@ -66,6 +66,12 @@ export IS_GLOBAL="{IS_GLOBAL}"
 export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
 ```
 
+```powershell
+$env:CURRENT_SKILL_DIRECTORY = "{SKILL_PATH}"
+$env:IS_GLOBAL = "{IS_GLOBAL}"
+$env:TYPE_OF_AI_TOOLS = "{TYPE_OF_AI_TOOLS}"
+```
+
 ---
 
 ## Library reference
@@ -73,7 +79,7 @@ export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
 `{LIB_META_SKILL}`
 ```
 
-`{SKILL_PATH}` = absolute `$DEST/meta-{domain}`.  
+`{SKILL_PATH}` = `$DEST/meta-{domain}` — project scope in git: `$(git rev-parse --show-toplevel)/<rel>/meta-{domain}` (literal); global or no git: absolute path (see root `SKILL.md`).  
 `{LIB_META_SKILL}` = `~/.meta-skills/skills/<category>/…/meta-{domain}/SKILL.md`.
 
 ### Sub-skill stub → `$DEST/<sub-id>/SKILL.md`
@@ -96,6 +102,12 @@ export IS_GLOBAL="{IS_GLOBAL}"
 export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
 ```
 
+```powershell
+$env:CURRENT_SKILL_DIRECTORY = "{META_SKILL_PATH}"
+$env:IS_GLOBAL = "{IS_GLOBAL}"
+$env:TYPE_OF_AI_TOOLS = "{TYPE_OF_AI_TOOLS}"
+```
+
 ---
 
 ## Library reference
@@ -103,7 +115,7 @@ export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
 `{LIB_SUB_SKILL}`
 ```
 
-`{META_SKILL_PATH}` = absolute `$DEST/meta-{domain}`.  
+`{META_SKILL_PATH}` = same rule as `{SKILL_PATH}`, pointing at `$DEST/meta-{domain}`.  
 `{LIB_SUB_SKILL}` = `~/.meta-skills/skills/<category>/…/meta-{domain}/sub_skills/<sub-id>/SKILL.md`.
 
 Agents **must read** the library path for slash commands, catalogs, and examples.

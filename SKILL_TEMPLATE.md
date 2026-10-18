@@ -21,10 +21,20 @@ IS_GLOBAL => {IS_GLOBAL}
 TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
 SKILL_PATH => {SKILL_PATH}
 
+Bash / zsh:
+
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
 export IS_GLOBAL="{IS_GLOBAL}"
 export TYPE_OF_AI_TOOLS="{TYPE_OF_AI_TOOLS}"
+```
+
+PowerShell (Windows):
+
+```powershell
+$env:CURRENT_SKILL_DIRECTORY = "{SKILL_PATH}"
+$env:IS_GLOBAL = "{IS_GLOBAL}"
+$env:TYPE_OF_AI_TOOLS = "{TYPE_OF_AI_TOOLS}"
 ```
 
 ##### END TO COPY

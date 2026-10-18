@@ -21,9 +21,18 @@ IS_GLOBAL => {IS_GLOBAL}
 TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
 SKILL_PATH => {SKILL_PATH}
 
+Bash / zsh:
+
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
 eval "$(~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/productivity/jira/scripts/skill_env.py)"
+```
+
+PowerShell (Windows):
+
+```powershell
+$env:CURRENT_SKILL_DIRECTORY = "{SKILL_PATH}"
+& "$HOME/.meta-skills/.venv/Scripts/python.exe" "$HOME/.meta-skills/skills/productivity/jira/scripts/skill_env.py" --shell powershell | Out-String | Invoke-Expression
 ```
 
 ##### END TO COPY
