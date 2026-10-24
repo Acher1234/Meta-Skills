@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from pathlib import Path
 
-from common.skill_cred import WORKSPACE_ENV, SkillCred, default_skill_dir, display_path
+from common.skill_env.skill_cred import WORKSPACE_ENV, SkillCred, default_skill_dir, display_path
 
 ShellName = str
 

@@ -8,7 +8,7 @@ import sys
 from collections.abc import Mapping
 from pathlib import Path
 
-from common.skill_env_export import SkillEnv, env_load_main
+from common.skill_env import SkillEnv, env_load_main
 
 KEYS = (
     "ZPA__CLIENT_ID",

@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from common.skill_env_export import SkillEnv, env_load_main
+from common.skill_env import SkillEnv, env_load_main
 
 
 class ElasticSkillEnv(SkillEnv):

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
-from common.skill_env_export import SkillEnv
+from common.skill_env import SkillEnv
 
 
 class GodaddySkillEnv(SkillEnv):

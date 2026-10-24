@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from common.skill_env_export import SkillEnv
+from common.skill_env import SkillEnv
 
 OPTIONAL_KEYS = ("FOLDER", "PASSWORD")
 
