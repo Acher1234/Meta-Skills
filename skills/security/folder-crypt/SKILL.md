@@ -22,12 +22,13 @@ Placeholders changed by `/meta-skills` at copy time (NAME => {PLACEHOLDER}):
 IS_GLOBAL => {IS_GLOBAL}
 TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
 SKILL_PATH => {SKILL_PATH}
+PROJECT_PATH => {PROJECT_PATH}
 
 Bash / zsh:
 
 ```bash
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-export PROJECT_PATH="<main project folder>"
+export PROJECT_PATH="{PROJECT_PATH}"
 ~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/security/folder-crypt/scripts/cli.py env
 ```
 
@@ -35,7 +36,7 @@ PowerShell (Windows):
 
 ```powershell
 $env:CURRENT_SKILL_DIRECTORY = "{SKILL_PATH}"
-$env:PROJECT_PATH = "<main project folder>"
+$env:PROJECT_PATH = "{PROJECT_PATH}"
 & "$HOME/.meta-skills/.venv/Scripts/python.exe" "$HOME/.meta-skills/skills/security/folder-crypt/scripts/cli.py" env
 ```
 
@@ -145,7 +146,7 @@ Stdout is JSON.
 ## How to run
 
 1. `export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"`
-2. `export PROJECT_PATH="<main project folder>"` — relative `FOLDER` paths start here
+2. `export PROJECT_PATH="{PROJECT_PATH}"` — relative `FOLDER` paths start here
 3. `cd ~/.meta-skills/skills/security/folder-crypt`
 4. First run: `~/.meta-skills/install.sh pip init .`
 5. `~/.meta-skills/.venv/bin/python scripts/cli.py …`
@@ -179,7 +180,7 @@ Do not add the hook until they say yes. The hook is only the `encrypt` command. 
 ```bash
 # folder-crypt encrypt
 export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-export PROJECT_PATH="<main project folder>"
+export PROJECT_PATH="{PROJECT_PATH}"
 ~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/security/folder-crypt/scripts/cli.py encrypt
 ```
 
