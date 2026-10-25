@@ -15,9 +15,6 @@ OpenCode and OpenClaw (WIP).
 - Credentials live next to the **registered** `SKILL.md` (per project / profile), never in
   the library.
 
-Forks built on top of this repo: `DeelimCommunity/Deelim-Skills` and
-`Acher1234/Perso-Meta-skills` (they pull from here via an `upstream` remote).
-
 ## Layout
 
 | Path | Role |
@@ -84,6 +81,7 @@ skills/<category>/<name>/
 - Commits: Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`…), branches `feat/…`, `fix/…`, `docs/…`.
 - No test suite yet: validate with a quick import / smoke run outside the repo.
 - Do only what is asked; don't refactor unrelated skills; never commit or push unless asked.
+- Never name repos that fork or build on this one: only a child repo names its `upstream`.
 
 ## Keep files minimal — point, don't inline
 
