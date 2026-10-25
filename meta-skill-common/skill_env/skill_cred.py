@@ -7,7 +7,7 @@ sets the env (see each skill's Working directory section).
 
 Usage::
 
-    from common.skill_cred import SkillCred
+    from common.skill_env import SkillCred
 
     token = SkillCred("google-workspace", ["google_token.json"])
     path = token.file_path()

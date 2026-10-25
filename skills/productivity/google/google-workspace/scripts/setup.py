@@ -33,7 +33,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from common.skill_cred import WORKSPACE_ENV, SkillCred, default_skill_dir, display_path
+from common.skill_env import WORKSPACE_ENV, SkillCred, default_skill_dir, display_path
 
 _SKILL_DIR = default_skill_dir(__file__)
 os.environ.setdefault(WORKSPACE_ENV, str(_SKILL_DIR))

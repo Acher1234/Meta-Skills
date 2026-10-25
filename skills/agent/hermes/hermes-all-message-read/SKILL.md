@@ -1,5 +1,5 @@
 ---
-name: whatsapp-log-reader
+name: hermes-all-message-read
 description: "Use when the user asks to read/list/show the WhatsApp messages received by the bot, inspect gateway WhatsApp logs, or audit what the bot received (including messages it did not reply to)."
 version: 1.0.0
 author: Hermes Agent

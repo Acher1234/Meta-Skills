@@ -55,7 +55,7 @@ export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
 
 Do **not** `source .env` by hand — run `python scripts/skill_env.py` (prints exports for bash / PowerShell / cmd).
 
-Each skill ships a thin `scripts/skill_env.py`: subclass `common.skill_env_export.SkillEnv` and implement `verify()`.
+Each skill ships a thin `scripts/skill_env.py`: subclass `common.skill_env.SkillEnv` (or `common.http.skill_env.HttpSkillEnv` / `common.browser.skill_env.BrowserSkillEnv`) and implement `verify()`.
 
 ### How credentials reach commands
 

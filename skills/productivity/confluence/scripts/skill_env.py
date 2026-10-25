@@ -7,8 +7,8 @@ import shutil
 import sys
 from pathlib import Path
 
-from common.skill_cred import WORKSPACE_ENV
-from common.skill_env_export import SkillEnv, emit_env_load, env_load_main
+from common.skill_env import WORKSPACE_ENV
+from common.skill_env import SkillEnv, emit_env_load, env_load_main
 
 OPTIONAL_EXPORT_KEYS = (
     "CONFLUENCE_EMAIL",

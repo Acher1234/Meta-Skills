@@ -9,7 +9,7 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 
-from common.skill_cred import WORKSPACE_ENV, SkillCred, default_skill_dir
+from common.skill_env import WORKSPACE_ENV, SkillCred, default_skill_dir
 
 _SKILL_DIR = default_skill_dir(__file__)
 os.environ.setdefault(WORKSPACE_ENV, str(_SKILL_DIR))
