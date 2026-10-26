@@ -5,4 +5,4 @@ register under `$DEST/<folder basename>/`. Open the linked `SKILL.md` only for t
 
 | Name | Folder | What it does |
 |------|--------|--------------|
-| `ai-usage` | [`skills/ai/ai-usage/`](../skills/ai/ai-usage/SKILL.md) | Claude Code / Codex / OpenCode / OpenCode Go — plan limits left (5h, week, month), extra usage, token usage per period; tokens from the tool, Hermes or OpenClaw |
+| `ai-usage` | [`skills/ai/ai-usage/`](../skills/ai/ai-usage/SKILL.md) | Claude Code / Codex / OpenCode / OpenCode Go — plan limits left (5h, week, month), extra usage (Claude, Codex, Zen balance / Go extra), token usage per period; tokens from the tool, Hermes or OpenClaw |

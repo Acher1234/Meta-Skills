@@ -78,8 +78,9 @@ Token order: **tool files** (project `.<tool>/` first if `IS_GLOBAL=FALSE`) → 
 |------|------|------|------|
 | claude | `.claude/.credentials.json`, macOS keychain | pool `anthropic`; profile `anthropic:*`; `CLAUDE_CODE_OAUTH_TOKEN`, `ANTHROPIC_TOKEN` | `api.anthropic.com/api/oauth/usage` |
 | codex | `.codex/auth.json` | `providers.openai-codex.tokens`, pool `openai-codex`; profile `openai-codex:*` | `chatgpt.com/backend-api/wham/usage` |
-| opencode | `.opencode/auth.json`, `~/.local/share/opencode/auth.json` | `anthropic` / `openai` OAuth entries → APIs above | per provider |
-| opencode-go | `auth.json` `opencode-go` / `opencode` | pool `opencode-go` (+ last 429 status); profile `opencode*`; `OPENCODE_GO_API_KEY`, `OPENCODE_API_KEY` | `opencode.ai/zen/go/v1/usage` (rolling 5h / week / month) |
+| opencode | `auth.json`, OpenCode 2 `opencode.db` (`credential` table) | `anthropic` / `openai` OAuth entries → APIs above | per provider |
+| opencode-go | `opencode-go` / `opencode` key | pool `opencode-go` (+ last 429 status); profile `opencode*`; `OPENCODE_GO_API_KEY`, `OPENCODE_API_KEY` | `opencode.ai/zen/go/v1/usage` (rolling 5h / week / month), else Console `go/status` |
+| zen (`--extra`) | `opencode` **Console sign-in** (OAuth, `opencode auth login opencode`) | — (no API-key route, opencode#10448) | Console `api/billing/status`, `billing/account`, `billing/auto-recharge`, `usage/cost-by-day` |
 
 Local logs: `~/.claude/projects/**/*.jsonl`, `~/.codex/sessions/**/*.jsonl`, OpenCode `opencode.db` /
 `storage/message/`; project scope keeps only sessions whose cwd is in the project.
@@ -96,7 +97,8 @@ Local logs: `~/.claude/projects/**/*.jsonl`, `~/.codex/sessions/**/*.jsonl`, Ope
 
 Flags (every subcommand): `--text` (human table, default JSON), `--scope auto|project|global`
 (override `IS_GLOBAL`), `--source auto|tool|hermes|openclaw|env` (one token origin only),
-`--extra` (extra usage: Claude pay-as-you-go credits / monthly cap / spend, Codex credits),
+`--extra` (extra usage: Claude credits / monthly cap / spend, Codex credits, OpenCode Zen balance —
+also what Go Extra Usage draws from — monthly limit, month spend, auto-reload, local Zen/Go spend),
 `--no-remote` (logs only), `--no-local` (limits only).
 
 ## Notes

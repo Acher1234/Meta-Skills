@@ -5,27 +5,21 @@ from __future__ import annotations
 import json
 import sqlite3
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import claude_usage
 import codex_usage
 from common.http import HttpClient, HttpError
-from common.skill_env.skill_cred import display_path
-from locate import Scope, first_file, jwt_claims, opencode_auth_files, opencode_data_dirs, read_json
-from sources import Cred, hermes_pool_status, opencode_go_creds, pick
+from locate import Scope, jwt_claims, opencode_data_dirs
+from opencode_console import NO_SIGN_IN, Console
+from sources import Cred, hermes_pool_status, opencode_auth, opencode_go_creds, pick
 from stats import Record, aggregate, parse_ts, window
 
 GO_USAGE_URL = "https://opencode.ai/zen/go/v1/usage"
 GO_WINDOWS = {"rolling": "rolling_5h", "weekly": "week", "monthly": "month"}
 MAX_LOG_AGE = 31 * 86400
-
-
-def load_auth(scope: Scope, override: Path | None) -> tuple[dict[str, Any], Path | None]:
-    candidates = [override] if override else []
-    candidates += opencode_auth_files(scope)
-    path = first_file(candidates)
-    return (read_json(path), path) if path else ({}, None)
 
 
 def go_limits(creds: list[Cred], http_env: dict[str, str]) -> dict[str, Any]:
@@ -63,7 +57,8 @@ def provider_limits(name: str, entry: dict[str, Any], label: str, http_env: dict
     """Plan limits for OAuth providers we know how to query; others have none to report."""
     kind = entry.get("type")
     if name in {"opencode", "opencode-go"}:
-        return {"type": kind, "limits": None, "note": "see opencode_go"}
+        note = "Console sign-in — see opencode_go / extra_usage" if kind == "oauth" else "see opencode_go"
+        return {"type": kind, "limits": None, "note": note}
     if kind != "oauth":
         return {"type": kind, "limits": None, "note": "API key — billed per token, no plan window"}
     access = entry.get("access") or ""
@@ -133,24 +128,55 @@ def local_records(scope: Scope) -> list[Record]:
     return records
 
 
+def local_spend(records: list[Record]) -> dict[str, float]:
+    """This month's cost logged locally for Zen (`opencode/…`) and Go (`opencode-go/…`) models."""
+    start = datetime.now().astimezone().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    spend = {"zen_usd": 0.0, "go_usd": 0.0}
+    for rec in records:
+        if rec.ts >= start:
+            provider = rec.model.split("/", 1)[0]
+            key = {"opencode": "zen_usd", "opencode-go": "go_usd"}.get(provider)
+            if key:
+                spend[key] = round(spend[key] + rec.cost, 6)
+    return spend
+
+
 def usage(scope: Scope, override: Path | None, http_env: dict[str, str], *,
-          want_remote: bool = True, want_local: bool = True, origin: str = "auto") -> dict[str, Any]:
-    auth, path = load_auth(scope, override) if origin in ("auto", "tool") else ({}, None)
-    label = display_path(path) if path else ""
+          want_remote: bool = True, want_local: bool = True, origin: str = "auto",
+          want_extra: bool = False) -> dict[str, Any]:
+    auth = opencode_auth(scope, override) if origin in ("auto", "tool") else {}
+    sources = sorted({label for _, label in auth.values()})
     _, go_found = pick(opencode_go_creds(scope, override), origin, kind="api_key")
-    out: dict[str, Any] = {"tool": "opencode", "credentials": label or None, "providers": sorted(auth)}
+    console_entry, console_label = auth.get("opencode", ({}, ""))
+    console = Console(console_entry, console_label, http_env) if console_entry.get("type") == "oauth" else None
+    out: dict[str, Any] = {"tool": "opencode", "credentials": ", ".join(sources) or None, "providers": sorted(auth)}
     if want_remote:
         out["limits"] = (
-            {name: provider_limits(name, entry, label, http_env) for name, entry in auth.items() if isinstance(entry, dict)}
-            if auth else {"error": "no OpenCode auth.json found — log in with `opencode auth login`"}
+            {name: provider_limits(name, entry, label, http_env) for name, (entry, label) in auth.items()}
+            if auth else {"error": "no OpenCode login found (auth.json / opencode.db) — run `opencode auth login`"}
         )
-        if go_found or "opencode-go" in auth:
+        if go_found or console or "opencode-go" in auth:
             go = go_limits(go_found, http_env)
+            if "error" in go and console and not console.expired():
+                go = {**console.go_status(), "key_error": go["error"]}
             go["sources_found"] = [c.describe() for c in go_found]
             hermes = hermes_pool_status(scope, "opencode-go")
             if hermes:
                 go["hermes_last_status"] = hermes
             out["opencode_go"] = go
+    records = local_records(scope) if (want_local or want_extra) else []
+    if want_extra:
+        if console is None:
+            zen: dict[str, Any] = {"error": NO_SIGN_IN}
+        elif console.expired():
+            zen = {"error": "Console sign-in expired — run `opencode` once (or `opencode auth login opencode`)"}
+        else:
+            zen = console.billing()
+        out["extra_usage"] = {
+            "zen_balance": zen,
+            "go_extra_usage": "when a Go window is blocked and Extra Usage is on (Go page), requests draw from this Zen balance",
+            "local_spend_this_month": local_spend(records),
+        }
     if want_local:
-        out["local_usage"] = aggregate(local_records(scope))
+        out["local_usage"] = aggregate(records)
     return out

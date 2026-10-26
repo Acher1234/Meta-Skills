@@ -143,7 +143,8 @@ def local_scan(scope: Scope) -> tuple[list[Record], dict[str, Any] | None]:
 
 
 def usage(scope: Scope, override: Path | None, http_env: dict[str, str], *,
-          want_remote: bool = True, want_local: bool = True, origin: str = "auto") -> dict[str, Any]:
+          want_remote: bool = True, want_local: bool = True, origin: str = "auto",
+          want_extra: bool = False) -> dict[str, Any]:
     cred, found = pick(codex_creds(scope, override), origin)
     out: dict[str, Any] = {
         "tool": "codex",

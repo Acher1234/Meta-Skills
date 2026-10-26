@@ -5,7 +5,9 @@ Order: tool files (project first unless global) → Hermes → OpenClaw → envi
 
 from __future__ import annotations
 
+import json
 import os
+import sqlite3
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -20,6 +22,7 @@ from locate import (
     codex_dirs,
     jwt_claims,
     opencode_auth_files,
+    opencode_data_dirs,
     read_json,
 )
 from stats import parse_ts
@@ -212,16 +215,58 @@ def codex_creds(scope: Scope, override: Path | None) -> list[Cred]:
     return creds
 
 
+def _opencode_db_rows(path: Path) -> dict[str, dict[str, Any]]:
+    """OpenCode 2 logins (`credential` table): active / newest row per integration, metadata merged."""
+    rows: dict[str, dict[str, Any]] = {}
+    try:
+        with sqlite3.connect(f"file:{path}?mode=ro", uri=True) as conn:
+            query = ("SELECT integration_id, value FROM credential WHERE integration_id IS NOT NULL "
+                     "ORDER BY active DESC, time_updated DESC, id DESC")
+            for integration, raw in conn.execute(query):
+                if integration in rows:
+                    continue
+                value = json.loads(raw)
+                if isinstance(value, dict):
+                    meta = value.get("metadata") if isinstance(value.get("metadata"), dict) else {}
+                    entry = {**meta, **value}
+                    if entry.get("type") == "key":
+                        entry["type"] = "api"
+                    rows[integration] = entry
+    except (sqlite3.Error, json.JSONDecodeError, TypeError):
+        return {}
+    return rows
+
+
+def opencode_db_files(scope: Scope) -> list[Path]:
+    override = os.environ.get("OPENCODE_DB", "").strip()
+    dirs = opencode_data_dirs(scope)
+    if override and Path(override).expanduser().is_absolute():
+        return [Path(override).expanduser()]
+    return [d / (override or "opencode.db") for d in dirs]
+
+
+def opencode_auth(scope: Scope, override: Path | None) -> dict[str, tuple[dict[str, Any], str]]:
+    """provider id → (entry, source label), first match wins: auth.json files, then opencode.db."""
+    found: dict[str, tuple[dict[str, Any], str]] = {}
+    for path in ([override] if override else []) + opencode_auth_files(scope):
+        for name, entry in _safe_json(path).items():
+            if isinstance(entry, dict):
+                found.setdefault(name, (entry, _label(path)))
+    for path in opencode_db_files(scope):
+        if path.is_file():
+            for name, entry in _opencode_db_rows(path).items():
+                found.setdefault(name, (entry, _label(path, "credential")))
+    return found
+
+
 def opencode_go_creds(scope: Scope, override: Path | None) -> list[Cred]:
     """OpenCode Go keys (`opencode-go`, or the shared Zen `opencode` key)."""
     creds: list[Cred] = []
-    for path in ([override] if override else []) + opencode_auth_files(scope):
-        auth = _safe_json(path)
-        for provider in ("opencode-go", "opencode"):
-            entry = auth.get(provider) or {}
-            token = entry.get("key") or entry.get("access")
-            if token:
-                creds.append(Cred("tool", _label(path, provider), token, "api_key"))
+    auth = opencode_auth(scope, override)
+    for provider in ("opencode-go", "opencode"):
+        entry, label = auth.get(provider, ({}, ""))
+        if entry.get("type") != "oauth" and entry.get("key"):
+            creds.append(Cred("tool", f"{label} ({provider})", entry["key"], "api_key"))
     homes = hermes_homes(scope)
     for home in homes:
         for label, entry in _hermes_pool(home, "opencode-go"):
