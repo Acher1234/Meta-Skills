@@ -63,6 +63,10 @@ Read-only: tokens are never refreshed or written; an expired token is reported â
 cd ~/.meta-skills/skills/ai/ai-usage && ~/.meta-skills/install.sh pip init .
 ```
 
+```powershell
+cd "$HOME/.meta-skills/skills/ai/ai-usage"; & "$HOME/.meta-skills/install.ps1" pip init .
+```
+
 ## Where tokens / logs are read
 
 | Tool | Credentials (project first if `IS_GLOBAL=FALSE`) | Limits API | Local logs |
