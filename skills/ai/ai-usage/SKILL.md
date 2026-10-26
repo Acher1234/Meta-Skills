@@ -101,6 +101,9 @@ Flags (every subcommand): `--text` (human table, default JSON), `--scope auto|pr
 also what Go Extra Usage draws from — monthly limit, month spend, auto-reload, local Zen/Go spend),
 `--no-remote` (logs only), `--no-local` (limits only).
 
+Full reference — every token location, endpoint, field, extra usage, pitfalls, verification status:
+`~/.meta-skills/skills/ai/ai-usage/references/providers.md`.
+
 ## Notes
 
 - Answer with the remaining % and reset time first, then the period table.
