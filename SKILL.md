@@ -73,6 +73,7 @@ One file per category under `~/.meta-skills/meta-skill-doc/`, with each skill's 
 | Category | Catalog | Skills |
 |----------|---------|--------|
 | Agent | `agent.md` | `hermes-all-message-read` |
+| AI tools | `ai.md` | `ai-usage` |
 | Database | `db.md` | `elastic` |
 | Design | `design.md` | `gif-creator` |
 | DevOps / DNS | `devops.md` | `godaddy` |
