@@ -69,8 +69,10 @@ skills/<category>/<name>/
 ## Conventions
 
 - Start new skills from `SKILL_TEMPLATE.md`; keep the `### TO COPY` / `##### END TO COPY`
-  markers and the `{IS_GLOBAL}`, `{TYPE_OF_AI_TOOLS}`, `{SKILL_PATH}` placeholders (bash **and**
-  PowerShell variants).
+  markers and the `{IS_GLOBAL}`, `{TYPE_OF_AI_TOOLS}`, `{SKILL_PATH}` placeholders.
+- The `TO COPY` slice always has both a `Bash / zsh:` block (`~/.meta-skills/.venv/bin/python …`)
+  and a `PowerShell (Windows):` block (`$env:…`, `& "$HOME/.meta-skills/.venv/Scripts/python.exe" …`)
+  running the same commands — never Bash only.
 - Read credentials only through `SkillCred` / `SkillEnv` (`$CURRENT_SKILL_DIRECTORY`).
   Never `source .env`, never commit `.env`, tokens or real secrets — the pre-commit hook runs gitleaks.
 - CLI output: JSON on stdout, logs/debug on stderr. Confirm with the user before side effects
