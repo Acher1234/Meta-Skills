@@ -13,11 +13,16 @@
 - Status ``>= 400`` raises :class:`HttpError`.
 - :meth:`HttpClient.download` streams to a file and can gunzip.
 - :meth:`HttpClient.load_browser_cookies` reuses a Playwright session.
+- ``impersonate="chrome"`` swaps the session for a ``curl_cffi`` one that copies
+  a real browser TLS fingerprint, for sites whose WAF (Radware, Cloudflare bot
+  management) blocks ``requests`` even with a browser User-Agent. Needs
+  ``curl_cffi`` in the skill requirements.txt.
 
 Settings come from the environment (or a skill ``.env`` through
 :class:`common.http.skill_env.HttpSkillEnv`):
 
 ``HTTP_TIMEOUT`` (seconds, default 30; wins over ``timeout=``), ``HTTP_RETRIES`` (default 2),
+``HTTP_IMPERSONATE`` (``curl_cffi`` browser target such as ``chrome``; wins over ``impersonate=``),
 ``HTTP_USER_AGENT`` (default: a desktop Chrome; wins over ``user_agent=``), ``HTTP_VERIFY_SSL`` (``0`` disables verification),
 ``HTTP_CA_BUNDLE`` (custom CA file), ``HTTP_DEBUG`` (log each request on
 stderr), and the proxy variables of :mod:`common.proxy`.
@@ -46,6 +51,7 @@ HTTP_ENV_KEYS = (
     "HTTP_TIMEOUT",
     "HTTP_RETRIES",
     "HTTP_USER_AGENT",
+    "HTTP_IMPERSONATE",
     "HTTP_VERIFY_SSL",
     "HTTP_CA_BUNDLE",
     "HTTP_DEBUG",
@@ -156,6 +162,7 @@ class HttpClient:
         retries: int | None = None,
         throttle: float = 0.0,
         verify: bool | str | None = None,
+        impersonate: str | None = None,
         session: requests.Session | None = None,
     ) -> None:
         source = os.environ if environ is None else environ
@@ -167,10 +174,15 @@ class HttpClient:
         self.debug = _flag(source, "HTTP_DEBUG", False)
         self._last_request = 0.0
 
+        self.impersonate = _setting(source, "HTTP_IMPERSONATE") or impersonate or None
+        self._network_errors: tuple[type[BaseException], ...] = (requests.ConnectionError, requests.Timeout)
+        if session is None and self.impersonate:
+            session = self._impersonated_session(self.impersonate)
         self.session = session or requests.Session()
-        self.session.headers["User-Agent"] = (
-            _setting(source, "HTTP_USER_AGENT") or user_agent or DEFAULT_USER_AGENT
-        )
+        # An impersonated session already sends the User-Agent matching its fingerprint.
+        agent = _setting(source, "HTTP_USER_AGENT") or user_agent
+        if agent or not self.impersonate:
+            self.session.headers["User-Agent"] = agent or DEFAULT_USER_AGENT
         if headers:
             self.session.headers.update(headers)
         self.session.verify = self._verify(source) if verify is None else verify
@@ -178,6 +190,16 @@ class HttpClient:
         self.proxy = resolve_proxy(source)
         if self.proxy is not None:
             self.session.proxies.update(self.proxy.requests())
+
+    def _impersonated_session(self, target: str) -> Any:
+        try:
+            from curl_cffi import requests as curl_requests
+        except ImportError as exc:
+            raise ImportError(
+                "curl_cffi is required for impersonate=. Add it to the skill requirements.txt."
+            ) from exc
+        self._network_errors += (curl_requests.exceptions.ConnectionError, curl_requests.exceptions.Timeout)
+        return curl_requests.Session(impersonate=target)
 
     @staticmethod
     def _verify(source: Mapping[str, str]) -> bool | str:
@@ -265,7 +287,7 @@ class HttpClient:
                     timeout=self.timeout if timeout is None else timeout,
                     stream=stream,
                 )
-            except (requests.ConnectionError, requests.Timeout) as exc:
+            except self._network_errors as exc:
                 self._log(method, url, type(exc).__name__, started)
                 if attempt < self.retries and method in _IDEMPOTENT:
                     attempt += 1
