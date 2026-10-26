@@ -42,13 +42,14 @@ One folder per helper, one class per file; each folder `__init__.py` only re-exp
 |--------|----------|
 | `common.skill_env` | `SkillCred` (config files under `$CURRENT_SKILL_DIRECTORY`), `SkillEnv` base (`.env` parsing, `verify()`, shell exports) |
 | `common.proxy` | `Proxy`, `resolve_proxy`, `ProxySkillEnv` — DataImpulse / `PROXY_URL` (http, socks5) |
-| `common.http` | `HttpClient`, `HttpSkillEnv` — REST client (timeouts, retries, throttle, download, proxy); needs `requests` in the skill deps |
+| `common.http` | `HttpClient`, `HttpSkillEnv` — REST client (timeouts, retries, throttle, download, proxy, `impersonate=` browser TLS fingerprint via `curl_cffi`); needs `requests` in the skill deps |
 | `common.browser` | `Browser`, `BrowserSkillEnv` — Camoufox browser automation (headless, proxy) |
 
 `SkillEnv` subclasses are cooperative mixins (`class MySkillEnv(HttpSkillEnv, BrowserSkillEnv)`);
 every `verify()` returns `{**super().verify(values), **own_keys}`. `PROXY_*` / `HTTP_*` / browser keys
-are optional. New REST skills use `HttpClient` instead of their own `requests` wrapper. New helper
-folder → add it to `packages` in `meta-skill-common/pyproject.toml`.
+are optional. New REST skills use `HttpClient` instead of their own `requests` wrapper; behind a
+WAF that blocks `requests` (Radware, Cloudflare bot), try `impersonate="chrome"` before a browser.
+New helper folder → add it to `packages` in `meta-skill-common/pyproject.toml`.
 
 ## Anatomy of a skill
 
