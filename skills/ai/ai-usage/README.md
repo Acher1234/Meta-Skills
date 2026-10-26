@@ -19,5 +19,6 @@ How much of your AI plan is left, for **Claude Code**, **Codex** and **OpenCode*
     …
 ```
 
-Subcommands: `claude`, `codex`, `opencode`, `all`. Flags: `--text`, `--scope auto|project|global`,
-`--no-remote`, `--no-local`. Details and token lookup order: [`SKILL.md`](SKILL.md).
+Subcommands: `claude`, `codex`, `opencode` (incl. OpenCode Go quota), `all`. Flags: `--text`,
+`--extra`, `--scope auto|project|global`, `--source auto|tool|hermes|openclaw|env`, `--no-remote`, `--no-local`.
+Tokens come from the tool's own files, else Hermes / OpenClaw configs. Details and token lookup order: [`SKILL.md`](SKILL.md).

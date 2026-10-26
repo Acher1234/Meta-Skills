@@ -35,9 +35,19 @@ def run_tool(name: str, args: argparse.Namespace) -> dict[str, Any]:
             ENV.http_values(),
             want_remote=not args.no_remote,
             want_local=not args.no_local,
+            origin=args.source,
         )
     except Exception as exc:  # one broken tool must not hide the others in `all`
         return {"tool": name, "error": f"{type(exc).__name__}: {exc}"}
+
+
+def strip_extra(node: Any) -> Any:
+    """Drop every `extra_usage` block unless --extra was asked."""
+    if isinstance(node, dict):
+        return {k: strip_extra(v) for k, v in node.items() if k != "extra_usage"}
+    if isinstance(node, list):
+        return [strip_extra(v) for v in node]
+    return node
 
 
 def _fmt_int(value: int) -> str:
@@ -52,11 +62,16 @@ def _text_windows(limits: Any, indent: str = "  ") -> list[str]:
     lines = []
     for w in limits.get("windows", []):
         reset = f" · resets in {w['resets_in']}" if w.get("resets_in") else ""
-        lines.append(f"{indent}{w['window']:<22} {w['used_percent']:>5}% used · {w['remaining_percent']:>5}% left{reset}")
-    if limits.get("extra_usage"):
-        lines.append(f"{indent}extra usage: {limits['extra_usage']}")
-    if limits.get("credits"):
-        lines.append(f"{indent}credits: {limits['credits']}")
+        status = f" [{w['status']}]" if w.get("status") not in (None, "ok") else ""
+        lines.append(f"{indent}{w['window']:<22} {w['used_percent']:>5}% used · {w['remaining_percent']:>5}% left{reset}{status}")
+    extra = limits.get("extra_usage")
+    if extra:
+        if extra.get("enabled") is False:
+            spent = f" · spent {extra['spend_used']} {extra.get('currency') or ''}" if extra.get("spend_used") is not None else ""
+            lines.append(f"{indent}extra usage: disabled{spent}")
+        else:
+            shown = {k: v for k, v in extra.items() if v not in (None, False)}
+            lines.append(f"{indent}extra usage: {shown or 'none'}")
     return lines
 
 
@@ -74,6 +89,13 @@ def render_text(report: dict[str, Any]) -> str:
             lines += _text_windows(info.get("limits"), "    ")
     else:
         lines += _text_windows(limits)
+    go = report.get("opencode_go")
+    if go:
+        lines.append(f"  [opencode-go] {go.get('credentials') or 'no key'}")
+        lines += _text_windows(go, "    ")
+        for status in go.get("hermes_last_status") or []:
+            lines.append(f"    hermes: {status.get('last_status')} {status.get('last_error_code') or ''} "
+                         f"{status.get('last_error_reason') or ''} reset {status.get('last_error_reset_at') or '-'}")
     if report.get("last_logged_limits"):
         snap = report["last_logged_limits"]
         lines.append(f"  last logged limits (as of {snap['as_of']}{', stale' if snap['stale'] else ''}):")
@@ -101,7 +123,8 @@ def emit(reports: list[dict[str, Any]], text: bool) -> None:
 
 def cmd_tool(args: argparse.Namespace) -> int:
     names = list(TOOLS) if args.command == "all" else [args.command]
-    emit([run_tool(name, args) for name in names], args.text)
+    reports = [run_tool(name, args) for name in names]
+    emit(reports if args.extra else [strip_extra(r) for r in reports], args.text)
     return 0
 
 
@@ -112,12 +135,16 @@ def build_parser() -> argparse.ArgumentParser:
                         help="auto: follow $IS_GLOBAL (project .<tool>/ first, then ~); project / global: force")
     common.add_argument("--no-remote", action="store_true", help="skip the plan-limits API call")
     common.add_argument("--no-local", action="store_true", help="skip scanning local session logs")
+    common.add_argument("--extra", action="store_true",
+                        help="also show extra usage: Claude pay-as-you-go credits / monthly cap, Codex credits")
+    common.add_argument("--source", choices=("auto", "tool", "hermes", "openclaw", "env"), default="auto",
+                        help="where to take the token: auto (tool → Hermes → OpenClaw → env) or one origin only")
     common.add_argument("--text", action="store_true", help="human-readable output instead of JSON")
     sub = parser.add_subparsers(dest="command", required=True)
     helps = {
         "claude": "Claude Code — 5h session / weekly limits left + local token usage",
         "codex": "Codex CLI — 5h / weekly ChatGPT limits left + local token usage",
-        "opencode": "OpenCode — limits of each logged-in provider + local token/cost usage",
+        "opencode": "OpenCode — limits of each logged-in provider, OpenCode Go quota + local token/cost usage",
         "all": "All three tools",
     }
     for name, text in helps.items():

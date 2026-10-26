@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import json
-import os
 import time
 from pathlib import Path
 from typing import Any
 
 from common.http import HttpClient, HttpError
-from locate import Scope, claude_dirs, claude_keychain_credentials, first_file, read_json
+from locate import Scope, claude_dirs
+from sources import Cred, claude_creds, pick
 from stats import Record, aggregate, parse_ts, window
 
 USAGE_URL = "https://api.anthropic.com/api/oauth/usage"
@@ -21,22 +21,6 @@ WINDOW_NAMES = {
     "seven_day_oauth_apps": "week_7d_oauth_apps",
 }
 MAX_LOG_AGE = 31 * 86400
-
-
-def load_credentials(scope: Scope, override: Path | None) -> tuple[dict[str, Any] | None, str | None]:
-    """Return (claudeAiOauth dict, source) — project `.claude/` first unless global."""
-    candidates = [override] if override else []
-    candidates += [d / ".credentials.json" for d in claude_dirs(scope)]
-    path = first_file(candidates)
-    if path:
-        return read_json(path).get("claudeAiOauth"), str(path)
-    keychain = claude_keychain_credentials()
-    if keychain:
-        return keychain.get("claudeAiOauth"), "macOS keychain (Claude Code-credentials)"
-    token = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "").strip()
-    if token:
-        return {"accessToken": token}, "$CLAUDE_CODE_OAUTH_TOKEN"
-    return None, None
 
 
 def fetch_limits(access_token: str, http_env: dict[str, str]) -> dict[str, Any]:
@@ -63,25 +47,31 @@ def fetch_limits(access_token: str, http_env: dict[str, str]) -> dict[str, Any]:
         name = "_".join(p for p in (limit.get("group") or limit.get("kind"), model) if p)
         windows.append(window(name, limit.get("percent"), limit.get("resets_at"), active=limit.get("is_active")))
     extra = data.get("extra_usage") or {}
-    out: dict[str, Any] = {"windows": windows}
-    if extra.get("is_enabled"):
-        out["extra_usage"] = {
+    spend = data.get("spend") or {}
+    used = (spend.get("used") or {})
+    return {
+        "windows": windows,
+        "extra_usage": {
+            "enabled": bool(extra.get("is_enabled")),
             "monthly_limit": extra.get("monthly_limit"),
             "used_credits": extra.get("used_credits"),
             "used_percent": extra.get("utilization"),
-            "currency": extra.get("currency"),
-        }
-    return out
+            "currency": extra.get("currency") or used.get("currency"),
+            "spend_used": used.get("amount_minor") / 10 ** used.get("exponent", 2) if used.get("amount_minor") is not None else None,
+            "spend_limit_reached": extra.get("spend_limit_reached"),
+            "disabled_reason": extra.get("disabled_reason") or spend.get("disabled_reason"),
+        },
+    }
 
 
-def remote(oauth: dict[str, Any] | None, http_env: dict[str, str]) -> dict[str, Any]:
-    if not oauth or not oauth.get("accessToken"):
-        return {"error": "no Claude OAuth token found — log in with `claude` (/login)"}
-    expires = oauth.get("expiresAt")
-    if expires and expires / 1000 < time.time():
-        return {"error": "OAuth token expired — run `claude` once to refresh it, then retry"}
+def remote(cred: Cred | None, http_env: dict[str, str], tool: str = "claude") -> dict[str, Any]:
+    """Shared with OpenCode's `anthropic` OAuth entry."""
+    if cred is None:
+        return {"error": f"no Claude OAuth token found — log in with `{tool}` (Claude Code /login, Hermes or OpenClaw)"}
+    if cred.expired():
+        return {"error": f"OAuth token expired ({cred.source}) — run `{tool}` once to refresh it, then retry"}
     try:
-        return fetch_limits(oauth["accessToken"], http_env)
+        return fetch_limits(cred.token, http_env)
     except HttpError as exc:
         return {"error": f"usage API HTTP {exc.status}", "detail": str(exc)[:300]}
     except Exception as exc:  # network / proxy errors must not hide local stats
@@ -136,16 +126,18 @@ def local_records(scope: Scope) -> list[Record]:
 
 
 def usage(scope: Scope, override: Path | None, http_env: dict[str, str], *,
-          want_remote: bool = True, want_local: bool = True) -> dict[str, Any]:
-    oauth, source = load_credentials(scope, override)
+          want_remote: bool = True, want_local: bool = True, origin: str = "auto") -> dict[str, Any]:
+    cred, found = pick(claude_creds(scope, override), origin)
     out: dict[str, Any] = {
         "tool": "claude",
-        "credentials": source,
-        "plan": (oauth or {}).get("subscriptionType"),
-        "rate_limit_tier": (oauth or {}).get("rateLimitTier"),
+        "credentials": cred.source if cred else None,
+        "credentials_origin": cred.origin if cred else None,
+        "plan": cred.meta.get("plan") if cred else None,
+        "rate_limit_tier": cred.meta.get("rate_limit_tier") if cred else None,
+        "sources_found": [c.describe() for c in found],
     }
     if want_remote:
-        out["limits"] = remote(oauth, http_env)
+        out["limits"] = remote(cred, http_env)
     if want_local:
         out["local_usage"] = aggregate(local_records(scope))
     return out

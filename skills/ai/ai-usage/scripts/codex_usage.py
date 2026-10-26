@@ -9,7 +9,8 @@ from pathlib import Path
 from typing import Any
 
 from common.http import HttpClient, HttpError
-from locate import Scope, codex_dirs, first_file, jwt_claims, read_json
+from locate import Scope, codex_dirs, jwt_claims
+from sources import Cred, codex_creds, pick
 from stats import Record, aggregate, parse_ts, window
 
 USAGE_URL = "https://chatgpt.com/backend-api/wham/usage"
@@ -27,22 +28,14 @@ def window_name(seconds: Any) -> str:
     return f"{round(seconds / 3600)}h" if seconds else "window"
 
 
-def account_id(tokens: dict[str, Any]) -> str | None:
-    if tokens.get("account_id"):
-        return tokens["account_id"]
-    for key in ("id_token", "access_token"):
-        claims = jwt_claims(tokens.get(key) or "")
-        found = (claims.get("https://api.openai.com/auth") or {}).get("chatgpt_account_id")
+def account_id(cred: Cred) -> str | None:
+    if cred.account:
+        return cred.account
+    for token in (cred.meta.get("id_token") or "", cred.token):
+        found = (jwt_claims(token).get("https://api.openai.com/auth") or {}).get("chatgpt_account_id")
         if found:
             return found
     return None
-
-
-def load_auth(scope: Scope, override: Path | None) -> tuple[dict[str, Any] | None, str | None]:
-    candidates = [override] if override else []
-    candidates += [d / "auth.json" for d in codex_dirs(scope)]
-    path = first_file(candidates)
-    return (read_json(path), str(path)) if path else (None, None)
 
 
 def fetch_limits(access_token: str, account: str | None, http_env: dict[str, str]) -> dict[str, Any]:
@@ -64,20 +57,18 @@ def fetch_limits(access_token: str, account: str | None, http_env: dict[str, str
         "allowed": limits.get("allowed"),
         "limit_reached": limits.get("limit_reached"),
         "windows": windows,
-        "credits": data.get("credits"),
+        "extra_usage": {"credits": data.get("credits")},
     }
 
 
-def remote(tokens: dict[str, Any] | None, http_env: dict[str, str], *, account: str | None = None) -> dict[str, Any]:
+def remote(cred: Cred | None, http_env: dict[str, str], tool: str = "codex") -> dict[str, Any]:
     """Shared with OpenCode's `openai` OAuth entry."""
-    access = (tokens or {}).get("access_token")
-    if not access:
-        return {"error": "no ChatGPT OAuth token — log in with `codex login` (API-key auth has no plan limits)"}
-    exp = jwt_claims(access).get("exp")
-    if exp and exp < time.time():
-        return {"error": "OAuth token expired — run `codex` once to refresh it, then retry"}
+    if cred is None:
+        return {"error": "no ChatGPT OAuth token — log in with `codex login`, Hermes or OpenClaw (API keys have no plan limits)"}
+    if cred.expired():
+        return {"error": f"OAuth token expired ({cred.source}) — run `{tool}` once to refresh it, then retry"}
     try:
-        return fetch_limits(access, account or account_id(tokens), http_env)
+        return fetch_limits(cred.token, account_id(cred), http_env)
     except HttpError as exc:
         return {"error": f"usage API HTTP {exc.status}", "detail": str(exc)[:300]}
     except Exception as exc:  # network / proxy errors must not hide local stats
@@ -152,16 +143,17 @@ def local_scan(scope: Scope) -> tuple[list[Record], dict[str, Any] | None]:
 
 
 def usage(scope: Scope, override: Path | None, http_env: dict[str, str], *,
-          want_remote: bool = True, want_local: bool = True) -> dict[str, Any]:
-    auth, source = load_auth(scope, override)
-    tokens = (auth or {}).get("tokens") or {}
+          want_remote: bool = True, want_local: bool = True, origin: str = "auto") -> dict[str, Any]:
+    cred, found = pick(codex_creds(scope, override), origin)
     out: dict[str, Any] = {
         "tool": "codex",
-        "credentials": source,
-        "auth_mode": "chatgpt" if tokens.get("access_token") else ("api_key" if (auth or {}).get("OPENAI_API_KEY") else None),
+        "credentials": cred.source if cred else None,
+        "credentials_origin": cred.origin if cred else None,
+        "auth_mode": "chatgpt" if cred else ("api_key" if found else None),
+        "sources_found": [c.describe() for c in found],
     }
     if want_remote:
-        out["limits"] = remote(tokens, http_env)
+        out["limits"] = remote(cred, http_env)
     if want_local:
         records, snapshot = local_scan(scope)
         out["local_usage"] = aggregate(records)

@@ -3,8 +3,9 @@ name: ai-usage
 description: >-
   Show how much of your AI coding plan is left — Claude Code, Codex and OpenCode:
   5h session / weekly limits used and remaining (with reset time) plus local token
-  usage per period (5h, today, week, month, 30d). Reads each tool's own login token
-  (project .claude/.codex/.opencode first, then the computer's). Use when the user
+  usage per period (5h, today, week, month, 30d), OpenCode Go quota and optional extra
+  usage. Reads the tool's own login token (project first, then the computer's), else
+  Hermes / OpenClaw configs. Use when the user
   asks about AI usage, quota, limits, "how much is left", or invokes /ai-usage_*.
 disable-model-invocation: true
 ---
@@ -69,15 +70,20 @@ cd "$HOME/.meta-skills/skills/ai/ai-usage"; & "$HOME/.meta-skills/install.ps1" p
 
 ## Where tokens / logs are read
 
-| Tool | Credentials (project first if `IS_GLOBAL=FALSE`) | Limits API | Local logs |
-|------|------|------|------|
-| claude | `<project>/.claude/.credentials.json` → `${CLAUDE_CONFIG_DIR:-~/.claude}/.credentials.json` → macOS keychain → `$CLAUDE_CODE_OAUTH_TOKEN` | `api.anthropic.com/api/oauth/usage` | `~/.claude/projects/**/*.jsonl` |
-| codex | `<project>/.codex/auth.json` → `${CODEX_HOME:-~/.codex}/auth.json` | `chatgpt.com/backend-api/wham/usage` (+ last limits logged in sessions, offline) | `~/.codex/sessions/**/*.jsonl` |
-| opencode | `<project>/.opencode/auth.json` → `~/.local/share/opencode/auth.json` → `~/.opencode/` → `~/.config/opencode/` | per provider: `anthropic` OAuth → Claude API, `openai` OAuth → Codex API; API keys have no window | `opencode.db` / `storage/message/` |
+Token order: **tool files** (project `.<tool>/` first if `IS_GLOBAL=FALSE`) → **Hermes**
+(`$HERMES_HOME`, `~/.hermes`: `auth.json` + `.env`) → **OpenClaw** (`$OPENCLAW_STATE_DIR`, `~/.openclaw`:
+`agents/*/agent/auth-profiles.json` + `.env`) → **process env**. `sources_found` lists every match (no secret).
 
-Project scope also filters local logs to sessions whose cwd is inside the project.
-`.env` keys (all optional): `CLAUDE_CREDENTIALS_FILE`, `CODEX_AUTH_FILE`, `OPENCODE_AUTH_FILE`
-force a file; `HTTP_*` / `PROXY_URL` as in `meta-skill-common/http`.
+| Tool | Tool files | Hermes / OpenClaw / env | Limits API |
+|------|------|------|------|
+| claude | `.claude/.credentials.json`, macOS keychain | pool `anthropic`; profile `anthropic:*`; `CLAUDE_CODE_OAUTH_TOKEN`, `ANTHROPIC_TOKEN` | `api.anthropic.com/api/oauth/usage` |
+| codex | `.codex/auth.json` | `providers.openai-codex.tokens`, pool `openai-codex`; profile `openai-codex:*` | `chatgpt.com/backend-api/wham/usage` |
+| opencode | `.opencode/auth.json`, `~/.local/share/opencode/auth.json` | `anthropic` / `openai` OAuth entries → APIs above | per provider |
+| opencode-go | `auth.json` `opencode-go` / `opencode` | pool `opencode-go` (+ last 429 status); profile `opencode*`; `OPENCODE_GO_API_KEY`, `OPENCODE_API_KEY` | `opencode.ai/zen/go/v1/usage` (rolling 5h / week / month) |
+
+Local logs: `~/.claude/projects/**/*.jsonl`, `~/.codex/sessions/**/*.jsonl`, OpenCode `opencode.db` /
+`storage/message/`; project scope keeps only sessions whose cwd is in the project.
+`.env` keys (optional): `CLAUDE_CREDENTIALS_FILE`, `CODEX_AUTH_FILE`, `OPENCODE_AUTH_FILE`, `HTTP_*`, `PROXY_URL`.
 
 ## Slash commands
 
@@ -85,14 +91,18 @@ force a file; `HTTP_*` / `PROXY_URL` as in `meta-skill-common/http`.
 |-------|-----|-------------|
 | `/ai-usage_claude` | `python scripts/cli.py claude` | Claude Code limits left + token usage |
 | `/ai-usage_codex` | `python scripts/cli.py codex` | Codex limits left + token usage |
-| `/ai-usage_opencode` | `python scripts/cli.py opencode` | OpenCode providers' limits + token/cost usage |
+| `/ai-usage_opencode` | `python scripts/cli.py opencode` | OpenCode providers' limits, OpenCode Go quota + token/cost usage |
 | `/ai-usage_all` | `python scripts/cli.py all` | All three |
 
 Flags (every subcommand): `--text` (human table, default JSON), `--scope auto|project|global`
-(override `IS_GLOBAL`), `--no-remote` (logs only), `--no-local` (limits only).
+(override `IS_GLOBAL`), `--source auto|tool|hermes|openclaw|env` (one token origin only),
+`--extra` (extra usage: Claude pay-as-you-go credits / monthly cap / spend, Codex credits),
+`--no-remote` (logs only), `--no-local` (limits only).
 
 ## Notes
 
 - Answer with the remaining % and reset time first, then the period table.
+- `used_percent` is consumed, not left. OpenCode Go: check every window — `blocked_by` names the
+  one that is rate-limited even when `rolling_5h` is at 0 %.
 - The limits APIs are undocumented endpoints used by the tools themselves; fields may change.
 - Never print tokens; never commit `.env` or credential files.
