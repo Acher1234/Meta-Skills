@@ -46,7 +46,8 @@ Same as [`git-worktree`](../git-worktree/SKILL.md), but the `.env` files follow.
 `.env` files are git-ignored, so a plain `git worktree add` produces a worktree
 without them — and meta-skills registered at project scope
 (`./.claude/skills/<name>/.env`, `./.cursor/skills/<name>/.env`, …) lose their
-credentials. This skill creates the worktree **and** copies the `.env` files.
+credentials. This skill creates the worktree, puts every submodule on the worktree's branch
+(pulled from its base branch first) **and** copies the `.env` files.
 
 Script: `~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree-sync.sh`
 
@@ -57,14 +58,15 @@ Script: `~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree-sync.sh`
 - Worktree already created some other way (Orca, Claude Code `EnterWorktree`,
   plain git, …)? Run `worktree-sync.sh copy` inside it **before** any other work.
 - The [`git-worktree`](../git-worktree/SKILL.md) and
-  [`orca-worktree`](../orca-worktree/SKILL.md) skills call this skill (`copy` mode)
-  as their mandatory final step.
+  [`orca-worktree`](../orca-worktree/SKILL.md) skills call this skill
+  (`submodules`, then `copy` as their mandatory final step).
 
 ## Slash commands
 
 | Slash | CLI | Description |
 |-------|-----|-------------|
 | `/git-worktree-sync_create` | `worktree-sync.sh create -b <branch> [-f <base>] [-p <path>]` | Create worktree + copy `.env` files |
+| `/git-worktree-sync_submodules` | `worktree-sync.sh submodules [--to <wt>] [--sub-base <b>] [--branch <b>]` | Pull each submodule from its base, then put all on the worktree branch |
 | `/git-worktree-sync_copy` | `worktree-sync.sh copy [--from <dir>] [--to <wt>]` | Copy `.env` files into an existing worktree |
 | `/git-worktree-sync_paths` | `worktree-sync.sh list-paths` | List the `.env` files that would be copied |
 
@@ -77,7 +79,8 @@ Options of `create`:
 | `-p, --path` | Folder (default `<repo>/../<repo-name>.worktrees/<branch-slug>`) |
 | `--detach <ref>` | Detached worktree instead of a branch |
 | `--from <dir>` | Source of the `.env` files (default: **main** worktree) |
-| `--no-submodules` | Skip `git submodule update --init --recursive` (run by default if `.gitmodules`) |
+| `--sub-base <branch>` | Base branch the submodules are pulled from (default: each submodule's `origin/HEAD`; missing → falls back to it) |
+| `--no-submodules` | Skip the submodule step (by default: init, pull base, same branch as the worktree in every submodule) |
 | `--dry-run` | Print the git command and the `.env` list, change nothing |
 
 ## How to run — `/git-worktree-sync_create`
@@ -85,7 +88,7 @@ Options of `create`:
 1. Gather context exactly like `git-worktree` step 1 (`git branch`, `git branch -r`,
    `git worktree list`).
 2. **Ask** the user: base branch, branch name (new / existing / detached),
-   folder (propose the default). One question at a time with defaults.
+   folder (propose the default), submodules base branch if `.gitmodules`. One question at a time with defaults.
 3. Preview: `worktree-sync.sh create -b <branch> -f <base> -p <path> --dry-run`.
 4. Run the same command without `--dry-run` from inside the repo:
 

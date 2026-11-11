@@ -4,8 +4,9 @@ description: >-
   Create, list and remove git worktrees with plain git commands. Asks which
   branch to base the worktree on, the new branch name and the target folder.
   Use when the user asks to "create a worktree", "nouveau worktree", "work tree
-  sur la branche X", or invokes /git-worktree_*. Final mandatory step: copy
-  the .env files with the `git-worktree-sync` skill.
+  sur la branche X", or invokes /git-worktree_*. Then puts every submodule on
+  the same branch and, as a mandatory final step, copies the .env files with
+  the `git-worktree-sync` skill.
 disable-model-invocation: true
 ---
 
@@ -49,7 +50,7 @@ main", `/git-worktree_*`.
 
 > **Final step is MANDATORY:** every worktree created with this skill must then
 > receive the project's `.env` files through the **`git-worktree-sync`** skill
-> (step 5). Plain `git worktree add` never copies ignored files, so without it the
+> (step 6). Plain `git worktree add` never copies ignored files, so without it the
 > skills registered in the project (`.claude/skills/*/.env`, …) have no credentials.
 
 ## Slash commands
@@ -86,6 +87,9 @@ git worktree list                        # existing worktrees
 3. **Folder** — where the worktree lives. Default:
    `<repo-root>/../<repo-name>.worktrees/<branch-with-/-replaced-by-->`.
    The folder must not exist (or be empty).
+4. **Submodules base branch** (only if the repo has `.gitmodules`) — branch each
+   submodule is updated from before branching. Default: each submodule's own
+   default branch (`origin/HEAD`).
 
 ### 3. Create
 
@@ -113,8 +117,7 @@ Notes:
 - A branch can be checked out in **only one** worktree. If git answers
   `'feat/xyz' is already used by worktree at …`, offer to reuse that worktree or
   pick another branch name. Never use `--force` without asking.
-- Repo with submodules (`.gitmodules`): run
-  `git -C "$WT_PATH" submodule update --init --recursive` afterwards.
+- Repo with submodules (`.gitmodules`): step 5 is mandatory.
 - Git LFS: `git -C "$WT_PATH" lfs pull` if the repo uses LFS.
 
 ### 4. Verify
@@ -124,7 +127,23 @@ git worktree list
 git -C "$WT_PATH" status -sb
 ```
 
-### 5. MANDATORY — copy the `.env` files (`git-worktree-sync`)
+### 5. Submodules — same branch everywhere (if `.gitmodules`)
+
+Every submodule must end on the **same branch as the worktree**. For each one
+(recursive): init → check out its base branch and `pull --ff-only` (answer of
+step 2, else its default branch) → check out the worktree branch (existing local
+or `origin/<branch>`) or create it from that base.
+
+```bash
+SYNC=~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree-sync.sh
+bash "$SYNC" submodules --to "$WT_PATH" [--sub-base <branch>]
+```
+
+The script ends with `all submodules on <branch>`; on `NOT on <branch>: …` fix
+those submodules (dirty tree, pull conflict) and re-run it. Run this **before**
+the `.env` copy (submodule folders must be checked out first).
+
+### 6. MANDATORY — copy the `.env` files (`git-worktree-sync`)
 
 Never skip this step, never report the worktree as ready before it ran. Follow the
 [`git-worktree-sync`](../git-worktree-sync/SKILL.md) skill in **copy** mode:
@@ -134,8 +153,8 @@ SYNC=~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree-sync.sh
 bash "$SYNC" copy --to "$WT_PATH"          # source = main worktree by default
 ```
 
-Then give the user the absolute path of the new worktree, its branch and the list
-of copied `.env` files (names only, never their content).
+Then give the user the absolute path of the new worktree, its branch, the branch
+of each submodule and the list of copied `.env` files (names only, never their content).
 
 ## Other commands
 

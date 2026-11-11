@@ -2,8 +2,8 @@
 name: orca-worktree
 description: >-
   Create an Orca-managed worktree with the `orca worktree create` CLI (repo,
-  base branch, branch name, parent lineage, optional agent + prompt), then — as
-  a mandatory final step — copy the project's .env files into it with the
+  base branch, branch name, parent lineage, optional agent + prompt), puts every
+  submodule on the same branch, then — as a mandatory final step — copy the project's .env files into it with the
   `git-worktree-sync` skill. Use when the user asks for an "Orca worktree",
   "nouveau workspace Orca", "worktree Orca avec un agent", or invokes
   /orca-worktree_*. Plain-git variant: `git-worktree`.
@@ -95,8 +95,11 @@ ORCA worktree list --repo id:<repoId> --json        # existing worktrees
    Orca uses its prefixed default; a taken name gets a numeric suffix).
 4. **Lineage** — child of the current worktree (`--parent-worktree active`) or
    independent (`--no-parent`).
-5. **Agent** (optional) — e.g. `claude`, `codex` + a prompt. See step 3: the agent
-   is launched **after** the `.env` copy.
+5. **Submodules base branch** (only if the repo has `.gitmodules`) — branch each
+   submodule is updated from before branching. Default: each submodule's own
+   default branch (`origin/HEAD`).
+6. **Agent** (optional) — e.g. `claude`, `codex` + a prompt. See step 3: the agent
+   is launched **after** the submodules and the `.env` copy.
 
 ### 3. Create the worktree (without agent)
 
@@ -112,11 +115,21 @@ Read from the JSON result the worktree **`id`** (`<repoId>::<path>`) and **`path
 
 Do **not** pass `--agent` here: the agent would start before the `.env` files exist.
 
-### 4. Submodules (if `.gitmodules`)
+### 4. Submodules — same branch everywhere (if `.gitmodules`)
+
+Every submodule must end on the **same branch as the worktree**. For each one
+(recursive): init → check out its base branch and `pull --ff-only` (answer of
+step 2, else its default branch) → check out the worktree branch (existing local
+or `origin/<branch>`) or create it from that base.
 
 ```bash
-git -C "<path>" submodule update --init --recursive
+SYNC=~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree-sync.sh
+bash "$SYNC" submodules --to "<path>" [--sub-base <branch>]
 ```
+
+The script ends with `all submodules on <branch>`; on `NOT on <branch>: …` fix
+those submodules (dirty tree, pull conflict) and re-run it. Run this **before**
+the `.env` copy (submodule folders must be checked out first).
 
 ### 5. MANDATORY — copy the `.env` files (`git-worktree-sync`)
 
@@ -128,7 +141,7 @@ SYNC=~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree-sync.sh
 bash "$SYNC" copy --to "<path>"          # source = main worktree by default
 ```
 
-### 6. Start the agent (if asked in step 2.5)
+### 6. Start the agent (if asked in step 2.6)
 
 ```text
 ORCA agent launch --agent claude --worktree id:<repoId>::<path> --prompt "<task brief>" --json
@@ -139,7 +152,7 @@ with `--retry-launch <operationId>` — never relaunch from scratch.
 
 ### 7. Report
 
-Worktree id, path, branch, copied `.env` files (names only, never their content),
+Worktree id, path, branch, branch of each submodule, copied `.env` files (names only, never their content),
 and the agent handle if any. Optionally set the card comment:
 `ORCA worktree set --worktree id:<repoId>::<path> --comment "<status>" --json`.
 
