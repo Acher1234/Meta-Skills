@@ -1,7 +1,7 @@
 ---
 name: git-worktree-sync
 description: >-
-  Create a git worktree with scripts/worktree-sync.sh, which ALWAYS copies every
+  Create a git worktree with scripts/worktree_sync.py (Python, Linux / macOS / Windows), which ALWAYS copies every
   .env file of the project (`.env`, `.env.*`, at any depth — including the
   credentials of registered skills like .claude/skills/<name>/.env) into the new
   worktree. Nothing else is copied. Use when the user wants a worktree that keeps
@@ -49,14 +49,22 @@ without them — and meta-skills registered at project scope
 credentials. This skill creates the worktree, puts every submodule on the worktree's branch
 (pulled from its base branch first) **and** copies the `.env` files.
 
-Script: `~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree-sync.sh`
+Script (Python 3.9+, stdlib only — Linux / macOS / Windows), written `worktree_sync.py` below:
+
+```bash
+~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree_sync.py <command> [options]
+```
+
+```powershell
+& "$HOME/.meta-skills/.venv/Scripts/python.exe" "$HOME/.meta-skills/skills/code/git-worktree-sync/scripts/worktree_sync.py" <command> [options]
+```
 
 ## MANDATORY rule
 
 - **Never** create the worktree with raw `git worktree add` in this skill — always
-  `worktree-sync.sh create`. The `.env` copy is part of the script and cannot be skipped.
+  `worktree_sync.py create`. The `.env` copy is part of the script and cannot be skipped.
 - Worktree already created some other way (Orca, Claude Code `EnterWorktree`,
-  plain git, …)? Run `worktree-sync.sh copy` inside it **before** any other work.
+  plain git, …)? Run `worktree_sync.py copy` inside it **before** any other work.
 - The [`git-worktree`](../git-worktree/SKILL.md) and
   [`orca-worktree`](../orca-worktree/SKILL.md) skills call this skill
   (`submodules`, then `copy` as their mandatory final step).
@@ -65,10 +73,10 @@ Script: `~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree-sync.sh`
 
 | Slash | CLI | Description |
 |-------|-----|-------------|
-| `/git-worktree-sync_create` | `worktree-sync.sh create -b <branch> [-f <base>] [-p <path>]` | Create worktree + copy `.env` files |
-| `/git-worktree-sync_submodules` | `worktree-sync.sh submodules [--to <wt>] [--sub-base <b>] [--branch <b>]` | Pull each submodule from its base, then put all on the worktree branch |
-| `/git-worktree-sync_copy` | `worktree-sync.sh copy [--from <dir>] [--to <wt>]` | Copy `.env` files into an existing worktree |
-| `/git-worktree-sync_paths` | `worktree-sync.sh list-paths` | List the `.env` files that would be copied |
+| `/git-worktree-sync_create` | `worktree_sync.py create -b <branch> [-f <base>] [-p <path>]` | Create worktree + copy `.env` files |
+| `/git-worktree-sync_submodules` | `worktree_sync.py submodules [--to <wt>] [--sub-base <b>] [--branch <b>]` | Pull each submodule from its base, then put all on the worktree branch |
+| `/git-worktree-sync_copy` | `worktree_sync.py copy [--from <dir>] [--to <wt>]` | Copy `.env` files into an existing worktree |
+| `/git-worktree-sync_paths` | `worktree_sync.py list-paths` | List the `.env` files that would be copied |
 
 Options of `create`:
 
@@ -89,13 +97,10 @@ Options of `create`:
    `git worktree list`).
 2. **Ask** the user: base branch, branch name (new / existing / detached),
    folder (propose the default), submodules base branch if `.gitmodules`. One question at a time with defaults.
-3. Preview: `worktree-sync.sh create -b <branch> -f <base> -p <path> --dry-run`.
+3. Preview: `worktree_sync.py create -b <branch> -f <base> -p <path> --dry-run`.
 4. Run the same command without `--dry-run` from inside the repo:
 
-   ```bash
-   SCRIPT=~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree-sync.sh
-   bash "$SCRIPT" create -b feat/xyz -f origin/main
-   ```
+   `worktree_sync.py create -b feat/xyz -f origin/main` (full path: see top).
 
 5. Report the `WORKTREE=` path printed at the end and the list of copied files
    (names only — never print the content of `.env` files).
@@ -117,7 +122,7 @@ new worktree automatically, so the copied credentials work right away.
 
 ## Notes
 
-- Bash script (Linux / macOS / Git Bash on Windows).
+- No dependency: runs with the shared venv or any `python3` ≥ 3.9.
 - Remove a worktree with `git worktree remove <path>` — confirm first; the copied
   `.env` files are deleted with the folder.
 - Copied secrets stay local (they are git-ignored); never `git add -f` them.

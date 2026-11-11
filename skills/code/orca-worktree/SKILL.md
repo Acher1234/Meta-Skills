@@ -69,7 +69,7 @@ or `ORCA skills get orca-cli`.
 
 | Slash | CLI | Description |
 |-------|-----|-------------|
-| `/orca-worktree_create` | `ORCA worktree create … --json` + `worktree-sync.sh copy` | Ask, create, then copy `.env` |
+| `/orca-worktree_create` | `ORCA worktree create … --json` + `worktree_sync.py copy` | Ask, create, then copy `.env` |
 | `/orca-worktree_list` | `ORCA worktree list --repo id:<repoId> --json` | List Orca worktrees of a repo |
 | `/orca-worktree_current` | `ORCA worktree current --json` | Show the enclosing worktree |
 | `/orca-worktree_remove` | `ORCA worktree rm --worktree id:<repoId>::<path> --json` | Remove (confirm first) |
@@ -123,8 +123,11 @@ step 2, else its default branch) → check out the worktree branch (existing loc
 or `origin/<branch>`) or create it from that base.
 
 ```bash
-SYNC=~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree-sync.sh
-bash "$SYNC" submodules --to "<path>" [--sub-base <branch>]
+~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree_sync.py submodules --to "<path>" [--sub-base <branch>]
+```
+
+```powershell
+& "$HOME/.meta-skills/.venv/Scripts/python.exe" "$HOME/.meta-skills/skills/code/git-worktree-sync/scripts/worktree_sync.py" submodules --to "<path>" [--sub-base <branch>]
 ```
 
 The script ends with `all submodules on <branch>`; on `NOT on <branch>: …` fix
@@ -137,9 +140,14 @@ Never skip this step, never report the worktree as ready before it ran. Follow t
 [`git-worktree-sync`](../git-worktree-sync/SKILL.md) skill in **copy** mode:
 
 ```bash
-SYNC=~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree-sync.sh
-bash "$SYNC" copy --to "<path>"          # source = main worktree by default
+~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree_sync.py copy --to "<path>"
 ```
+
+```powershell
+& "$HOME/.meta-skills/.venv/Scripts/python.exe" "$HOME/.meta-skills/skills/code/git-worktree-sync/scripts/worktree_sync.py" copy --to "<path>"
+```
+
+Source = main worktree by default.
 
 ### 6. Start the agent (if asked in step 2.6)
 

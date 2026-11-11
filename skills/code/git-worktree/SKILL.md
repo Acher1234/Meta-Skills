@@ -135,8 +135,11 @@ step 2, else its default branch) → check out the worktree branch (existing loc
 or `origin/<branch>`) or create it from that base.
 
 ```bash
-SYNC=~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree-sync.sh
-bash "$SYNC" submodules --to "$WT_PATH" [--sub-base <branch>]
+~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree_sync.py submodules --to "$WT_PATH" [--sub-base <branch>]
+```
+
+```powershell
+& "$HOME/.meta-skills/.venv/Scripts/python.exe" "$HOME/.meta-skills/skills/code/git-worktree-sync/scripts/worktree_sync.py" submodules --to "$WT_PATH" [--sub-base <branch>]
 ```
 
 The script ends with `all submodules on <branch>`; on `NOT on <branch>: …` fix
@@ -149,9 +152,14 @@ Never skip this step, never report the worktree as ready before it ran. Follow t
 [`git-worktree-sync`](../git-worktree-sync/SKILL.md) skill in **copy** mode:
 
 ```bash
-SYNC=~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree-sync.sh
-bash "$SYNC" copy --to "$WT_PATH"          # source = main worktree by default
+~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree_sync.py copy --to "$WT_PATH"
 ```
+
+```powershell
+& "$HOME/.meta-skills/.venv/Scripts/python.exe" "$HOME/.meta-skills/skills/code/git-worktree-sync/scripts/worktree_sync.py" copy --to "$WT_PATH"
+```
+
+Source = main worktree by default.
 
 Then give the user the absolute path of the new worktree, its branch, the branch
 of each submodule and the list of copied `.env` files (names only, never their content).
