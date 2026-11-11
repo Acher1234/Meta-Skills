@@ -1,80 +1,33 @@
----
-name: orca-worktree
-description: >-
-  Create an Orca-managed worktree with the `orca worktree create` CLI (repo,
-  base branch, branch name, parent lineage, optional agent + prompt), puts every
-  submodule on the same branch, then — as a mandatory final step — copy the project's .env files into it with the
-  `git-worktree-sync` skill. Use when the user asks for an "Orca worktree",
-  "nouveau workspace Orca", "worktree Orca avec un agent", or invokes
-  /orca-worktree_*. Plain-git variant: `git-worktree`.
-disable-model-invocation: true
----
+# orca-dev-worktree — Commands
 
-### TO COPY
+`ORCA` = resolved CLI (see `orca-dev` SKILL.md). All commands take `--json`; full
+flags: `ORCA worktree <cmd> --help`.
 
-# orca-worktree
+> **Creating a worktree always follows the flow below** — never a bare
+> `ORCA worktree create` and stop: submodules go on the same branch, then the
+> `.env` files are copied with **`git-worktree-sync`** (mandatory final step).
+> Orca creates a clean checkout: ignored files (`.env`, `.claude/skills/*/.env`, …)
+> are not there.
 
-Per-workspace registration slice. No credentials.
+## Commands
 
-## Working directory
+| Command | Description |
+|---------|-------------|
+| `ORCA worktree create --name <n> [--repo <sel>] [--branch <b>] [--base-branch <ref>] [--no-parent \| --parent-worktree active]` | Create — **use the flow below** |
+| `ORCA worktree list [--repo <sel>] [--limit <n>]` | List Orca worktrees |
+| `ORCA worktree show --worktree <sel>` | One worktree (id, path, branch, links) |
+| `ORCA worktree current` | Worktree of the current directory |
+| `ORCA worktree set --worktree <sel> [--display-name] [--comment] [--workspace-status] [--unread\|--read] [--parent-worktree <sel>\|--no-parent]` | Update Orca metadata |
+| `ORCA worktree rm --worktree <sel> [--force]` | Remove from Orca **and git** — confirm first |
+| `ORCA worktree ps [--limit <n>] [--agent-wait]` | Orchestration summary across worktrees |
+| `ORCA ports [--worktree <sel>] [--all]` | Listening ports tied to a workspace (dev servers) |
 
-Placeholders changed by `/meta-skills` at copy time (NAME => {PLACEHOLDER}):
+Selectors: `id:<repoId>::<path>` (copy the whole `id` from JSON), `name:<display>`,
+`path:<abs>`, `branch:<b>`, `issue:<n>`, `active` / `current`.
 
-IS_GLOBAL => {IS_GLOBAL}
-TYPE_OF_AI_TOOLS => {TYPE_OF_AI_TOOLS}
-SKILL_PATH => {SKILL_PATH}
+Card comment at checkpoints: `ORCA worktree set --worktree active --comment "<status>" --json`.
 
-Bash / zsh:
-
-```bash
-export CURRENT_SKILL_DIRECTORY="{SKILL_PATH}"
-```
-
-PowerShell (Windows):
-
-```powershell
-$env:CURRENT_SKILL_DIRECTORY = "{SKILL_PATH}"
-```
-
-##### END TO COPY
-
-# orca-worktree
-
-## When to use
-
-Create a worktree that Orca tracks (workspace card, terminals, lineage, agents)
-instead of a raw `git worktree add`. Trigger phrases: "Orca worktree", "crée un
-workspace Orca", "worktree Orca avec claude/codex", `/orca-worktree_*`.
-
-> **Final step is MANDATORY:** every worktree created with this skill must then
-> receive the project's `.env` files through the **`git-worktree-sync`** skill
-> (step 5). Orca creates a clean checkout: ignored files (`.env`,
-> `.claude/skills/*/.env`, …) are not there.
-
-## Resolve the Orca CLI (once per session)
-
-Same rule as the `orca-cli` skill — written `ORCA` below, substitute it:
-
-- `$ORCA_CLI_COMMAND` if set;
-- else `orca-dev` in an Orca dev checkout (`$ORCA_DEV_REPO_ROOT` set);
-- else on Linux **outside** an Orca terminal: `orca-ide` — never bare `orca`
-  there (`/usr/bin/orca` is the GNOME screen reader);
-- else `orca`.
-
-If the executable fails, report the exact error and stop. If Orca is not running:
-`ORCA open --json`, then retry. For flags not covered here: `ORCA worktree create --help`
-or `ORCA skills get orca-cli`.
-
-## Slash commands
-
-| Slash | CLI | Description |
-|-------|-----|-------------|
-| `/orca-worktree_create` | `ORCA worktree create … --json` + `worktree_sync.py copy` | Ask, create, then copy `.env` |
-| `/orca-worktree_list` | `ORCA worktree list --repo id:<repoId> --json` | List Orca worktrees of a repo |
-| `/orca-worktree_current` | `ORCA worktree current --json` | Show the enclosing worktree |
-| `/orca-worktree_remove` | `ORCA worktree rm --worktree id:<repoId>::<path> --json` | Remove (confirm first) |
-
-## How to run — `/orca-worktree_create`
+## Create — `/orca-dev_worktree create` (MANDATORY flow)
 
 ### 1. Gather context (run, don't ask)
 
@@ -123,21 +76,23 @@ step 2, else its default branch) → check out the worktree branch (existing loc
 or `origin/<branch>`) or create it from that base.
 
 ```bash
-~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree_sync.py submodules --to "<path>" [--sub-base <branch>]
+~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/code/git-worktree/scripts/submodules.py --to "<path>" [--sub-base <branch>]
 ```
 
 ```powershell
-& "$HOME/.meta-skills/.venv/Scripts/python.exe" "$HOME/.meta-skills/skills/code/git-worktree-sync/scripts/worktree_sync.py" submodules --to "<path>" [--sub-base <branch>]
+& "$HOME/.meta-skills/.venv/Scripts/python.exe" "$HOME/.meta-skills/skills/code/git-worktree/scripts/submodules.py" --to "<path>" [--sub-base <branch>]
 ```
 
-The script ends with `all submodules on <branch>`; on `NOT on <branch>: …` fix
+Script from the `git-worktree` skill. It ends with `all submodules on <branch>`; on `NOT on <branch>: …` fix
 those submodules (dirty tree, pull conflict) and re-run it. Run this **before**
 the `.env` copy (submodule folders must be checked out first).
 
 ### 5. MANDATORY — copy the `.env` files (`git-worktree-sync`)
 
-Never skip this step, never report the worktree as ready before it ran. Follow the
-[`git-worktree-sync`](../git-worktree-sync/SKILL.md) skill in **copy** mode:
+Never skip this step, never report the worktree as ready before it ran. It copies
+the `.env` files and the user's extra items (`SYNC_EXTRA`) — set
+`CURRENT_SKILL_DIRECTORY` with that skill's Working directory block first. Follow the
+[`git-worktree-sync`](../../git-worktree-sync/SKILL.md) skill in **copy** mode:
 
 ```bash
 ~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree_sync.py copy --to "<path>"

@@ -74,7 +74,7 @@ One file per category under `~/.meta-skills/meta-skill-doc/`, with each skill's 
 |----------|---------|--------|
 | Agent | `agent.md` | `hermes-all-message-read` |
 | AI tools | `ai.md` | `ai-usage` |
-| Code | `code.md` | `git-worktree`, `git-worktree-sync`, `orca-worktree` |
+| Code | `code.md` | `git-worktree`, `git-worktree-sync`, `orca-dev` |
 | Database | `db.md` | `elastic` |
 | Design | `design.md` | `gif-creator` |
 | DevOps / DNS | `devops.md` | `godaddy` |

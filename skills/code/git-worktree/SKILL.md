@@ -135,20 +135,22 @@ step 2, else its default branch) → check out the worktree branch (existing loc
 or `origin/<branch>`) or create it from that base.
 
 ```bash
-~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/code/git-worktree-sync/scripts/worktree_sync.py submodules --to "$WT_PATH" [--sub-base <branch>]
+~/.meta-skills/.venv/bin/python ~/.meta-skills/skills/code/git-worktree/scripts/submodules.py --to "$WT_PATH" [--sub-base <branch>]
 ```
 
 ```powershell
-& "$HOME/.meta-skills/.venv/Scripts/python.exe" "$HOME/.meta-skills/skills/code/git-worktree-sync/scripts/worktree_sync.py" submodules --to "$WT_PATH" [--sub-base <branch>]
+& "$HOME/.meta-skills/.venv/Scripts/python.exe" "$HOME/.meta-skills/skills/code/git-worktree/scripts/submodules.py" --to "$WT_PATH" [--sub-base <branch>]
 ```
 
-The script ends with `all submodules on <branch>`; on `NOT on <branch>: …` fix
+Script `scripts/submodules.py` (stdlib, Linux / macOS / Windows). It ends with `all submodules on <branch>`; on `NOT on <branch>: …` fix
 those submodules (dirty tree, pull conflict) and re-run it. Run this **before**
 the `.env` copy (submodule folders must be checked out first).
 
 ### 6. MANDATORY — copy the `.env` files (`git-worktree-sync`)
 
-Never skip this step, never report the worktree as ready before it ran. Follow the
+Never skip this step, never report the worktree as ready before it ran. It copies
+the `.env` files and the user's extra items (`SYNC_EXTRA`) — set
+`CURRENT_SKILL_DIRECTORY` with that skill's Working directory block first. Follow the
 [`git-worktree-sync`](../git-worktree-sync/SKILL.md) skill in **copy** mode:
 
 ```bash
