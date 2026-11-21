@@ -77,7 +77,7 @@ One file per category under `~/.meta-skills/meta-skill-doc/`, with each skill's 
 | Code | `code.md` | `git-worktree`, `git-worktree-sync`, `orca-dev` |
 | Database | `db.md` | `elastic` |
 | Design | `design.md` | `gif-creator` |
-| DevOps / DNS | `devops.md` | `godaddy` |
+| DevOps / DNS | `devops.md` | `coolify`, `godaddy` |
 | MDM & Antivirus | `mdm-antivirus.md` | `eset`, `hexnode` |
 | Productivity | `productivity.md` | `confluence`, `fathom`, `google-workspace`, `jira`, `pc-report`, `youtrack` |
 | Security | `security.md` | `bitwarden`, `folder-crypt`, `zscaler` |

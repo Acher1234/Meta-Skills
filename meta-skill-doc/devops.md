@@ -5,4 +5,5 @@ register under `$DEST/<folder basename>/`. Open the linked `SKILL.md` only for t
 
 | Name | Folder | What it does |
 |------|--------|--------------|
+| `coolify` | [`skills/devops/coolify/`](../skills/devops/coolify/SKILL.md) | Coolify via the `coolify` CLI — servers, apps, databases, services, deployments |
 | `godaddy` | [`skills/devops/dns/godaddy/`](../skills/devops/dns/godaddy/SKILL.md) | GoDaddy v3 discovery, owned domains, DNS CLI |
