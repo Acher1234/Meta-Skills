@@ -7,4 +7,5 @@ register under `$DEST/<folder basename>/`. Open the linked `SKILL.md` only for t
 |------|--------|--------------|
 | `git-worktree` | [`skills/code/git-worktree/`](../skills/code/git-worktree/SKILL.md) | Plain-git worktrees (asks base branch, branch, folder), `submodules.py` puts every submodule on the same branch, then mandatory `.env` copy via `git-worktree-sync` |
 | `git-worktree-sync` | [`skills/code/git-worktree-sync/`](../skills/code/git-worktree-sync/SKILL.md) | `worktree_sync.py` (Linux / macOS / Windows): copy every `.env` / `.env.*` file + `SYNC_EXTRA` items from one checkout to another — no worktree creation |
+| `gh-cli` | [`skills/code/gh-cli/`](../skills/code/gh-cli/SKILL.md) | GitHub CLI (`gh` 2.103.0) router — auth, repo, PR, issue / discussion, Actions, release, project, search, `gh api`, gist / codespace, extensions / agent skills. No credentials |
 | `orca-dev` | [`skills/code/orca-dev/`](../skills/code/orca-dev/SKILL.md) | `orca` CLI router — worktree (submodules + mandatory `.env` sync), repo, agent, terminal, orchestration, automation, tickets, browser, computer, runtime |
